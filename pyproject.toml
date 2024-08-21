@@ -1,0 +1,52 @@
+[build-system]
+requires = [
+  "setuptools"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taktk"
+version = "v0.1.0a1.dev1"
+dynamic = ["version"]
+
+classifiers = [
+  "Intended Audience :: Developers",
+  "Development Status :: 2 - Pre-Alpha",
+  "License :: OSI Approved :: GPLv3.0 License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Natural Language :: English",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "customtkinter",
+]
+
+description = "Order your tkinter apps"
+#dynamic
+keywords = ["customtkinter", "framework", "tkinter"]
+license = {file="LICENSE"}
+maintainers = [
+  {name="ken-morel", email="engonken8@gmail.com"}
+]
+authors = [
+  {name="ken-morel", email="engonken8@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">= 3.10"
+
+[project.optional-dependencies]
+all = [
+  "tksheet"
+]
+
+[project.urls]
+Homepage = "https://github.com/ken-morel/taktk.git"
+Documentation = "https://github.com/ken-morel/taktk/wiki"
+Repository = "https://github.com/ken-morel/taktk.git"
+Issues = "https://github.com/ken-morel/taktk/issues"
+Changelog = "https://github.com/ken-morel/taktk/blob/main/doc/CHANGELOG.rst"

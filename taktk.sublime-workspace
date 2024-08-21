@@ -1,0 +1,1721 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"__",
+				"__init__()"
+			],
+			[
+				"Ex",
+				"exceptions"
+			],
+			[
+				"sh",
+				"shouldrun"
+			],
+			[
+				"sta",
+				"startswith()"
+			],
+			[
+				"Co",
+				"CommandParameter"
+			],
+			[
+				"Comm",
+				"CommandParameter"
+			],
+			[
+				"ke",
+				"keyword"
+			],
+			[
+				"com",
+				"command"
+			],
+			[
+				"def",
+				"default"
+			],
+			[
+				"m",
+				"meta_scope"
+			],
+			[
+				"shell",
+				"shellsy-literal"
+			],
+			[
+				"she",
+				"shellsy-command"
+			],
+			[
+				"pr",
+				"prompt_toolkit."
+			],
+			[
+				"P",
+				"PathCompleter()"
+			],
+			[
+				"INP",
+				"input_dialog"
+			],
+			[
+				"print",
+				"print_stack_trace"
+			],
+			[
+				"exc",
+				"except"
+			],
+			[
+				"Shell",
+				"Shellsy"
+			],
+			[
+				"re",
+				"resolved"
+			],
+			[
+				"S_",
+				"S_Repl"
+			],
+			[
+				"c",
+				"context"
+			],
+			[
+				"le",
+				"lexer"
+			],
+			[
+				"She",
+				"ShellsyException"
+			],
+			[
+				"s",
+				"cr_content_scripts\tchrome_content_scripts"
+			],
+			[
+				"SHe",
+				"ShellsyException"
+			],
+			[
+				"ex",
+				"exceptions"
+			],
+			[
+				"ty",
+				"type_match"
+			],
+			[
+				"in",
+				"inter"
+			],
+			[
+				"S",
+				"S_Interpreter"
+			],
+			[
+				"rs",
+				"rstrip"
+			],
+			[
+				"ne",
+				"next_path"
+			],
+			[
+				"str",
+				"string_set"
+			],
+			[
+				"dec",
+				"decimal"
+			],
+			[
+				"an",
+				"annotate"
+			],
+			[
+				"S_E",
+				"S_Exception"
+			],
+			[
+				"fu",
+				"fullstring"
+			],
+			[
+				"full",
+				"fullstring"
+			],
+			[
+				"fi",
+				"final_args"
+			],
+			[
+				"comm",
+				"command"
+			],
+			[
+				"st",
+				"stacktrace"
+			],
+			[
+				"No",
+				"NoSuchCommand"
+			],
+			[
+				"get",
+				"get_command"
+			],
+			[
+				"Stac",
+				"StackTrace"
+			],
+			[
+				"vs",
+				"values"
+			],
+			[
+				"Va",
+				"ValueError"
+			],
+			[
+				"ev",
+				"evaluate_literal"
+			],
+			[
+				"la",
+				"last_key"
+			],
+			[
+				"is",
+				"isdigit"
+			],
+			[
+				"Fl",
+				"False"
+			],
+			[
+				"ret",
+				"return"
+			],
+			[
+				"par",
+				"parse_arguments"
+			],
+			[
+				"ad",
+				"add_stack"
+			],
+			[
+				"fil",
+				"file_name"
+			],
+			[
+				"CO",
+				"COMMAND_NAME"
+			],
+			[
+				"pars",
+				"parse_command"
+			],
+			[
+				"Ni",
+				"NilType"
+			],
+			[
+				"co",
+				"console"
+			],
+			[
+				"set",
+				"set_setting"
+			],
+			[
+				"wr",
+				"write_text"
+			],
+			[
+				"read_",
+				"read_text"
+			],
+			[
+				"MUI_ABORTWARNING",
+				"define:MUI_ABORTWARNING_TEXT"
+			],
+			[
+				"MUI_HEADER",
+				"define:MUI_HEADERIMAGE_BITMAP"
+			],
+			[
+				"MUI",
+				"define:MUI_HEADERIMAGE"
+			],
+			[
+				"fol",
+				"folder"
+			],
+			[
+				"fo",
+				"folders"
+			],
+			[
+				"name",
+				"Name"
+			],
+			[
+				"ha",
+				"hash"
+			],
+			[
+				"Not",
+				"NotImplementedError"
+			],
+			[
+				"St",
+				"Stack"
+			],
+			[
+				"mar",
+				"markdown"
+			],
+			[
+				"va",
+				"values"
+			],
+			[
+				"eval",
+				"evaluate_literal"
+			],
+			[
+				"v",
+				"values"
+			],
+			[
+				"__i",
+				"__instancecheck__"
+			],
+			[
+				"of",
+				"offset"
+			],
+			[
+				"cea",
+				"ceasar_file"
+			],
+			[
+				"ra",
+				"randrange"
+			],
+			[
+				"pygmen",
+				"pygments_lexer_cls"
+			],
+			[
+				"prin",
+				"print_formatted_text"
+			],
+			[
+				"p",
+				"print_formatted_text"
+			],
+			[
+				"pro",
+				"prompt_toolkit"
+			],
+			[
+				"pa",
+				"parent_text"
+			],
+			[
+				"ST",
+				"Stack"
+			],
+			[
+				"Sig",
+				"Signature"
+			],
+			[
+				"stack",
+				"stacktrace"
+			],
+			[
+				"Sh",
+				"ShellsyError"
+			],
+			[
+				"arg",
+				"argmaps"
+			],
+			[
+				"kw",
+				"kwmaps"
+			],
+			[
+				"con",
+				"content"
+			],
+			[
+				"pare",
+				"parent_text"
+			],
+			[
+				"sys",
+				"system"
+			],
+			[
+				"a",
+				"auto_evaluate"
+			],
+			[
+				"STA",
+				"STACKTRACE"
+			],
+			[
+				"cont",
+				"content"
+			],
+			[
+				"Shellsy",
+				"ShellsyError"
+			],
+			[
+				"N",
+				"NoSuchCommand"
+			],
+			[
+				"Com",
+				"CommandBlock"
+			],
+			[
+				"pl",
+				"plugin_shell"
+			],
+			[
+				"plu",
+				"plugin_dir"
+			],
+			[
+				"Pa",
+				"Path"
+			],
+			[
+				"Py",
+				"PygmentsTokens"
+			],
+			[
+				"T",
+				"TangoStyle"
+			],
+			[
+				"mak",
+				"makedirs"
+			],
+			[
+				"dis",
+				"dispatches"
+			],
+			[
+				"C",
+				"CommandCall"
+			],
+			[
+				"Command",
+				"CommandHelp"
+			],
+			[
+				"para",
+				"ParamDoc"
+			],
+			[
+				"be",
+				"begin"
+			],
+			[
+				"fro",
+				"from_function"
+			],
+			[
+				"beg",
+				"begin_docs"
+			],
+			[
+				"dat",
+				"dataclass"
+			],
+			[
+				"un",
+				"uni_name"
+			],
+			[
+				"d",
+				"description"
+			],
+			[
+				"au",
+				"author_email"
+			],
+			[
+				"auth",
+				"author_email"
+			],
+			[
+				"ini",
+				"initialize_plugin"
+			],
+			[
+				"Valu",
+				"ValueError"
+			],
+			[
+				"Ar",
+				"Arguments"
+			],
+			[
+				"mkd",
+				"mkdir"
+			],
+			[
+				"Plu",
+				"PluginConf"
+			],
+			[
+				"se",
+				"setdefault"
+			],
+			[
+				"fin",
+				"find_packages"
+			],
+			[
+				"Con",
+				"ContextVar"
+			],
+			[
+				"me",
+				"message_dialog"
+			],
+			[
+				"eva",
+				"evaluate_literal"
+			],
+			[
+				"clas",
+				"classmethod"
+			],
+			[
+				"D",
+				"DoesNotExist"
+			],
+			[
+				"__is",
+				"__instancecheck__"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/black.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Anaconda Python Builder",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				]
+			],
+			[
+				"Anaconda Python Builder",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					""
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"All Syntaxes"
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"Performance"
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"Regex Compatibility"
+				],
+				[
+					"Packages/User/Django.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/Django.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					""
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"All Syntaxes"
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"Performance"
+				],
+				[
+					"Packages/Default/Syntax Tests.sublime-build",
+					"Regex Compatibility"
+				],
+				[
+					"Packages/User/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/User/Django.sublime-build",
+					"pylint"
+				]
+			],
+			[
+				"Packages/User/Django.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					""
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Test"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Install"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Cross-Compile (Interactive)"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Golang Build/Go.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					""
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Test"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Install"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Cross-Compile (Interactive)"
+				],
+				[
+					"Packages/Golang Build/Go.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Golang Build/Go.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/NSIS/NSIS.sublime-build",
+					""
+				],
+				[
+					"Packages/NSIS/NSIS.sublime-build",
+					"strict"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/NSIS/NSIS.sublime-build",
+				"strict"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/NSIS/NSIS.sublime-build",
+					""
+				],
+				[
+					"Packages/NSIS/NSIS.sublime-build",
+					"strict"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/NSIS/NSIS.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/shellsy/shellsy.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/shellsy/shellsy.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/black.sublime-build",
+					""
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/black.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/User/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/User/Django.sublime-build",
+					"pylint"
+				]
+			],
+			[
+				"Packages/User/Django.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Sbook",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				]
+			],
+			[
+				"Packages/subliminal/Django.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/go.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				],
+				[
+					"Packages/User/sphinx.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/sass.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Sbook",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					""
+				],
+				[
+					"Packages/subliminal/Django.sublime-build",
+					"pylint"
+				],
+				[
+					"Packages/User/sass.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/sass.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"UI",
+				"UI: Select Theme"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"helium",
+				"Helium: Settings"
+			],
+			[
+				"cAMEL",
+				"Convert Case: UpperCamelCase"
+			],
+			[
+				"ui",
+				"UI: Select Theme"
+			],
+			[
+				"Package Control: i",
+				"Package Control: Install Package"
+			],
+			[
+				"reformat",
+				"Preferences: Terminus Command Palette"
+			],
+			[
+				"Package Control: dis",
+				"Package Control: Disable Package"
+			],
+			[
+				"install ",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: e",
+				"Package Control: Enable Package"
+			],
+			[
+				"Package Control: in",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: add",
+				"Package Control: Add Repository"
+			],
+			[
+				"Package Control: I",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: d",
+				"Package Control: Disable Package"
+			],
+			[
+				"Package Control: D",
+				"Package Control: Disable Package"
+			],
+			[
+				"open",
+				"Sublime Files: Open Navigator"
+			],
+			[
+				"ter",
+				"Terminal: Open"
+			],
+			[
+				"Package Control: Add",
+				"Package Control: Add Repository"
+			],
+			[
+				"Package Control: l",
+				"Package Control: List Packages"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 127.0,
+		"history":
+		[
+			"import socket; socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((\"localhost\", 52595))",
+			"\nd",
+			"\nimport socket; socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((\"localhost\", 49491))"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/taktk"
+	],
+	"file_history":
+	[
+		"/C/wtk/pyproject.toml",
+		"/C/wtk/src/wtk/__init__.py",
+		"/C/shellsy/src/shellsy/shellsy.py",
+		"/C/shellsy/src/shellsy/shell.py",
+		"/C/shellsy/src/shellsy/__main__.py",
+		"/C/shellsy/src/shellsy/lang.py",
+		"/C/shellsy/src/shellsy/exceptions.py",
+		"/C/shellsy/compile.bat",
+		"/C/shellsy/src/shellsy/repl/__init__.py",
+		"/C/shellsy/src/shellsy/interpreter.py",
+		"/C/wtk/.gitignore",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/User/GitHub Dark.sublime-theme",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/GitHub Theme/GitHub Dark.sublime-theme",
+		"/C/shellsy/src/tests/test_parse_args.py",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/shellsy/shellsy.sublime-syntax",
+		"/C/shellsy/test.shellsy",
+		"/C/shellsy/build-setup.nsi",
+		"/C/shellsy/build/windows/list-files.py",
+		"/C/shellsy/build/windows/portable/jedi/third_party/typeshed/third_party/2/tornado/web.pyi",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/User/SublimeTextTrans.sublime-settings",
+		"/C/shellsy/manifests/k/ken-morel/shellsy/0.1.0/ken-morel.shellsy.locale.en-UK.yaml",
+		"/C/shellsy/auto-py-to-exe.json",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/Helium/Helium.sublime-settings",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/User/Helium.sublime-settings",
+		"/C/shellsy/src/shellsy/lexer.py",
+		"/C/shellsy/src/main.py",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/Anaconda/anaconda_server/jsonserver.py",
+		"/C/Users/engon/AppData/Roaming/Sublime Text/Packages/Transparency/SublimeTextTrans.sublime-settings",
+		"/C/shellsy/src/shellsy/repl.py",
+		"/C/gama/build.bat",
+		"/F/shellsy/src/test.go",
+		"/C/Users/CHEF SEC/Desktop/py_c/make.bat",
+		"/C/Users/CHEF SEC/AppData/Local/Sublime Text/Cache/Simplenote/notes/  Bienvenue dans Simplenote (d4f7ab14-2cd8-4ad3-baf9-031688ebf539).todo",
+		"/F/shellsy/src/shellsy/shell.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/autostart/autostart.ps1",
+		"/F/shellsy/src/shellsy/lang.py",
+		"/F/shellsy/src/shellsy/interpreter.py",
+		"/F/shellsy/src/shellsy/plugin.py",
+		"/F/shellsy/src/shellsy/exceptions.py",
+		"/F/shellsy/src/shellsy/lexer.py",
+		"/F/shellsy/src/shellsy/shellsy.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Sublime Text/Packages/SublimeFiles/SublimeFiles.sublime-settings",
+		"/C/Users/CHEF SEC/AppData/Roaming/Sublime Text/Packages/User/Default (Windows).sublime-keymap",
+		"/F/shellsy/src/shellsy/args.py",
+		"/C/ken-morel/ai.py",
+		"/F/linket/help",
+		"/F/shellsy/.gitignore",
+		"/F/shellsy/src/shellsy/settings.py",
+		"/F/shellsy/src/shellsy/help.py",
+		"/F/shellsy/src/shellsy/__main__.py",
+		"/F/shellsy/src/shellsy/interpreter/__init__.py",
+		"/F/shellsy/src/shellsy/interpreter/parser.py",
+		"/F/shellsy/src/shellsy/interpreter/exceptions.py",
+		"/F/shellsy/src/shellsy/interpreter/types.py",
+		"/F/shellsy/src/shellsy/interpreter/repr.py",
+		"/F/shellsy/src/test.shellsy",
+		"/F/pyoload/src/pyoload/__init__.py",
+		"/F/shellsy/src/setup.py",
+		"/F/shellsy/compile.bat",
+		"/F/shellsy/build/windows/list-files.py",
+		"/C/NSIS/Examples/Modern UI/StartMenu.nsi",
+		"/F/shellsy/src/main.py",
+		"/F/shellsy/build-setup.nsi",
+		"/C/NSIS/Examples/StartMenu/Example.nsi",
+		"/C/NSIS/Examples/Modern UI/MultiLanguage.nsi",
+		"/C/NSIS/Examples/Modern UI/HeaderBitmap.nsi",
+		"/C/NSIS/Examples/Modern UI/Basic.nsi",
+		"/C/NSIS/Examples/Modern UI/WelcomeFinish.nsi",
+		"/F/shellsy/build-setup-nsis.bat",
+		"/F/shellsy/src/shellsy/__init__.py",
+		"/F/shellsy/src/del.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/comberload.py",
+		"/F/shellsy/ceasar/ceasar/shellsy.py",
+		"/F/shellsy/ceasar/ceasar/ceasar.py",
+		"/F/Users/engon/AppData/Roaming/Python/Python312/site-packages/pygments/lexers/shell.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Sublime Merge/Packages/User/Preferences.sublime-settings",
+		"/F/shellsy/README.md",
+		"/D/sbook/README.md",
+		"/F/shellsy/storelsb/storelsb/shellsy.py",
+		"/F/shellsy/shellsy.sublime-workspace",
+		"/F/shellsy/tbtest.py",
+		"/F/shellsy/src/build/lib/shellsy/args.py",
+		"/F/shellsy/src/build/lib/shellsy/lang.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/ken-morel/shellsy/1.0.0/plugins/storelsb/shellsy.py",
+		"/F/shellsy/storelsb/storelsb/__init__.py",
+		"/F/shellsy/LICENSE",
+		"/F/shellsy/src/shellsy/editor/__init__.py",
+		"/F/shellsy/test.shellsy",
+		"/C/Users/CHEF SEC/AppData/Roaming/Sublime Text/Packages/shellsy/shellsy.sublime-syntax",
+		"/C/Users/CHEF SEC/AppData/Roaming/Sublime Text/Packages/shellsy/shellsy.sublime-build",
+		"/C/Users/CHEF SEC/AppData/Roaming/ken-morel/shellsy/1.0.0/plugins/mt-1.0.0.dist-info/direct_url.json",
+		"/F/shellsy/mt/mt/shell.py",
+		"/F/Program Files/Python310/Lib/dataclasses.py",
+		"/C/Program Files (x86)/Python311-32/Lib/contextvars.py",
+		"/F/Program Files/Python310/Lib/typing.py",
+		"/F/shellsy/src/tests/test_parse_args.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/pygments/lexers/python.py",
+		"/F/djamago/src/djamago/__init__.py",
+		"/F/shellsy/src/tests/__init__.py",
+		"/C/Users/CHEF SEC/AppData/Local/ken-morel/shellsy/settings.json",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/pyoload/__init__.py",
+		"/F/shellsy/src/comberload.py",
+		"/F/shellsy/dockerfiles/dev.dockerfile",
+		"/F/shellsy/docs/requirements.txt",
+		"/F/shellsy/special_input.py",
+		"/F/djamago/src/djamago/demo.py",
+		"/F/shellsy/src/shellsy/types.py",
+		"/F/shellsy/src/history.txt",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/pygments/lexers/shell.py",
+		"/F/shellsy/src/comberloa.py",
+		"/C/Program Files (x86)/Python311-32/Lib/types.py",
+		"/F/shellsy/shellsy/expressions.py",
+		"/F/shellsy/shellsy/topics/main.py",
+		"/F/shellsy/build.bat",
+		"/F/shellsy/attack.py",
+		"/F/shellsy/main.py",
+		"/F/shellsy/djamago/__init__.py",
+		"/F/shellsy/dictionary/en.yaml",
+		"/F/shellsy/build/shellsy/xref-shellsy.html",
+		"/F/shellsy/build/shellsy/Splash-00_script.tcl",
+		"/F/shellsy/icon.png",
+		"/F/shellsy/shellsy/__init__.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/ttkbootstrap/utility.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/ttkbootstrap/toast.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/ttkbootstrap/tooltip.py",
+		"/F/shellsy/attack/__init__.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/ttkbootstrap/icons.py",
+		"/C/Users/CHEF SEC/AppData/Roaming/Python/Python311-32/site-packages/ttkbootstrap/style.py"
+	],
+	"find":
+	{
+		"height": 31.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": false,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 31.0
+	},
+	"input":
+	{
+		"height": 57.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.Terminus":
+	{
+		"height": 187.0
+	},
+	"output.Terminus 2":
+	{
+		"height": 134.0
+	},
+	"output.Terminus 3":
+	{
+		"height": 151.0
+	},
+	"output.Terminus 4":
+	{
+		"height": 146.0
+	},
+	"output.Terminus 5":
+	{
+		"height": 126.0
+	},
+	"output.Terminus 6":
+	{
+		"height": 220.0
+	},
+	"output.diff_views":
+	{
+		"height": 527.0
+	},
+	"output.exec":
+	{
+		"height": 114.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.golang_build":
+	{
+		"height": 126.0
+	},
+	"output.gotools_syntax_errors":
+	{
+		"height": 98.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"output.stino_build_panel":
+	{
+		"height": 0.0
+	},
+	"output.stino_panel":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "taktk.sublime-project",
+	"replace":
+	{
+		"height": 58.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 499.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"F:\\sbook\\frontend\\frontend.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 250.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
