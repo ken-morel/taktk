@@ -6,9 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taktk"
-version = "v0.1.0a1.dev1"
-dynamic = ["version"]
-
+version = "0.1.0a1.dev1"
 classifiers = [
   "Intended Audience :: Developers",
   "Development Status :: 2 - Pre-Alpha",
@@ -25,9 +23,7 @@ classifiers = [
 dependencies = [
   "customtkinter",
 ]
-
 description = "Order your tkinter apps"
-#dynamic
 keywords = ["customtkinter", "framework", "tkinter"]
 license = {file="LICENSE"}
 maintainers = [
