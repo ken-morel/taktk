@@ -5,27 +5,29 @@ from pyoload import annotate
 from typing import Optional
 from typing import Callable
 import sys
+from ...writeable import Writeable
 
 
 class frame(_Component):
     WIDGET = Frame
 
     class attrs:
-        padding: int = 5
+        padding: int = Nil
+        borderwidth: int = Nil
+        relief: str = Nil
 
     def create(self, parent: "Optional[_Component]" = None):
         parent = parent or self.parent.widget
-        same = [
-        ]
+        same = [x for x in dir(frame.attrs) if not x.startswith('_')]
         param_names = {
             **dict(zip(same, same)),
         }
         params = {
             **{
-                param_names[k]: v for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
+                param_names[k]: (v.get() if isinstance(v, Writeable) else v) for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
             }
         }
-        self.widget = self.WIDGET(master=parent)
+        self.widget = self.WIDGET(master=parent, **params)
         self._position_()
         for child in self.children:
             child.create(self.widget)
@@ -41,22 +43,24 @@ class label(_Component):
         fg_color: str = Nil
         bg_color: str = Nil
         text_color: str = Nil
+        padx: int = Nil
+        pady: int = Nil
 
     def create(self, parent: "Optional[_Component]" = None):
         parent = parent or self.parent.widget
         same = [
-            'fg_color', 'bg_color', 'text_color'
+            'fg_color', 'bg_color', 'text_color' 'padx', 'pady', 'text'
         ]
         param_names = {
             **dict(zip(same, same)),
         }
         params = {
             **{
-                param_names[k]: v for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
+                param_names[k]: (v.get() if isinstance(v, Writeable) else v) for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
             }
         }
         self.widget = self.WIDGET(
-            master=parent, text=self.attrs.text, **params
+            master=parent, **params
         )
         self._position_()
         return self.widget
@@ -69,18 +73,20 @@ class button(_Component):
         padding: int = 5
         text: str = "fake"
         command: Callable = lambda: None
+        padx: int = Nil
+        pady: int = Nil
 
     def create(self, parent: "Optional[_Component]" = None):
         parent = parent or self.parent.widget
         same = [
-            'command', 'text'
+            'command', 'text', 'padx', 'pady',
         ]
         param_names = {
             **dict(zip(same, same)),
         }
         params = {
             **{
-                param_names[k]: v for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
+                param_names[k]: (v.get() if isinstance(v, Writeable) else v) for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
             }
         }
         self.widget = self.WIDGET(

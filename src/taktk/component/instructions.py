@@ -93,6 +93,8 @@ def execute(text, namespace, component_space):
     scope = [master]
     last_ind = 0
     for line in lines:
+        if not line.strip():
+            continue
         ind = 0
         while line[ind * 2 :].startswith("  "):
             ind += 1

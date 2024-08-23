@@ -22,6 +22,8 @@ from pyoload import annotate
 from importlib import import_module
 from typing import Optional
 from dataclasses import dataclass
+from ..writeable import Writeable
+from .. import Nil
 
 
 class ComponentNamespace:
@@ -111,6 +113,9 @@ class _Component:
                     )
             else:
                 vals[key] = parser.evaluate_literal(value, namespace)
+        for val in vals.values():
+            if isinstance(val, Writeable):
+                val.subscribe(self._update)
         try:
             self.attrs = self.__class__.attrs(**vals)
         except TypeError as e:
@@ -131,28 +136,63 @@ class _Component:
             case wrong:
                 raise ValueError("unrecognised position tuple:", wrong)
 
+    def update(self):
+        for child in self.children:
+            child.update()
+
+    def _update(self):
+        same = [x for x in dir(self.__class__.attrs) if not x.startswith('_')]
+        param_names = {
+            **dict(zip(same, same)),
+        }
+        params = {
+            **{
+                param_names[k]: v for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
+            }
+        }
+        for param, val in params.items():
+            if isinstance(val, Writeable):
+                val = val.get()
+            self.widget[param] = val
+
 
 @annotate
 class Component(_Component):
-    __component__: _Component = None
+    _component_: _Component = None
     code: str = r"\frame"
 
     def __getitem__(self, item: str):
         return getattr(self, item)
 
     def __setitem__(self, item: str, value):
-        return setattr(self, item, value)
+        setattr(self, item, value)
+        self._warn_subscribers_()
+
+    def _subscribe_(self, subscriber):
+        self._subscribers_.add(subscriber)
+
+    def _unsubscribe_(self, subscriber):
+        self._subscribers_.remove(subscriber)
+
+    def _warn_subscribers_(self):
+        for subscriber in self._subscribers_:
+            subscriber()
 
     def __init__(self, parent: "Optional[object]" = None):
         from . import builtin
 
-        self.__component__ = execute(
+        self._parent_ = parent
+        self._subscribers_ = set()
+
+        self._component_ = execute(
             self.code, self, ModularNamespace(builtin)
         )
-        self.__parent__ = parent
 
     def render(self, master):
-        return self.__component__.create(master)
+        return self._component_.create(master)
+
+    def update(self):
+        self._component_.update()
 
 
 from .instructions import execute

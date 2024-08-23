@@ -23,6 +23,7 @@ from pyoload import annotate
 from typing import Optional
 from dataclasses import dataclass
 from decimal import Decimal
+from ..writeable import NamespaceWriteable
 
 
 SPACE: set = set(" ")
@@ -217,7 +218,11 @@ def evaluate_literal(string: str, namespace: "Component"):
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
     elif b == "{" and e == "}":
-        return eval(string[1:-1], {}, namespace)
+        st = string[1:-1]
+        if len(st) >= 2 and st[0] == '{' and st[-1] == '}':
+            return NamespaceWriteable(namespace, st[1:-1])
+        else:
+            return eval(string[1:-1], {}, namespace)
     elif b in STRING_QUOTES:
         if e == b:
             return string[1:-1]
