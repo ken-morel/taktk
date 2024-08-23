@@ -45,13 +45,21 @@ class ModularNamespace(ComponentNamespace):
         self.package = package
 
     def __getitem__(self, name: str):
-        try:
-            if hasattr(self.package, name):
-                _component = getattr(self.package, name)
+        if '.' in name:
+            try:
+                mod = self.package.__package__
+            except AttributeError:
+                raise ValueError(f"{self.package} is not a package, does not have {name}") from None
             else:
-                path = self.package.__package__ + "." + name
-                module = import_module(path)
-                _component = module._component
+                mod_path, name = name.rsplit('.', 1)
+                mod = import_module(mod + '.' + mod_path)
+        else:
+            mod = self.package
+        try:
+            if hasattr(mod, name):
+                _component = getattr(mod, name)
+            else:
+                raise NameError(f"{name} not in module {mod}")
         except AssertionError:
             pass
         else:
@@ -119,7 +127,7 @@ class _Component:
             case ("pack", _):
                 self.widget.pack()
             case ("grid", (x, y)):
-                self.widget.grid(column=y, row=x)
+                self.widget.grid(column=x, row=y)
             case wrong:
                 raise ValueError("unrecognised position tuple:", wrong)
 

@@ -23,7 +23,7 @@
       "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
       "name": "Taktk",
       "selector": "source.python",
-      "cmd": ["py", "-3.12", "$project_path/examples/main.py"],
+      "cmd": ["py", "-3.12", "$project_path/examples/simple.py"],
     },
 	],
   "settings":

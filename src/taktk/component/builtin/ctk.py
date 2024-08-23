@@ -1,4 +1,4 @@
-from tkinter.ttk import Label, Frame, Button
+from customtkinter import CTkLabel, CTkFrame, CTkButton
 from .. import _Component
 from ... import Nil
 from pyoload import annotate
@@ -7,8 +7,10 @@ from typing import Callable
 import sys
 
 
+
+
 class frame(_Component):
-    WIDGET = Frame
+    WIDGET = CTkFrame
 
     class attrs:
         padding: int = 5
@@ -33,7 +35,7 @@ class frame(_Component):
 
 
 class label(_Component):
-    WIDGET = Label
+    WIDGET = CTkLabel
 
     class attrs:
         text: str = "fake"
@@ -63,7 +65,7 @@ class label(_Component):
 
 
 class button(_Component):
-    WIDGET = Button
+    WIDGET = CTkButton
 
     class attrs:
         padding: int = 5
@@ -89,4 +91,3 @@ class button(_Component):
         )
         self._position_()
         return self.widget
-

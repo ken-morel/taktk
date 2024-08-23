@@ -99,7 +99,6 @@ def execute(text, namespace, component_space):
         if ind == last_ind:
             scope.pop()
         else:
-            print(scope)
             while last_ind >= ind:
                 scope.pop()
                 last_ind -= 1
