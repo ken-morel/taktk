@@ -23,11 +23,12 @@ from pyoload import annotate
 from typing import Optional
 from dataclasses import dataclass
 from decimal import Decimal
-from ..writeable import NamespaceWriteable
+from ..writeable import NamespaceWriteable, Expression
 
 
 SPACE: set = set(" ")
-COMPONENT_NAME = set(string.ascii_letters + string.digits + "_.")
+VARNAME = set(string.ascii_letters + string.digits + "_")
+COMPONENT_NAME = VARNAME | set(".")
 BRACKETS = dict(map(tuple, "(),[],{}".split(",")))
 STRING_QUOTES = set("\"'")
 INT = set(string.digits)
@@ -205,6 +206,44 @@ def next_value(_state: State) -> tuple[State, str, str]:
 
 
 @annotate
+def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
+    """
+    Gets next attribute value pair from `\\` character, may include alias
+    """
+    begin = _state.copy()
+    begin |= skip_spaces(begin)
+    state = begin.copy()
+    state += len("!enum ")
+    state |= skip_spaces(state)
+    b = state.copy()
+    while state:
+        if state[...][0] not in VARNAME:
+            if state[...][0] != ':':
+                raise Exception("unrecognised symbol in after enum object name", state.text)
+            break
+        state += 1
+    else:
+        raise Exception("unterminated enum first field", state.text)
+    obj = state.text[b:state]
+    state += 1
+    b = state.copy()
+    b += 1
+    nc = 0
+    while state:
+        if state[...][0] == ')':
+            break
+        elif state[...][0] == ',':
+            nc += 1
+            if nc > 1:
+                raise Exception("too many fields after enum object", state.text)
+        state += 1
+    else:
+        raise Exception("Unterminated enum second field", state.text)
+    alias = tuple(map(str.strip, state[b:state].split(',')))
+    return state, obj, alias
+
+
+@annotate
 def evaluate_literal(string: str, namespace: "Component"):
     string_set = set(string)
     if len(string) > 1:
@@ -222,7 +261,7 @@ def evaluate_literal(string: str, namespace: "Component"):
         if len(st) >= 2 and st[0] == '{' and st[-1] == '}':
             return NamespaceWriteable(namespace, st[1:-1])
         else:
-            return eval(string[1:-1], {}, namespace)
+            return Expression(namespace, st)
     elif b in STRING_QUOTES:
         if e == b:
             return string[1:-1]

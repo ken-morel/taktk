@@ -24,6 +24,7 @@ dependencies = [
   "customtkinter",
   "pyoload",
   "comberload",
+  "PyYAML",
 ]
 description = "Order your tkinter apps"
 keywords = ["customtkinter", "framework", "tkinter"]

@@ -22,7 +22,7 @@ from pyoload import annotate
 from importlib import import_module
 from typing import Optional
 from dataclasses import dataclass
-from ..writeable import Writeable
+from ..writeable import Writeable, resolve
 from .. import Nil
 
 
@@ -72,6 +72,7 @@ class _Component:
     parent: "Optional[_Component]"
     children: "list[_Component]"
     _pos_ = None
+    widget = None
 
     @classmethod
     def __init_subclass__(cls):
@@ -90,29 +91,81 @@ class _Component:
         self.namespace = namespace
         if parent is not None:
             self.parent.children.append(self)
+        self.raw_attrs = attrs
+
+    def _position_(self):
+        pos = self._pos_
+        if pos is None:
+            return
+        match pos:
+            case ("pack", _):
+                self.widget.pack()
+            case ("grid", coord):
+                coord = resolve(coord)
+                grid_params = ('sticky',)
+                grid = {k: v for k, v in self._pos_params_.items() if k in grid_params}
+                if len(coord) == 2:
+                    (x, y) = coord
+                    grid['column'] = x
+                    grid['row'] = y
+                elif len(coord) == 4:
+                    (x, y, xs, ys) = coord
+                    grid['column'] = x
+                    grid['row'] = y
+                    grid['columnspan'] = xs
+                    grid['rowspan'] = ys
+                else:
+                    raise ValueError("wrong grid tuple", coord)
+                if 'xweight' in self._pos_params_:
+                    self.widget.master.columnconfigure(x, weight=int(self._pos_params_['xweight']))
+                if 'yweight' in self._pos_params_:
+                    self.widget.master.rowconfigure(y, weight=int(self._pos_params_['yweight']))
+                self.widget.grid(**grid)
+            case wrong:
+                raise ValueError("unrecognised position tuple:", wrong)
+
+    def update(self):
+        for child in self.children:
+            child.update()
+
+    def _update(self):
+        if self.widget is None:
+            return
+        params = {
+            **{
+                self.conf_aliasses[k]: resolve(v) for k, v in vars(self.attrs).items() if k in self.conf_aliasses and v is not Nil
+            }
+        }
+        self.widget.configure(**params)
+
+    def make_bindings(self):
+        for event, handler in self.event_binds.items():
+            self.widget.bind(f"<{event}>", resolve(handler))
+
+    def create(self):
+        self.event_binds = {}
         vals = {}
-        for key, value in attrs.items():
+        self._pos_params_ = {}
+        for key, value in self.raw_attrs.items():
             if ":" in key:
                 st, name = key.split(":", 1)
-                if st == "on":
-                    raise NotImplementedError("events not yet implemented")
+                if st == "bind":
+                    self.event_binds[name] = parser.evaluate_literal(value, self.namespace)
                 elif st == "pos":
                     if name == "grid":
                         self._pos_ = (
                             name,
-                            parser.evaluate_literal(value, namespace),
+                            parser.evaluate_literal(value, self.namespace),
                         )
                     else:
-                        raise NotImplementedError(
-                            f"unemplemented {name!r} positioning"
-                        )
+                        self._pos_params_[name] = parser.evaluate_literal(value, self.namespace)
                 else:
                     raise ValueError(
                         f"Unrecognised special attribute type {st!r}"
                         f"in attribute {key!r}"
                     )
             else:
-                vals[key] = parser.evaluate_literal(value, namespace)
+                vals[key] = parser.evaluate_literal(value, self.namespace)
         for val in vals.values():
             if isinstance(val, Writeable):
                 val.subscribe(self._update)
@@ -125,35 +178,53 @@ class _Component:
                 attrs,
             ) from None
 
-    def _position_(self):
-        if self._pos_ is None:
-            return
-        match self._pos_:
-            case ("pack", _):
-                self.widget.pack()
-            case ("grid", (x, y)):
-                self.widget.grid(column=x, row=y)
-            case wrong:
-                raise ValueError("unrecognised position tuple:", wrong)
+
+@annotate
+class EnumComponent(_Component):
+    def __init__(
+        self,
+        object,
+        alias,
+        namespace,
+        parent: "Optional[_Component]" = None,
+    ):
+        self.children = []
+        self.parent = parent
+        self.namespace = namespace
+        self.alias = alias
+        self.object = object
+        if parent is not None:
+            self.parent.children.append(self)
+
+    def create(self, parent=None):
+        parent = parent or self.parent.widget
+        self.render_parent = parent
+        self.widgets = []
+        for (idx, val) in enumerate(self.object.get()):
+            aidx, aval = self.alias
+            setattr(self.namespace, aidx, idx)
+            setattr(self.namespace, aval, val)
+            for child in self.children:
+                elt = child.create(parent)
+                self.widgets.append(
+                    (child, elt),
+                )
+        if len(self.widgets) > 0:
+            return tuple(zip(*self.widgets))[1]
+        else:
+            return []
 
     def update(self):
-        for child in self.children:
-            child.update()
-
-    def _update(self):
-        same = [x for x in dir(self.__class__.attrs) if not x.startswith('_')]
-        param_names = {
-            **dict(zip(same, same)),
-        }
-        params = {
-            **{
-                param_names[k]: v for k, v in vars(self.attrs).items() if k in param_names and v is not Nil
-            }
-        }
-        for param, val in params.items():
-            if isinstance(val, Writeable):
-                val = val.get()
-            self.widget[param] = val
+        widgets = self.widgets.copy()
+        self.create(self.render_parent)
+        try:
+            self.render_parent.update()  # for smoother renderring
+        except Exception:
+            pass
+        for component, widget in widgets:
+            component.widget = None
+            widget.destroy()
+            del widget
 
 
 @annotate
@@ -161,12 +232,20 @@ class Component(_Component):
     _component_: _Component = None
     code: str = r"\frame"
 
+    @annotate
     def __getitem__(self, item: str):
-        return getattr(self, item)
+        try:
+            return getattr(self, item)
+        except AttributeError:
+            try:
+                return globals()[item]
+            except IndexError as e:
+                raise IndexError(item) from e
 
+    @annotate
     def __setitem__(self, item: str, value):
         setattr(self, item, value)
-        self._warn_subscribers_()
+        self._watch_changes_()
 
     def _subscribe_(self, subscriber):
         self._subscribers_.add(subscriber)
@@ -183,7 +262,9 @@ class Component(_Component):
 
         self._parent_ = parent
         self._subscribers_ = set()
-
+        self._last_ = {
+            k: v for k, v in vars(self).items() if not k.startswith("_")
+        }
         self._component_ = execute(
             self.code, self, ModularNamespace(builtin)
         )
@@ -192,7 +273,16 @@ class Component(_Component):
         return self._component_.create(master)
 
     def update(self):
+        self._watch_changes_()
         self._component_.update()
+
+    def _watch_changes_(self):
+        state = {
+            k: v for k, v in vars(self).items() if not k.startswith("_")
+        }
+        if state != self._last_:
+            self._warn_subscribers_()
+        self._last_ = state
 
 
 from .instructions import execute

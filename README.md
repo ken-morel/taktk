@@ -53,3 +53,57 @@ root.mainloop()
 > [!WARNING]
 > The component building language is still in development and may be extremely
 > strict
+
+
+## Example 2: A todo list
+
+```python
+r"""
+\frame
+    \ctk.frame pos:grid=0,0 width=350 pos:sticky='nsew'
+        \ctk.entry width=300 pos:grid=0,0 text={{entry}} pos:xweight=2
+        \button text='+' command={add_todo} pos:grid=1,0 pos:xweight=0
+    \ctk.frame pos:grid=0,1 width=350 pos:sticky='nsew'
+        !enum todos:(i, todo)
+            \ctk.label text={str(i + 1) + ') ' + todo } pos:grid={(0, i)} pos:sticky='nsw' bind:1={popper(i)}
+            # popper closure does popping for you
+"""
+from tkinter import Tk
+from taktk.component import Component
+
+
+class Todo(Component):
+    code = __doc__
+
+    todos = []
+    entry = "Enter todo here"
+
+    def close(self):
+        root.destroy()
+
+    def add_todo(self):
+        self.todos.append(self['entry'])
+        self.entry = ""
+        self.update()
+
+    def clear(self):
+        self.todos.clear()
+        self.update()
+
+    def popper(self, idx):
+        def func(e):
+            self.todos.pop(idx)
+            self.update()
+        return func
+
+
+root = Tk()
+root.title('Todo list')
+
+editor = Todo()
+editor.render(root).grid(column=0, row=0)
+
+root.mainloop()
+```
+
+![demo](images/example-todo.png)

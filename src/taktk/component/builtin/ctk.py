@@ -1,5 +1,5 @@
-from customtkinter import CTkLabel, CTkFrame, CTkButton
-from . import frame, label, button
+from customtkinter import CTkLabel, CTkFrame, CTkButton, CTkEntry
+from . import frame, label, button, entry
 
 
 
@@ -14,3 +14,7 @@ class label(label):
 
 class button(button):
     WIDGET = CTkButton
+
+
+class entry(entry):
+    WIDGET = CTkEntry
