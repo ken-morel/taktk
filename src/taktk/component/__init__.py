@@ -96,6 +96,17 @@ class _Component:
         self.raw_attrs = attrs
 
     def _position_(self):
+        if "xweights" in self._pos_params_:
+            for col, weight in self._pos_params_['xweights'].items():
+                self.widget.columnconfigure(
+                    col, weight=weight
+                )
+        if "yweights" in self._pos_params_:
+            for row, weight in self._pos_params_['yweights'].items():
+                self.widget.rowconfigure(
+                    row, weight=weight
+                )
+
         pos = self._pos_
         if pos is None:
             return
@@ -175,6 +186,24 @@ class _Component:
                         self._pos_params_[name] = parser.evaluate_literal(
                             value, self.namespace
                         )
+                elif st == 'weight':
+                    value = parser.evaluate_literal(
+                        value, self.namespace
+                    )
+                    if name == 'x':
+                        xweights = {}
+                        for x in value.split(','):
+                            i, w = map(lambda s: int(s.strip()), x.strip().split(':'))
+                            xweights[i] = w
+                        self._pos_params_['xweights'] = xweights
+                    elif name == 'y':
+                        yweights = {}
+                        for x in value.split(','):
+                            i, w = map(lambda s: int(s.strip()), x.strip().split(':'))
+                            yweights[i] = w
+                        self._pos_params_['yweights'] = yweights
+                    else:
+                        raise ValueError(f'Wrong weight direction: {name!r}, should be x or y')
                 else:
                     raise ValueError(
                         f"Unrecognised special attribute type {st!r}"

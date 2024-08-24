@@ -200,6 +200,14 @@ def next_value(_state: State) -> tuple[State, str, str]:
                 raise Exception(
                     f"unmatched {c!r} at {int(state)}: {state.text!r}"
                 )
+        elif ':' in state[...] and state[...][:(n := state[...].index(':'))].isalpha():
+            begin = state.copy()
+            state += n
+            while state:
+                if state[...][0].isspace():
+                    break
+                state += 1
+            return state, state.text[begin:state]
         elif len(brackets) == 0 and c.isspace():
             break
         state += 1
@@ -250,6 +258,7 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
 
 @annotate
 def evaluate_literal(string: str, namespace: "Component"):
+    from ..media import get_media
     string_set = set(string)
     if len(string) > 1:
         b, *_, e = string
@@ -257,7 +266,15 @@ def evaluate_literal(string: str, namespace: "Component"):
         b, e = string, None
     else:
         raise ValueError("empty literal string")
-    if len(string_set - INT) == 0 and string.isnumeric():
+    if string == 'None':
+        return None
+    elif string == 'True':
+        return True
+    elif string == 'False':
+        return False
+    elif ':' in string and string[:string.index(':')].isalpha():
+        return get_media(string)
+    elif len(string_set - INT) == 0 and string.isnumeric():
         return int(string)
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)

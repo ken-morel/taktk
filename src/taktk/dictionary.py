@@ -6,10 +6,10 @@ from .writeable import Writeable
 class Dictionary(dict):
     subscribers = set()
 
-    def __init__(self, path=None, locale=None):
+    def __init__(self, path, language=None):
         super().__init__()
         self.path = path
-        self.locale = locale
+        self.language = language
         self.load()
 
     def load(self):
@@ -23,8 +23,11 @@ class Dictionary(dict):
         import builtins
 
         builtins._ = self
-        for subscriber in Dictionary.subscribers:
-            subscriber()
+        for subscriber in tuple(Dictionary.subscribers):
+            try:
+                subscriber()
+            except:
+                pass
 
     def __call__(self, path):
         obj = self
@@ -33,23 +36,23 @@ class Dictionary(dict):
         return obj
 
     @classmethod
-    def from_directory(
-        cls, path="dictionary", locale=None, fallback_locale="English"
-    ):
-        files = Path(path).glob("*.yml")
-        langs = {p.stem: p for p in files}
-        if locale is None:
-            import locale as loc
-
-            locale = loc.getlocale()[0].split("_", 1)[0]
-        if locale in langs:
-            return cls(langs[locale], locale=locale)
-        else:
-            return cls(langs[fallback_locale], locale=fallback_locale)
-
-    @classmethod
     def subscribe(cls, method):
         cls.subscribers.add(method)
+
+
+class Dictionaries:
+    def __init__(self, path='dictionaries'):
+        self.path = path
+        self.languages  = {p.stem: p for p in path.glob('*.yml')}
+
+    def get(self, language=None, fallback_language="English"):
+        if language is None:
+            import locale as loc
+            language = loc.getlocale()[0].split("_", 1)[0]
+        if language in self.languages:
+            return Dictionary(self.languages[language], language=language)
+        else:
+            return Dictionary(self.languages[fallback_language], language=fallback_language)
 
 
 class Translation(Writeable):

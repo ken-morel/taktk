@@ -1,13 +1,13 @@
 r"""
-\ctk.frame
+\frame padding=20
     \frame pos:grid=0,0 pos:sticky='nsew'
-        \entry width=80 pos:grid=0,0 text={{entry}} pos:sticky='nsw'
+        \entry width=80 pos:grid=0,0 text={{entry}} pos:sticky='nsw' bind:Key-Return={add_todo}
         \button text='+' command={add_todo} pos:grid=1,0 pos:sticky='nse'
     \frame pos:grid=0,1 pos:sticky='nsew'
         !enum todos:(idx, todo)
             \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(idx)}
             \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
-            \button text='remove' command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
+            \button text=[pages.todos.remove] command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
 """
 
 from taktk.component import Component
@@ -33,7 +33,7 @@ class Todo(Component):
     def close(self):
         root.destroy()
 
-    def add_todo(self):
+    def add_todo(self, *_):
         if not self.entry.strip():
             return Notification(
                 "Empty field",

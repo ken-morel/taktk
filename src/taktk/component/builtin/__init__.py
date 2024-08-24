@@ -1,12 +1,13 @@
 from ttkbootstrap import Label, Frame, Button, Entry, Checkbutton
-from tkinter import StringVar, BooleanVar
+from tkinter import StringVar, BooleanVar, Image as TkImage
 from .. import _Component
-from ... import Nil
+from ... import Nil, resolve
 from pyoload import annotate
 from typing import Optional
 from typing import Callable
 import sys
-from ...writeable import resolve, Writeable, NamespaceWriteable
+from ...writeable import Writeable, NamespaceWriteable
+from ...media import Image
 
 
 class frame(_Component):
@@ -56,7 +57,8 @@ class label(_Component):
         padx: int = Nil
         pady: int = Nil
         font: str = Nil
-
+        image: Image | TkImage = Nil
+        compound: str = Nil
     same = [x for x in dir(attrs) if not x.startswith("_")]
     conf_aliasses = {
         **dict(zip(same, same)),
@@ -90,6 +92,8 @@ class button(_Component):
         pady: int = Nil
         fg: str = Nil
         bg: str = Nil
+        image: Image | TkImage = Nil
+        compound: str = Nil
 
     same = [x for x in dir(attrs) if not x.startswith("_")]
     conf_aliasses = {

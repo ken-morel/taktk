@@ -3,27 +3,43 @@ from ttkbootstrap import Window
 
 
 class Application:
-    dictionary = None
+    dictionaries = None
+    fallback_language = 'English'
     params = {}
+    menu = None
 
     def __init__(self):
         import taktk
 
         taktk.application = self
 
-    def setup_dictionary(self):
-        from .dictionary import Dictionary
+    def init(self):
+        pass
 
-        if self.dictionary is not None:
-            Dictionary.from_directory(self.dictionary).install()
+    def set_language(self, lang=None):
+        self.dictionaries.get(language=lang, fallback_language=self.fallback_language).install()
+
+    def setup_taktk(self):
+        if self.dictionaries is not None:
+            from .dictionary import Dictionaries
+            self.dictionaries = Dictionaries(self.dictionaries)
+            self.set_language()
+        if self.media is not None:
+            from pathlib import Path
+            from . import media
+            media.MEDIA_DIR = Path(self.media)
+
 
     def create(self):
         self.root = root = Window(**self.params)
+        if self.menu is not None:
+            self.menu.toplevel(root)
         return root
 
     def run(self, entry="/"):
-        self.setup_dictionary()
+        self.setup_taktk()
         root = self.create()
+        self.init()
         self.view = PageView(root, self.commander)
         self.view.geometry()
         self.view.url(entry)
@@ -31,6 +47,9 @@ class Application:
 
     def __call__(self, url: str):
         self.view.url(url)
+
+    def exit(self):
+        self.root.destroy()
 
 
 class PageView:

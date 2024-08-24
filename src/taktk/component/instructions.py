@@ -133,13 +133,16 @@ class Enum_Component(Instruction):
 
 
 def execute(text, namespace, component_space):
-    line, *lines = text.splitlines()
+    lines = list(filter(lambda l: bool(l.strip()), text.splitlines()))
+    offset = min(len(l) - len(l.lstrip(' ')) for l in lines)
+    lines = [l[offset:] for l in lines]
+    line, *lines = lines
     indent = -1
     while not line.startswith("\\"):
         if not line.strip() or line[0] == "#":
             line, *lines = lines
             continue
-        elif c.isspace():
+        elif line[0].isspace():
             raise ValueError("Unallowed space in line:", line)
         elif c == "@":
             if line.startswith("@indent"):
