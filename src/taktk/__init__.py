@@ -1,6 +1,7 @@
 __version__ = "0.1.0a1.dev1"
 __author__ = "ken-morel"
 
+
 class NilType:
     _instance = None
 
@@ -29,3 +30,13 @@ class NilType:
 
 
 Nil = NilType()
+
+
+def resolve(value):
+    from .media import Resource
+    from .writeable import Writeable
+
+    if isinstance(value, (Resource, Writeable)):
+        return value.get()
+    else:
+        return value
