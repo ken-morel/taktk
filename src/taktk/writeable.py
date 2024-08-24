@@ -10,14 +10,15 @@ class Writeable:
     Creates a monitorred writable object, storing
     a specific state and subscribers
     """
-    def __init__(self, val: Any=None):
+
+    def __init__(self, val: Any = None):
         """
         Creates the object with the specified value
         """
         self._value_ = val
         self.subscribers = set()
 
-    def set(self, value: Any, warn: bool=True):
+    def set(self, value: Any, warn: bool = True):
         """
         Sets the value of the Writeable, and warns
         notifiers except warn=False
@@ -68,24 +69,27 @@ class NamespaceWriteable(Writeable):
     @staticmethod
     def parse_path(text):
         from .component.parser import State, VARNAME
+
         begin = State(text=text)
         state = begin.copy()
         path = []
-        assert len(set(text) - (VARNAME | set("[]."))) == 0, f"wrong value path for NamespaceWriteable {text!r}"
+        assert (
+            len(set(text) - (VARNAME | set("[]."))) == 0
+        ), f"wrong value path for NamespaceWriteable {text!r}"
         while state:
-            if state[...][0].isalpha():
-                path.append('')
+            if state[...][0] in VARNAME:
+                path.append("")
                 while state and state[...][0] in VARNAME:
                     path[-1] += state[...][0]
                     state += 1
                 continue
             elif state[...][0] == "[":
                 c = 0
-                path.append('')
+                path.append("")
                 while state:
-                    if state[...][0] == '[':
+                    if state[...][0] == "[":
                         c += 1
-                    elif state[...][0] == ']':
+                    elif state[...][0] == "]":
                         if c <= 0:
                             path[-1] += state[...][0]
                             break
@@ -95,12 +99,11 @@ class NamespaceWriteable(Writeable):
                     state += 1
                 state += 1
                 continue
-            elif state[...][0] == '.':
+            elif state[...][0] == ".":
                 state += 1
             else:
                 raise Exception("wrong value", state[...])
         return tuple(path)
-
 
     def __init__(self, namespace, name: str):
         """
@@ -119,12 +122,14 @@ class NamespaceWriteable(Writeable):
         """
         try:
             obj = self.base
-            if self.name.startswith('['):
-                string = 'obj' + self.name
+            if self.name.startswith("["):
+                string = "obj" + self.name
                 try:
                     return eval(string, locals(), self.namespace)
                 except Exception as e:
-                    raise NameError("Error resolving NamespaceWriteable", e, repr(string)) from e
+                    raise NameError(
+                        "Error resolving NamespaceWriteable", e, repr(string)
+                    ) from e
             else:
                 return getattr(obj, self.name)
         except AttributeError as e:
@@ -135,8 +140,12 @@ class NamespaceWriteable(Writeable):
         Sets value to namespace
         """
         obj = self.base
-        if self.name.startswith('['):
-            exec('obj' + self.name + ' = val', globals(), vars(self.namespace) | locals())
+        if self.name.startswith("["):
+            exec(
+                "obj" + self.name + " = val",
+                globals(),
+                vars(self.namespace) | locals(),
+            )
         else:
             setattr(obj, self.name, val)
         self.warn_subscribers()
@@ -152,8 +161,8 @@ class NamespaceWriteable(Writeable):
         obj = self.namespace
         path = self.base_path
         for sub in path:
-            if sub.startswith('['):
-                obj = eval('obj' + sub, globals(), locals())
+            if sub.startswith("["):
+                obj = eval("obj" + sub, globals(), locals())
             else:
                 obj = getattr(obj, sub)
         self._base = obj
@@ -202,6 +211,7 @@ class WritableVar:
                 self._writable_.set(self.get())
                 self.set(self._writable_.get())
 
+
 class WritableStringVar(StringVar, WritableVar):
     def __init__(self, writable):
         super().__init__(value=writable.get())
@@ -211,7 +221,6 @@ class WritableStringVar(StringVar, WritableVar):
         if self._should_update_:
             with self.no_tk_update():
                 self.set(self._writable_.get())
-
 
 
 class WritableIntVar(IntVar, WritableVar):
@@ -280,7 +289,6 @@ class Expression(NamespaceWriteable):
                 return True
             else:
                 return False
-
 
 
 def resolve(val):

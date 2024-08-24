@@ -47,14 +47,16 @@ class ModularNamespace(ComponentNamespace):
         self.package = package
 
     def __getitem__(self, name: str):
-        if '.' in name:
+        if "." in name:
             try:
                 mod = self.package.__package__
             except AttributeError:
-                raise ValueError(f"{self.package} is not a package, does not have {name}") from None
+                raise ValueError(
+                    f"{self.package} is not a package, does not have {name}"
+                ) from None
             else:
-                mod_path, name = name.rsplit('.', 1)
-                mod = import_module(mod + '.' + mod_path)
+                mod_path, name = name.rsplit(".", 1)
+                mod = import_module(mod + "." + mod_path)
         else:
             mod = self.package
         try:
@@ -102,24 +104,32 @@ class _Component:
                 self.widget.pack()
             case ("grid", coord):
                 coord = resolve(coord)
-                grid_params = ('sticky',)
-                grid = {k: v for k, v in self._pos_params_.items() if k in grid_params}
+                grid_params = ("sticky",)
+                grid = {
+                    k: v
+                    for k, v in self._pos_params_.items()
+                    if k in grid_params
+                }
                 if len(coord) == 2:
                     (x, y) = coord
-                    grid['column'] = x
-                    grid['row'] = y
+                    grid["column"] = x
+                    grid["row"] = y
                 elif len(coord) == 4:
                     (x, y, xs, ys) = coord
-                    grid['column'] = x
-                    grid['row'] = y
-                    grid['columnspan'] = xs
-                    grid['rowspan'] = ys
+                    grid["column"] = x
+                    grid["row"] = y
+                    grid["columnspan"] = xs
+                    grid["rowspan"] = ys
                 else:
                     raise ValueError("wrong grid tuple", coord)
-                if 'xweight' in self._pos_params_:
-                    self.widget.master.columnconfigure(x, weight=int(self._pos_params_['xweight']))
-                if 'yweight' in self._pos_params_:
-                    self.widget.master.rowconfigure(y, weight=int(self._pos_params_['yweight']))
+                if "xweight" in self._pos_params_:
+                    self.widget.master.columnconfigure(
+                        x, weight=int(self._pos_params_["xweight"])
+                    )
+                if "yweight" in self._pos_params_:
+                    self.widget.master.rowconfigure(
+                        y, weight=int(self._pos_params_["yweight"])
+                    )
                 self.widget.grid(**grid)
             case wrong:
                 raise ValueError("unrecognised position tuple:", wrong)
@@ -133,7 +143,9 @@ class _Component:
             return
         params = {
             **{
-                self.conf_aliasses[k]: resolve(v) for k, v in vars(self.attrs).items() if k in self.conf_aliasses and v is not Nil
+                self.conf_aliasses[k]: resolve(v)
+                for k, v in vars(self.attrs).items()
+                if k in self.conf_aliasses and v is not Nil
             }
         }
         self.widget.configure(**params)
@@ -150,7 +162,9 @@ class _Component:
             if ":" in key:
                 st, name = key.split(":", 1)
                 if st == "bind":
-                    self.event_binds[name] = parser.evaluate_literal(value, self.namespace)
+                    self.event_binds[name] = parser.evaluate_literal(
+                        value, self.namespace
+                    )
                 elif st == "pos":
                     if name == "grid":
                         self._pos_ = (
@@ -158,7 +172,9 @@ class _Component:
                             parser.evaluate_literal(value, self.namespace),
                         )
                     else:
-                        self._pos_params_[name] = parser.evaluate_literal(value, self.namespace)
+                        self._pos_params_[name] = parser.evaluate_literal(
+                            value, self.namespace
+                        )
                 else:
                     raise ValueError(
                         f"Unrecognised special attribute type {st!r}"
@@ -175,7 +191,7 @@ class _Component:
             raise TypeError(
                 f"error while binding arguments to {self.__class__!r}",
                 e,
-                attrs,
+                self.attrs,
             ) from None
 
 
@@ -200,7 +216,7 @@ class EnumComponent(_Component):
         parent = parent or self.parent.widget
         self.render_parent = parent
         self.widgets = []
-        for (idx, val) in enumerate(self.object.get()):
+        for idx, val in enumerate(self.object.get()):
             aidx, aval = self.alias
             setattr(self.namespace, aidx, idx)
             setattr(self.namespace, aval, val)
@@ -231,6 +247,16 @@ class EnumComponent(_Component):
 class Component(_Component):
     _component_: _Component = None
     code: str = r"\frame"
+
+    @classmethod
+    def __init_subclass__(cls):
+        try:
+            cls._component_ = execute(cls.code, cls, ModularNamespace(builtin))
+        except:
+            pass
+
+    def init(self):
+        pass
 
     @annotate
     def __getitem__(self, item: str):
@@ -265,9 +291,11 @@ class Component(_Component):
         self._last_ = {
             k: v for k, v in vars(self).items() if not k.startswith("_")
         }
-        self._component_ = execute(
-            self.code, self, ModularNamespace(builtin)
-        )
+        self.init()
+        if not self._component_:
+            self._component_ = execute(
+                self.code, self, ModularNamespace(builtin)
+            )
 
     def render(self, master):
         return self._component_.create(master)
@@ -277,9 +305,7 @@ class Component(_Component):
         self._component_.update()
 
     def _watch_changes_(self):
-        state = {
-            k: v for k, v in vars(self).items() if not k.startswith("_")
-        }
+        state = {k: v for k, v in vars(self).items() if not k.startswith("_")}
         if state != self._last_:
             self._warn_subscribers_()
         self._last_ = state

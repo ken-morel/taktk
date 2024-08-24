@@ -10,6 +10,7 @@ r"""
             \button text={'mark done' if not todo.done else 'mark undone'} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
             \button text='remove' command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
 """
+
 from tkinter import Tk
 from taktk.component import Component
 from dataclasses import dataclass
@@ -18,7 +19,7 @@ from dataclasses import dataclass
 @dataclass
 class TodoItem:
     desc: str
-    done:bool = False
+    done: bool = False
 
 
 class Todo(Component):
@@ -31,7 +32,7 @@ class Todo(Component):
         root.destroy()
 
     def add_todo(self):
-        self.todos.append(TodoItem(desc=self['entry']))
+        self.todos.append(TodoItem(desc=self["entry"]))
         self.entry = ""
         self.update()
 
@@ -43,17 +44,19 @@ class Todo(Component):
         def func(*_):
             self.todos.pop(idx)
             self.update()
+
         return func
 
     def toggler(self, idx):
         def func(*_):
             self.todos[idx].done = not self.todos[idx].done
             self.update()
+
         return func
 
 
 root = Tk()
-root.title('Todo list')
+root.title("Todo list")
 
 editor = Todo()
 editor.render(root).grid(column=0, row=0)

@@ -83,6 +83,7 @@ class Create_Component(Instruction):
         self.computed = True
         return self.component
 
+
 @annotate
 class Enum_Component(Instruction):
     """
@@ -120,9 +121,12 @@ class Enum_Component(Instruction):
     def eval(self, namespace: "Component", component_space):
         from ..writeable import NamespaceWriteable
         from . import EnumComponent
+
         parent = self.parent
         self.component = EnumComponent(
-            parent=parent, namespace=namespace, object=NamespaceWriteable(namespace, self.object_name),
+            parent=parent,
+            namespace=namespace,
+            object=NamespaceWriteable(namespace, self.object_name),
             alias=self.alias,
         )
         return self.component
@@ -155,12 +159,12 @@ def execute(text, namespace, component_space):
             continue
         if indent == -1:
             indent = len(line) - len(line.lstrip())
-        if line.strip().startswith('#'):
+        if line.strip().startswith("#"):
             continue
         ind = len(line) - len(line.lstrip())
         if ind % indent != 0:
             raise ValueError("Unexpected indent", line)
-        ind  = ind // indent
+        ind = ind // indent
         if ind == last_ind:
             scope.pop()
         else:
@@ -168,7 +172,7 @@ def execute(text, namespace, component_space):
                 scope.pop()
                 last_ind -= 1
         instr = line.strip()
-        if instr[0] == '\\':
+        if instr[0] == "\\":
             scope.append(
                 Create_Component.next(
                     parser.State(line, ind * 2), parent=scope[-1]
