@@ -1,5 +1,0 @@
-button:
-  add: 'add +'
-  close: 'close >'
-label:
-  text: 'close the window'

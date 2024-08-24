@@ -1,5 +1,0 @@
-button:
-  add: 'ajouter +'
-  close: 'fermer >'
-label:
-  text: 'fermer la fenetre'

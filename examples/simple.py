@@ -11,10 +11,9 @@ class Comp(Component):
   \\frame pos:grid=0,1  padding=5 relief='sunken'
     \\label text={{number}} pos:grid=0,0
     \\ctk.button text='add +' command={add} pos:grid=1,0"""
-
     code = __doc__
 
-    label_text = "close the window"
+    label_text = 'close the window'
     number = 0
 
     def close(self):
@@ -22,7 +21,7 @@ class Comp(Component):
         print("closed")
 
     def add(self):
-        self["number"] += 1
+        self['number'] += 1
         self.update()
 
 

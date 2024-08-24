@@ -23,13 +23,11 @@ from pyoload import annotate
 from typing import Optional
 from dataclasses import dataclass
 from decimal import Decimal
-from ..writeable import NamespaceWriteable, Expression
-from ..dictionary import Translation
+from ..writeable import NamespaceWriteable
 
 
 SPACE: set = set(" ")
-VARNAME = set(string.ascii_letters + string.digits + "_")
-COMPONENT_NAME = VARNAME | set(".")
+COMPONENT_NAME = set(string.ascii_letters + string.digits + "_.")
 BRACKETS = dict(map(tuple, "(),[],{}".split(",")))
 STRING_QUOTES = set("\"'")
 INT = set(string.digits)
@@ -200,14 +198,6 @@ def next_value(_state: State) -> tuple[State, str, str]:
                 raise Exception(
                     f"unmatched {c!r} at {int(state)}: {state.text!r}"
                 )
-        elif ':' in state[...] and state[...][:(n := state[...].index(':'))].isalpha():
-            begin = state.copy()
-            state += n
-            while state:
-                if state[...][0].isspace():
-                    break
-                state += 1
-            return state, state.text[begin:state]
         elif len(brackets) == 0 and c.isspace():
             break
         state += 1
@@ -215,50 +205,7 @@ def next_value(_state: State) -> tuple[State, str, str]:
 
 
 @annotate
-def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
-    """
-    Gets next attribute value pair from `\\` character, may include alias
-    """
-    begin = _state.copy()
-    begin |= skip_spaces(begin)
-    state = begin.copy()
-    state += len("!enum ")
-    state |= skip_spaces(state)
-    b = state.copy()
-    while state:
-        if state[...][0] not in VARNAME:
-            if state[...][0] != ":":
-                raise Exception(
-                    "unrecognised symbol in after enum object name", state.text
-                )
-            break
-        state += 1
-    else:
-        raise Exception("unterminated enum first field", state.text)
-    obj = state.text[b:state]
-    state += 1
-    b = state.copy()
-    b += 1
-    nc = 0
-    while state:
-        if state[...][0] == ")":
-            break
-        elif state[...][0] == ",":
-            nc += 1
-            if nc > 1:
-                raise Exception(
-                    "too many fields after enum object", state.text
-                )
-        state += 1
-    else:
-        raise Exception("Unterminated enum second field", state.text)
-    alias = tuple(map(str.strip, state[b:state].split(",")))
-    return state, obj, alias
-
-
-@annotate
 def evaluate_literal(string: str, namespace: "Component"):
-    from ..media import get_media
     string_set = set(string)
     if len(string) > 1:
         b, *_, e = string
@@ -266,24 +213,16 @@ def evaluate_literal(string: str, namespace: "Component"):
         b, e = string, None
     else:
         raise ValueError("empty literal string")
-    if string == 'None':
-        return None
-    elif string == 'True':
-        return True
-    elif string == 'False':
-        return False
-    elif ':' in string and string[:string.index(':')].isalpha():
-        return get_media(string)
-    elif len(string_set - INT) == 0 and string.isnumeric():
+    if len(string_set - INT) == 0 and string.isnumeric():
         return int(string)
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
     elif b == "{" and e == "}":
         st = string[1:-1]
-        if len(st) >= 2 and st[0] == "{" and st[-1] == "}":
+        if len(st) >= 2 and st[0] == '{' and st[-1] == '}':
             return NamespaceWriteable(namespace, st[1:-1])
         else:
-            return Expression(namespace, st)
+            return eval(string[1:-1], {}, namespace)
     elif b in STRING_QUOTES:
         if e == b:
             return string[1:-1]
@@ -292,7 +231,100 @@ def evaluate_literal(string: str, namespace: "Component"):
     elif string[0] == string[-1] == "/":
         return Path(os.path.expandvars(string[1:-1]))
     elif string[0] == "[" and string[-1] == "]":
-        return Translation(string[1:-1])
+        if string == "[]":
+            return list()
+        elif string == "[-]":
+            return dict()
+        elif (
+            string.startswith("[-") and len(string) > 2 and string[2].isalpha()
+        ):
+            kwargs = {}
+            last_key = None
+            ipos = 1
+            while ipos < len(string):
+                self.stacktrace.add(
+                    ipos + 1, len(string), 1, string, "<argument>"
+                )
+                lit, idx = _Parser.next_key(string, ipos)  # try get a key
+                if lit is not None:  # found key
+                    last_key = lit[1:]
+                    kwargs[last_key] = Nil
+                else:
+                    try:
+                        lit, idx = _Parser.next_literal(string, ipos)
+                    except _Parser.WrongLiteral as wl:
+                        msg, text, begin, ipos, end = wl.params
+                        self.stacktrace.add(ipos, end, 1, text, "<key value>")
+                        raise ShellsyException(
+                            msg,
+                            self.stacktrace,
+                        ) from wl
+                    else:
+                        if lit is not None:
+                            try:
+                                val = self.evaluate_literal(
+                                    lit, idx - len(lit), string
+                                )
+                            except WrongLiteral as e:
+                                stack = e.stack()
+                                if stack.xpos[0] != 0:
+                                    self.stacktrace.pop()
+                                    self.stacktrace.add_stack(e.stack())
+                                raise ShellsyException(
+                                    e.msg,
+                                    self.stacktrace,
+                                ) from e
+                            if last_key is not None:
+                                kwargs[last_key] = val
+                                last_key = None
+                            else:
+                                raise ShellsyException(
+                                    "non key preceeded value in "
+                                    "dictionnary",
+                                    self.stacktrace,
+                                )
+                        else:
+                            break
+                ipos = idx
+                self.stacktrace.pop()
+            return kwargs
+        else:
+            args = []
+            ipos = 1
+            while ipos < len(string):
+                self.stacktrace.add(
+                    ipos + 1, len(string), 1, string, "<argument>"
+                )
+                try:
+                    lit, idx = _Parser.next_literal(string, ipos)
+                except _Parser.WrongLiteral as wl:
+                    msg, text, begin, ipos, end = wl.params
+                    self.stacktrace.add(ipos, end, 1, text, "<key value>")
+                    raise ShellsyException(
+                        msg,
+                        self.stacktrace,
+                    ) from wl
+                else:
+                    if lit is not None:
+                        try:
+                            val = self.evaluate_literal(
+                                lit, idx - len(lit), string
+                            )
+                        except WrongLiteral as e:
+                            stack = e.stack()
+                            if stack.xpos[0] != 0:
+                                self.stacktrace.pop()
+                                self.stacktrace.add_stack(e.stack())
+                            raise ShellsyException(
+                                e.msg,
+                                self.stacktrace,
+                            ) from e
+                        args.append(val)
+                    else:
+                        break
+                ipos = idx
+                self.stacktrace.pop()
+            return args
     elif ":" in string and len(string_set - (NUMBER | SLICE)) == 0:
         if len(d := (string_set - SLICE)) > 0:
             idx = pos + min(string.index(t) for t in d)
