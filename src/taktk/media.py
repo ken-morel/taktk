@@ -1,14 +1,14 @@
 import PIL.Image
 import PIL.ImageTk
 from functools import cached_property
-
+from pathlib import Path
 
 MEDIA_DIR = None
 
 
 def get_media(spec):
     assert spec.count(':') == 1, "media spec should include ':'"
-    match tuple(spec.slit(':', 1)):
+    match tuple(spec.split(':', 1)):
         case ('img', path):
             return Image(path)
         case wrong:
@@ -23,7 +23,7 @@ class Image(Resource):
     def image(self):
         if MEDIA_DIR is None:
             raise RuntimeError("Media directory not set")
-        return PIL.Image.open(MEDIA_DIR / self.path)
+        return PIL.Image.open(MEDIA_DIR / 'img' / self.path)
 
     @cached_property
     def tk(self):

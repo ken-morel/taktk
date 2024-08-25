@@ -7,6 +7,7 @@ class Application:
     fallback_language = 'English'
     params = {}
     menu = None
+    layout = None
 
     def __init__(self):
         import taktk
@@ -34,7 +35,12 @@ class Application:
         self.root = root = Window(**self.params)
         if self.menu is not None:
             self.menu.toplevel(root)
-        return root
+        if self.Layout is not None:
+            self.layout = self.Layout(self)
+            self.layout.cre
+            return self.layout.outlet.widget
+        else:
+            return root
 
     def run(self, entry="/"):
         self.setup_taktk()
