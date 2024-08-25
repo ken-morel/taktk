@@ -19,8 +19,7 @@ def parse_media_spec(spec):
 def parse_media_spec_props(props):
     from .component.parser import evaluate_literal
     props = props.split(';')
-    print(props)
-    return {x.split(':')[0]: evaluate_literal(x.split(':')[1].strip(), None) for x in props}
+    return {x.split(':')[0]: evaluate_literal(x.split(':')[1].strip(), None) for x in props if x.strip()}
 
 
 def get_media(spec):

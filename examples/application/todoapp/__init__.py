@@ -56,9 +56,9 @@ class Application(Application):
     class Layout(Component):
         r"""
         \frame
-            \frame padding=20 weight:y='1:10' weight:x='1:10' pos:grid=0,0 pos:sticky='nsew'
-                \button command={back}    image=img:backward{width: 10} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
-                \button command={forward} image=img:forward{width: 10}  pos:grid=2,0 pos:sticky='e' bootstyle='dark outline'
+            \frame padding=5 weight:y='1:10' weight:x='1:10' pos:grid=0,0 pos:sticky='nsew'
+                \button command={back}    image=img:backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
+                \button command={forward} image=img:forward{width: 20}  pos:grid=2,0 pos:sticky='e' bootstyle='dark outline'
             \frame:outlet pos:grid=0,1
         """
         code = __doc__
