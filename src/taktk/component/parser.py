@@ -203,8 +203,24 @@ def next_value(_state: State) -> tuple[State, str, str]:
         elif ':' in state[...] and state[...][:(n := state[...].index(':'))].isalpha():
             begin = state.copy()
             state += n
+            bc = 0
             while state:
-                if state[...][0].isspace():
+                if state[...][0] == '{':
+                    bc += 1
+                elif state[...][0] == '}':
+                    bc -= 1
+                elif (quote := state[...][0]) in STRING_QUOTES:
+                    state += 1
+                    while state:
+                        if state[...][0] == quote:
+                            break
+                        elif state[...][0] == "\\":
+                            state += 2
+                        else:
+                            state += 1
+                    else:
+                        raise Exception("unterminated string in:", repr(state.text))
+                elif state[...][0].isspace() and bc == 0:
                     break
                 state += 1
             return state, state.text[begin:state]
@@ -257,7 +273,7 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
 
 
 @annotate
-def evaluate_literal(string: str, namespace: "Component"):
+def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
     from ..media import get_media
     string_set = set(string)
     if len(string) > 1:
@@ -279,6 +295,8 @@ def evaluate_literal(string: str, namespace: "Component"):
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
     elif b == "{" and e == "}":
+        if namespace is None:
+            raise ValueError('Unallowed Writeable in none namespaced context', string)
         st = string[1:-1]
         if len(st) >= 2 and st[0] == "{" and st[-1] == "}":
             return NamespaceWriteable(namespace, st[1:-1])

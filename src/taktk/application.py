@@ -37,7 +37,7 @@ class Application:
             self.menu.toplevel(root)
         if self.Layout is not None:
             self.layout = self.Layout(self)
-            self.layout.cre
+            self.layout.render(root).grid(column=0, row=0, sticky='nsew')
             return self.layout.outlet.widget
         else:
             return root
