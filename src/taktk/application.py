@@ -80,11 +80,13 @@ class PageView:
             self.current_page = 0
         else:
             self.current_page += 1
-        if self.current_widget is not None:
-            self.current_widget.destroy()
+        current = self.current_widget
         self.history.insert(self.current_page, component)
         self.current_widget = component.render(self.parent)
         self.current_widget.grid(column=0, row=0, sticky="nsew")
+        if current is not None:
+            # current.destroy()
+            pass
 
     def back(self):
         if self.current_page > 0:
