@@ -1,16 +1,33 @@
 import PIL.Image
 import PIL.ImageTk
 from functools import cached_property
-
+from pathlib import Path
 
 MEDIA_DIR = None
 
 
+def parse_media_spec(spec):
+    if '{' in spec:
+        assert '}' in spec, f"Unterminated spec {spec}"
+        b = spec.index('{')
+        e = spec.index('}')
+        return spec[:b], parse_media_spec_props(spec[b + 1:e])
+    else:
+        return spec, {}
+
+
+def parse_media_spec_props(props):
+    from .component.parser import evaluate_literal
+    props = props.split(';')
+    return {x.split(':')[0]: evaluate_literal(x.split(':')[1].strip(), None) for x in props if x.strip()}
+
+
 def get_media(spec):
-    assert spec.count(':') == 1, "media spec should include ':'"
-    match tuple(spec.slit(':', 1)):
+    spec, props = parse_media_spec(spec)
+    assert (n := spec.count(':')) == 1, f"media spec should include one ':', has: {n}"
+    match tuple(spec.split(':', 1)):
         case ('img', path):
-            return Image(path)
+            return Image(path, props)
         case wrong:
             raise ValueError(f'Unrecognised media {spec!r}')
 
@@ -23,7 +40,16 @@ class Image(Resource):
     def image(self):
         if MEDIA_DIR is None:
             raise RuntimeError("Media directory not set")
-        return PIL.Image.open(MEDIA_DIR / self.path)
+        image = PIL.Image.open(MEDIA_DIR / 'img' / self.path)
+        iw, ih = image.size
+        width, height = self.props.get('width'), self.props.get('height')
+        if width == height == None:
+            return image
+        elif width is None:
+            width = height / ih * iw
+        elif height is None:
+            height = width / iw * ih
+        return image.resize((int(width), int(height)))
 
     @cached_property
     def tk(self):
@@ -32,7 +58,8 @@ class Image(Resource):
     def get(self):
         return self.tk
 
-    def __init__(self, path):
+    def __init__(self, path, props):
         if not '.' in path:
             path += '.png'
         self.path = path
+        self.props = props

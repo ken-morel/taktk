@@ -5,6 +5,9 @@ from taktk.media import get_media
 from taktk.component import Component
 from . import pages
 from pathlib import Path
+from taktk.component import Component
+
+from taktk.notification import Notification
 
 DIR = Path(__file__).parent
 
@@ -25,26 +28,41 @@ class Application(Application):
     params = dict(
         themename="darkly",
     )
+    destroy_cache = 1
     menu = Menu({
-        'file': {
-            'open': lambda: None,
-            'recent': {
+        '@file': {
+            '@open': lambda: None,
+            '@recent': {
                 f: opener_file(f) for f in recent_files
             },
             '!sep': None,
-            'quit': exit,
+            '$menu.quit': exit,
         },
-        'preferences': {
-            'language': [],
+        '@preferences': {
+            '@language': [],
         },
-        'quit': exit,
-    })
+        '@quit': exit,
+    },
+    translations = 'menu',
+)
 
-    class NavBar(Component):
+    def init(self):
+        self.menu['preferences.language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
+
+    def back(self):
+        self.view.back()
+
+    def forward(self):
+        self.view.forward()
+
+
+    class Layout(Component):
         r"""
-        \frame padding=20 weight:y='1:10' weight:x='1:10'
-            \button command={back} text=[nav.back] bootstyle='dark' pos:grid=0,0 pos:sticky='w'
-            \button command={forward} text=[nav.next] bootstyle='dark' pos:grid=2,0 pos:sticky='w'
+        \frame
+            \frame padding=5 weight:y='1:10' weight:x='1:10' pos:grid=0,0 pos:sticky='nsew'
+                \button command={back}    image=img:backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
+                \button command={forward} image=img:forward{width: 20}  pos:grid=2,0 pos:sticky='e' bootstyle='dark outline'
+            \frame:outlet pos:grid=0,1
         """
         code = __doc__
 
@@ -58,23 +76,5 @@ class Application(Application):
         def forward(self):
             self.app.forward()
 
-    def create(self):
-        from ttkbootstrap import Frame, Button
-
-        container = super().create()
-        root = self.root
-        root.minsize(400, 500)
-        nav = self.NavBar(self)
-        nav.render(container).grid(column=0, row=0, sticky="nsew")
-        frm = Frame(container)
-        frm.grid(column=0, row=1)
-        return frm
-
-    def init(self):
-        self.menu['preferences.language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
-
-    def back(self):
-        self.view.back()
-
-    def forward(self):
-        self.view.forward()
+    def handle():
+        return Layout()

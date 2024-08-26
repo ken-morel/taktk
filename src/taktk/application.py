@@ -7,6 +7,8 @@ class Application:
     fallback_language = 'English'
     params = {}
     menu = None
+    layout = None
+    destroy_cache: int = 5
 
     def __init__(self):
         import taktk
@@ -34,13 +36,18 @@ class Application:
         self.root = root = Window(**self.params)
         if self.menu is not None:
             self.menu.toplevel(root)
-        return root
+        if self.Layout is not None:
+            self.layout = self.Layout(self)
+            self.layout.render(root).grid(column=0, row=0, sticky='nsew')
+            return self.layout.outlet.widget
+        else:
+            return root
 
     def run(self, entry="/"):
         self.setup_taktk()
         root = self.create()
         self.init()
-        self.view = PageView(root, self.commander)
+        self.view = PageView(root, self.commander, self, self.destroy_cache)
         self.view.geometry()
         self.view.url(entry)
         self.root.mainloop()
@@ -53,12 +60,15 @@ class Application:
 
 
 class PageView:
-    def __init__(self, parent, commander):
+
+    def __init__(self, parent, commander, app, destroy_cache: int = 5):
         self.history = []
         self.current_page = None
         self.parent = parent
         self.commander = commander
         self.current_widget = None
+        self.app = app
+        self.destroy_cache = destroy_cache
 
     def geometry(self):
         self.parent.columnconfigure(0, weight=1)
@@ -74,11 +84,17 @@ class PageView:
             self.current_page = 0
         else:
             self.current_page += 1
-        if self.current_widget is not None:
-            self.current_widget.destroy()
+        current = self.current_widget
         self.history.insert(self.current_page, component)
         self.current_widget = component.render(self.parent)
         self.current_widget.grid(column=0, row=0, sticky="nsew")
+        if current is not None:
+            self.destroy_later(current)
+
+    def destroy_later(self, widget, cache=[]):
+        cache.append(widget)
+        if len(cache) > self.destroy_cache:
+            cache.pop(0).destroy()
 
     def back(self):
         if self.current_page > 0:

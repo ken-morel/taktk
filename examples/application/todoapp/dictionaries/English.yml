@@ -19,3 +19,14 @@ pages:
 nav:
   back: < back
   next: next >
+menu:
+  file:
+    __label__: File
+    open: Open
+    recent:
+      __label__: Recent
+  quit: Quit
+  preferences:
+    __label__: Preferences
+    language: Language
+

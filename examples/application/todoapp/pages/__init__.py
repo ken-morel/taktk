@@ -16,7 +16,6 @@ class Index(Component):
 
     def gt_next(self):
         import taktk
-
         taktk.application("todos")
 
 
