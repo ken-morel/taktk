@@ -16,7 +16,7 @@ class Menu:
         menubar = ttkMenu()
         Menu.build_submenus(menubar, self.eval_structure())
         self.menu = menubar
-        self.menu_structure = self.eval_structure()
+        self.menu_structure = self._last = self.eval_structure()
         return menubar
 
     @classmethod
@@ -27,9 +27,8 @@ class Menu:
             try:
                 idx, name = label
             except ValueError:
-                print(label)
                 continue
-            if isinstance(name, Translation):
+            if isinstance(name, (Writeable, Translation)):
                 name = name.get()
             if callable(contents):  # it is a command
                 menu.add_command(label=name, command=contents)
@@ -43,6 +42,8 @@ class Menu:
                     menu.add_checkbutton(label=name, variable=contents.booleanvar)
             elif name == '!sep':
                 menu.add_separator()
+            else:
+                raise ValueError(f"wrong menu dict field: {label!r}:{contents!r}",)
 
     def post(self, xpos, ypos):
         if self.menu_structure != self.eval_structure():
@@ -56,13 +57,13 @@ class Menu:
 
     def __getitem__(self, item):
         obj = self.structure
-        for x in item.split('.'):
+        for x in item.split('/'):
             obj = obj[x]
         return obj
 
     def __setitem__(self, item, val):
         obj = self.structure
-        *path, item = item.split('.')
+        *path, item = item.split('/')
         for x in path:
             if x in obj:
                 obj = obj[x]
@@ -90,13 +91,17 @@ class Menu:
                 menu_trans = child_name
                 if child_name.startswith('@'):  #alias translation
                     menu_trans = child_name[1:]
+                    absolute = menu_trans.startswith('/')
+                    if absolute:
+                        menu_trans = menu_trans[1:]
                     try:
+                        basename = (menu_trans if absolute else f'{alias}.{menu_trans}')
                         try:
-                            name = _(alias + f'.{menu_trans}.__label__')
+                            name = _(f'{basename}.__label__')
                         except NameError:
                             name = 'Not Found'
                         except:
-                            name = _(alias + f'.{menu_trans}')
+                            name = _(basename)
                     except:
                         name = "Not found"
                 else:

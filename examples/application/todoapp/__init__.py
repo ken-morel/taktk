@@ -36,10 +36,10 @@ class Application(Application):
                 f: opener_file(f) for f in recent_files
             },
             '!sep': None,
-            '$menu.quit': exit,
+            '@/menu.quit': exit,
         },
         '@preferences': {
-            '@language': [],
+            '@language': {},
         },
         '@quit': exit,
     },
@@ -47,7 +47,8 @@ class Application(Application):
 )
 
     def init(self):
-        self.menu['preferences.language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
+        self.menu['@preferences/@language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
+        self.menu.update()
 
     def back(self):
         self.view.back()
