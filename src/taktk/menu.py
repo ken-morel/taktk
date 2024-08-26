@@ -5,24 +5,30 @@ class Menu:
     menu = None
     menu_structure = None
 
-    def __init__(self, structure):
+    def __init__(self, structure, translations='menu'):
         from .dictionary import Dictionary
         Dictionary.subscribe(self.update)
         self.structure = structure
-        self._last = structure.copy()
+        self.translations = translations
+        self._last = None  # self.eval_structure()
 
     def create(self):
         menubar = ttkMenu()
-        Menu.build_submenus(menubar, self.structure)
+        Menu.build_submenus(menubar, self.eval_structure())
         self.menu = menubar
-        self.menu_structure = self.structure.copy()
+        self.menu_structure = self.eval_structure()
         return menubar
 
     @classmethod
     def build_submenus(cls, menu, structure):
         from .writeable import Writeable
         from .dictionary import Translation
-        for name, contents in structure.items():
+        for label, contents in structure.items():
+            try:
+                idx, name = label
+            except ValueError:
+                print(label)
+                continue
             if isinstance(name, Translation):
                 name = name.get()
             if callable(contents):  # it is a command
@@ -39,12 +45,12 @@ class Menu:
                 menu.add_separator()
 
     def post(self, xpos, ypos):
-        if not self.menu_structure == self.structure:
+        if self.menu_structure != self.eval_structure():
             self.create()
         self.menu.post(xpos, ypos)
 
     def toplevel(self, root):
-        if not self.menu_structure == self.structure:
+        if self.menu_structure != self.eval_structure():
             self.create()
         root['menu'] = self.menu
 
@@ -69,6 +75,39 @@ class Menu:
         return val
 
     def update(self):
-        for k in self._last:
-            self.menu.delete(k)
-        self.build_submenus(self.menu, self.structure)
+        if self._last is not None:
+            for (idx, k) in self._last:
+                try:
+                    self.menu.delete(k)
+                except:
+                    pass
+            self.build_submenus(self.menu, self.eval_structure())
+
+    def eval_structure(self):
+        def build_sub(alias, structure):
+            ret = {}
+            for child_name, child_contents in structure.items():
+                menu_trans = child_name
+                if child_name.startswith('@'):  #alias translation
+                    menu_trans = child_name[1:]
+                    try:
+                        try:
+                            name = _(alias + f'.{menu_trans}.__label__')
+                        except NameError:
+                            name = 'Not Found'
+                        except:
+                            name = _(alias + f'.{menu_trans}')
+                    except:
+                        name = "Not found"
+                else:
+                    name = child_name
+                if '&' in name:
+                    name = name.index('&'), name.replace('&', '')
+                else:
+                    name = (None, name)
+                if isinstance(child_contents, dict):
+                    ret[name] = build_sub(alias + f'.{menu_trans}', child_contents)
+                else:
+                    ret[name] = child_contents
+            return ret
+        return build_sub(self.translations, self.structure)

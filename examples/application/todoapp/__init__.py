@@ -30,19 +30,21 @@ class Application(Application):
     )
     destroy_cache = 1
     menu = Menu({
-        'file': {
-            'open': lambda: None,
-            'recent': {
+        '@file': {
+            '@open': lambda: None,
+            '@recent': {
                 f: opener_file(f) for f in recent_files
             },
             '!sep': None,
-            'quit': exit,
+            '$menu.quit': exit,
         },
-        'preferences': {
-            'language': [],
+        '@preferences': {
+            '@language': [],
         },
-        'quit': exit,
-    })
+        '@quit': exit,
+    },
+    translations = 'menu',
+)
 
     def init(self):
         self.menu['preferences.language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
