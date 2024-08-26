@@ -5,14 +5,16 @@ r"""
         \button text='+' command={add_todo} pos:grid=1,0 pos:sticky='nse'
     \frame pos:grid=0,1 pos:sticky='nsew'
         !enum todos:(idx, todo)
-            \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(idx)}
+            \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(idx)} bind:3={popup_menu(idx)}
             \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
             \button text=[pages.todos.remove] command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
 """
 
 from taktk.component import Component
 from taktk.notification import Notification
+from taktk.menu import Menu
 from dataclasses import dataclass
+from functools import cache
 
 
 @dataclass
@@ -65,6 +67,17 @@ class Todo(Component):
 
         return func
 
+    def popup_menu(self, idx):
+        menu = Menu({
+            'toggle done': self.toggler(idx),
+            'remove': self.popper(idx),
+        })
+        def func(e):
+            menu.post(e.x_root, e.y_root)
 
+        return func
+
+
+@cache
 def handle():
     return Todo()

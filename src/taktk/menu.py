@@ -6,6 +6,8 @@ class Menu:
     menu_structure = None
 
     def __init__(self, structure):
+        from .dictionary import Dictionary
+        Dictionary.subscribe(self.update)
         self.structure = structure
         self._last = structure.copy()
 
@@ -19,7 +21,10 @@ class Menu:
     @classmethod
     def build_submenus(cls, menu, structure):
         from .writeable import Writeable
+        from .dictionary import Translation
         for name, contents in structure.items():
+            if isinstance(name, Translation):
+                name = name.get()
             if callable(contents):  # it is a command
                 menu.add_command(label=name, command=contents)
             elif isinstance(contents, dict):  # a submenu
@@ -36,7 +41,7 @@ class Menu:
     def post(self, xpos, ypos):
         if not self.menu_structure == self.structure:
             self.create()
-        self.menu.post((xpos, ypos))
+        self.menu.post(xpos, ypos)
 
     def toplevel(self, root):
         if not self.menu_structure == self.structure:

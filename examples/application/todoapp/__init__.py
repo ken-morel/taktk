@@ -28,6 +28,7 @@ class Application(Application):
     params = dict(
         themename="darkly",
     )
+    destroy_cache = 1
     menu = Menu({
         'file': {
             'open': lambda: None,
