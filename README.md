@@ -5,9 +5,38 @@ _tak_, meaning to order, and _tk_ for `tkinter`.
 
 taktk aims to give you a more orderly, easy and responsive way to build tkinter
 pages.
-It is currently in build(since last 2 days), but I will expose on what it can
-do now.
 
+Taktk adds new functions permitting you to build better applications including
+
+## simple component syntax
+
+taktk brings in components renderable in tkinter widgets,
+
+```latex
+\frame padding=20
+    \frame pos:grid=0,0 pos:sticky='nsew'
+        \entry width=80 pos:grid=0,0 text={{entry}} pos:sticky='nsw' bind:Key-Return={add_todo}
+        \button text='+' command={add_todo} pos:grid=1,0 pos:sticky='nse'
+    \frame pos:grid=0,1 pos:sticky='nsew'
+        !enum todos:(idx, todo)
+            \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(idx)} bind:3={popup_menu(idx)}
+            \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
+            \button text=[pages.todos.remove] command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
+```
+
+## text translation support
+
+Using yaml and taktk dictionaries, easily build apps available in different languages
+
+![](images/montage.png)
+
+
+## styled notifications
+
+
+
+
+# examples
 ## hello world example
 
 Here the example in [examples/simple.py](examples/simple.py)
@@ -53,57 +82,3 @@ root.mainloop()
 > [!WARNING]
 > The component building language is still in development and may be extremely
 > strict
-
-
-## Example 2: A todo list
-
-```python
-r"""
-\frame
-    \ctk.frame pos:grid=0,0 width=350 pos:sticky='nsew'
-        \ctk.entry width=300 pos:grid=0,0 text={{entry}} pos:xweight=2
-        \button text='+' command={add_todo} pos:grid=1,0 pos:xweight=0
-    \ctk.frame pos:grid=0,1 width=350 pos:sticky='nsew'
-        !enum todos:(i, todo)
-            \ctk.label text={str(i + 1) + ') ' + todo } pos:grid={(0, i)} pos:sticky='nsw' bind:1={popper(i)}
-            # popper closure does popping for you
-"""
-from tkinter import Tk
-from taktk.component import Component
-
-
-class Todo(Component):
-    code = __doc__
-
-    todos = []
-    entry = "Enter todo here"
-
-    def close(self):
-        root.destroy()
-
-    def add_todo(self):
-        self.todos.append(self['entry'])
-        self.entry = ""
-        self.update()
-
-    def clear(self):
-        self.todos.clear()
-        self.update()
-
-    def popper(self, idx):
-        def func(e):
-            self.todos.pop(idx)
-            self.update()
-        return func
-
-
-root = Tk()
-root.title('Todo list')
-
-editor = Todo()
-editor.render(root).grid(column=0, row=0)
-
-root.mainloop()
-```
-
-![demo](images/example-todo.png)

@@ -282,6 +282,12 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
         b, e = string, None
     else:
         raise ValueError("empty literal string")
+    if string[0] == '!':
+        auto_eval = True
+        aes_string = string[1:]
+    else:
+        auto_eval = False
+        aes_string = string
     if string == 'None':
         return None
     elif string == 'True':
@@ -294,14 +300,20 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
         return int(string)
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
-    elif b == "{" and e == "}":
+    elif len(aes_string) > 2 and aes_string[0] == "{" and aes_string[-1] == "}":
         if namespace is None:
             raise ValueError('Unallowed Writeable in none namespaced context', string)
-        st = string[1:-1]
+        st = aes_string[1:-1]
         if len(st) >= 2 and st[0] == "{" and st[-1] == "}":
-            return NamespaceWriteable(namespace, st[1:-1])
+            if auto_eval:
+                return NamespaceWriteable(namespace, st[1:-1]).get()
+            else:
+                return NamespaceWriteable(namespace, st[1:-1])
         else:
-            return Expression(namespace, st)
+            if auto_eval:
+                return Expression(namespace, st).get()
+            else:
+                return Expression(namespace, st)
     elif b in STRING_QUOTES:
         if e == b:
             return string[1:-1]

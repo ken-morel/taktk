@@ -33,10 +33,10 @@ Nil = NilType()
 
 
 def resolve(value):
-    from .media import Resource
+    from .media import Resource, Image
     from .writeable import Writeable
 
-    if isinstance(value, (Resource, Writeable)):
+    if isinstance(value, Resource | Writeable):
         return value.get()
     else:
         return value

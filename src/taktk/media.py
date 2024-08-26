@@ -27,7 +27,10 @@ def get_media(spec):
     assert (n := spec.count(':')) == 1, f"media spec should include one ':', has: {n}"
     match tuple(spec.split(':', 1)):
         case ('img', path):
-            return Image(path, props)
+            if path[0] == '@':
+                return MediaImage(path[1:], props)
+            else:
+                return Image(path, props)
         case wrong:
             raise ValueError(f'Unrecognised media {spec!r}')
 
@@ -35,7 +38,37 @@ def get_media(spec):
 class Resource:
     pass
 
+
 class Image(Resource):
+    @cached_property
+    def image(self):
+        image = PIL.Image.open(self.path)
+        iw, ih = image.size
+        width, height = self.props.get('width'), self.props.get('height')
+        if width == height == None:
+            return image
+        elif width is None:
+            width = height / ih * iw
+        elif height is None:
+            height = width / iw * ih
+        return image.resize((int(width), int(height)))
+
+    @cached_property
+    def tk(self):
+        return PIL.ImageTk.PhotoImage(self.image)
+
+    def get(self):
+        print(self, self.tk)
+        return self.tk
+
+    def __init__(self, path, props):
+        if not '.' in path:
+            path += '.png'
+        self.path = path
+        self.props = props
+
+
+class MediaImage(Resource):
     @cached_property
     def image(self):
         if MEDIA_DIR is None:

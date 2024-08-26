@@ -23,6 +23,12 @@
             "cmd": ["py", "-3.12", "$project_path/examples/application/main.py"],
             "working_dir": "$project_path/examples/locale",
         },
+        {
+            "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+            "name": "Taktk notify",
+            "cmd": ["py", "-3.12", "$project_path/examples/notify.py"],
+            "working_dir": "$project_path/images",
+        },
     ],
     "settings": {
         "python_interpreter": "$VIRTUAL_ENV/Scripts/python.exe",
