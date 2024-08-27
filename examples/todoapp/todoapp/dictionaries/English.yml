@@ -1,0 +1,36 @@
+pages:
+  index:
+    welcome: |
+      Good day!, welcome to this test page. This program is just to demonstrate
+      most of the features offered by taktk.
+      taktk, from from the work 'tak', meaning to order, and tk for tkinter
+      for that it does, serves you in writting more organized, simple and
+      readable code using sort of markup.
+      The component language though it's appearance actually interpretes to
+      python instructions telling taktk how to build the component.
+      It is still in development, and I will be happy to hear of you issues
+      at https://github.com/ken-morel/taktk/issues
+    next: Go to dashboard >
+  todos:
+    placeholder: Enter you todo her please
+    mark-done: Mark as done
+    mark-undone: Mark undone
+    remove: &todosRm Remove
+    menu:
+      toggle: Toggle done
+      remove: *todosRm
+      edit: edit
+nav:
+  back: < back
+  next: next >
+menu:
+  file:
+    __label__: File
+    open: Open
+    recent:
+      __label__: Recent
+  quit: Quit
+  preferences:
+    __label__: Preferences
+    language: Language
+
