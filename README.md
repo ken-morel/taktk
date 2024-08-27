@@ -1,3 +1,8 @@
+
+<p style="text-align: center;">
+  <a href="https://taktk.readthedocs.io">docs</a>|<a href="https://github.com/ken-morel/taktk">github</a>
+</p>
+
 # taktk
 
 taktk from from the [bulu](https://wikipedia.com/wiki/bulu) word
@@ -33,7 +38,42 @@ Using yaml and taktk dictionaries, easily build apps available in different lang
 
 ## styled notifications
 
+#todo: add animated image, search app for that..
 
+# menus
+
+easily build and update menus from a dictionnary using `taktk.menu.Menu`
+and add translation aliasses from your dictionnary.
+
+```python
+menu = Menu({
+    '@file': {
+        '@open': lambda: None,
+            '@recent': {
+                f: opener_file(f) for f in recent_files
+            },
+            '!sep': None,
+            '@/menu.quit': exit,
+        },
+        '@preferences': {
+            '@language': {},
+        },
+        '@quit': exit,
+        'taktk': show_info,
+        'github': open_gh,
+    },
+    translations = 'menu',
+)
+
+def init(self):
+    menu['@preferences/@language'] = {l: self.dictionaries.get(l).install for l in self.dictionaries.languages}
+    menu.update()
+```
+
+# custom components
+
+Build custom components in your tkinter apps making them more flexible,
+and automatic data binding
 
 
 # examples
@@ -82,3 +122,5 @@ root.mainloop()
 > [!WARNING]
 > The component building language is still in development and may be extremely
 > strict
+
+

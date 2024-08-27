@@ -94,6 +94,8 @@ class button(_Component):
         bg: str = Nil
         image: Image | TkImage = Nil
         compound: str = Nil
+        background: str = Nil
+        foreground: str = Nil
 
     same = [x for x in dir(attrs) if not x.startswith("_")]
     conf_aliasses = {
