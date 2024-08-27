@@ -97,15 +97,11 @@ class _Component:
 
     def _position_(self):
         if "xweights" in self._pos_params_:
-            for col, weight in self._pos_params_['xweights'].items():
-                self.widget.columnconfigure(
-                    col, weight=weight
-                )
+            for col, weight in self._pos_params_["xweights"].items():
+                self.widget.columnconfigure(col, weight=weight)
         if "yweights" in self._pos_params_:
-            for row, weight in self._pos_params_['yweights'].items():
-                self.widget.rowconfigure(
-                    row, weight=weight
-                )
+            for row, weight in self._pos_params_["yweights"].items():
+                self.widget.rowconfigure(row, weight=weight)
 
         pos = self._pos_
         if pos is None:
@@ -186,24 +182,28 @@ class _Component:
                         self._pos_params_[name] = parser.evaluate_literal(
                             value, self.namespace
                         )
-                elif st == 'weight':
-                    value = parser.evaluate_literal(
-                        value, self.namespace
-                    )
-                    if name == 'x':
+                elif st == "weight":
+                    value = parser.evaluate_literal(value, self.namespace)
+                    if name == "x":
                         xweights = {}
-                        for x in value.split(','):
-                            i, w = map(lambda s: int(s.strip()), x.strip().split(':'))
+                        for x in value.split(","):
+                            i, w = map(
+                                lambda s: int(s.strip()), x.strip().split(":")
+                            )
                             xweights[i] = w
-                        self._pos_params_['xweights'] = xweights
-                    elif name == 'y':
+                        self._pos_params_["xweights"] = xweights
+                    elif name == "y":
                         yweights = {}
-                        for x in value.split(','):
-                            i, w = map(lambda s: int(s.strip()), x.strip().split(':'))
+                        for x in value.split(","):
+                            i, w = map(
+                                lambda s: int(s.strip()), x.strip().split(":")
+                            )
                             yweights[i] = w
-                        self._pos_params_['yweights'] = yweights
+                        self._pos_params_["yweights"] = yweights
                     else:
-                        raise ValueError(f'Wrong weight direction: {name!r}, should be x or y')
+                        raise ValueError(
+                            f"Wrong weight direction: {name!r}, should be x or y"
+                        )
                 else:
                     raise ValueError(
                         f"Unrecognised special attribute type {st!r}"
@@ -272,9 +272,13 @@ class EnumComponent(_Component):
             del widget
 
 
+from .instructions import execute, Instruction
+
+
 @annotate
 class Component(_Component):
     _component_: _Component = None
+    _instructions_: Instruction = None
     code: str = r"\frame"
 
     @classmethod
@@ -312,19 +316,19 @@ class Component(_Component):
         for subscriber in self._subscribers_:
             subscriber()
 
-    def __init__(self, parent: "Optional[object]" = None):
+    def __init__(self):
         from . import builtin
 
-        self._parent_ = parent
         self._subscribers_ = set()
         self._last_ = {
             k: v for k, v in vars(self).items() if not k.startswith("_")
         }
         self.init()
         if not self._component_:
-            self._component_ = execute(
-                self.code, self, ModularNamespace(builtin)
+            self._instructions_ = execute(
+                self.code
             )
+            self._component_ = self._instructions_.eval(self, ModularNamespace(builtin))
 
     def render(self, master):
         return self._component_.create(master)
@@ -339,5 +343,3 @@ class Component(_Component):
             self._warn_subscribers_()
         self._last_ = state
 
-
-from .instructions import execute

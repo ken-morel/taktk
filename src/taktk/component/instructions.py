@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from . import parser
 from dataclasses import dataclass, field
 from pyoload import *
 from typing import Optional
@@ -28,6 +27,30 @@ class Instruction:
 
 
 Attrs = dict[str]
+
+
+class Namespace:
+    def __init__(self, parents = []):
+        self.parents = parents
+        self.vars = {}
+
+    def __getitem__(self, item):
+        if item in self.vars:
+            return self.vars[item]
+        else:
+            for parent in self.parents:
+                try:
+                    return parent[item]
+                except:
+                    continue
+            else:
+                raise NameError(item)
+
+
+class ComponentNamespace(Namespace):
+    def __init__(self, component, parents = []):
+        self.parents = parents
+        self.vars = component
 
 
 # @annotate
@@ -56,6 +79,9 @@ class Create_Component(Instruction):
         self.attrs = attrs
         self.alias = alias
         self.parent = parent
+        if parent:
+            self.parent.children.append(self)
+        self.children = []
 
     @classmethod
     def next(cls, _state, parent: "Optional[_Component]" = None):
@@ -73,14 +99,31 @@ class Create_Component(Instruction):
         return cls(name=name, alias=alias, attrs=attrs, parent=parent)
 
     @annotate
-    def eval(self, namespace: "Component", component_space):
-        parent = self.parent  # if self.parent is not None else None
+    def _eval(self, namespace: Namespace, component_space):
+        print("__eval on", self.__class__.__name__)
+        parent = self.parent
+        assert parent.computed, "cannot compute children instructions before parent"
         self.component = component_space[self.name](
-            parent=parent, attrs=self.attrs, namespace=namespace
+            parent=parent.component, attrs=self.attrs, namespace=namespace
         )
         if self.alias is not None:
             setattr(namespace, self.alias, self.component)
         self.computed = True
+        for child in self.children:
+            child._eval(namespace, component_space)
+        return self.component
+
+    @annotate
+    def eval(self, namespace: Namespace, component_space):
+        print("eval on", self.__class__.__name__)
+        self.component = component_space[self.name](
+            parent=None, attrs=self.attrs, namespace=namespace
+        )
+        if self.alias is not None:
+            namespace[self.alias] = self.component)
+        self.computed = True
+        for child in self.children:
+            child._eval(namespace, component_space)
         return self.component
 
 
@@ -118,10 +161,23 @@ class Enum_Component(Instruction):
         return cls(name=name, alias=alias, parent=parent)
 
     @annotate
-    def eval(self, namespace: "Component", component_space):
-        from ..writeable import NamespaceWriteable
-        from . import EnumComponent
+    def _eval(self, namespace: "_Component", component_space):
+        print("eval on", self.__class__.__name__)
+        self.component = component_space[self.name](
+            parent=None, attrs=self.attrs, namespace=namespace
+        )
+        if self.alias is not None:
+            setattr(namespace, self.alias, self.component)
+        self.computed = True
+        for child in self.children:
+            child._eval(namespace, component_space)
+        return self.component
 
+    @annotate
+    def _eval(self, namespace: Namespace, component_space):
+        from ..writeable import NamespaceWriteable
+
+        for
         parent = self.parent
         self.component = EnumComponent(
             parent=parent,
@@ -132,9 +188,56 @@ class Enum_Component(Instruction):
         return self.component
 
 
-def execute(text, namespace, component_space):
+
+def parse_subinstructions(parent, lines, begin, indent, offset):
+    print("child")
+    base_ind = -1
+    last_component = None
+    target_idx = 0
+    for line_idx, line in enumerate(lines):
+        if line_idx < target_idx or line_idx < begin:
+            continue
+        if not line.strip():
+            continue
+        if indent == -1:
+            indent = len(line) - len(line.lstrip())
+        if base_ind == -1:
+            base_ind = (len(line) - len(line.lstrip())) // indent
+        if line.strip().startswith("#"):
+            continue
+        ind = len(line) - len(line.lstrip())
+        if ind % indent != 0:
+            raise ValueError("Unexpected indent", line)
+        ind = ind // indent
+        print(ind, base_ind, indent, line)
+        if ind < base_ind:
+            return (line_idx, parent)
+        elif ind > base_ind:
+            target_idx, _w = parse_subinstructions(last_component, lines, line_idx, indent, offset)
+            print(target_idx, _w)
+            continue
+        else:
+            instr = line.strip()
+            if instr[0] == "\\":
+                last_component = Create_Component.next(
+                    parser.State(line, ind * 2), parent=parent
+                )
+            elif instr[0] == "!":
+                if instr.startswith("!enum"):
+                    Enum_Component.next(
+                        parser.State(line, ind * 2), parent=parent
+                    )
+                else:
+                    raise ValueError("unknown special tag:", instr)
+            else:
+                raise ValueError("unknown tag:", instr)
+        last_ind = ind
+    return (line_idx, parent)
+
+
+def execute(text):
     lines = list(filter(lambda l: bool(l.strip()), text.splitlines()))
-    offset = min(len(l) - len(l.lstrip(' ')) for l in lines)
+    offset = min(len(l) - len(l.lstrip(" ")) for l in lines)
     lines = [l[offset:] for l in lines]
     line, *lines = lines
     indent = -1
@@ -152,48 +255,15 @@ def execute(text, namespace, component_space):
                 raise ValueError("Unrecognised meta parameter:", line)
         else:
             raise ValueError("Error parsing line", line)
-    master = Create_Component.next(parser.State(line, 0)).eval(
-        namespace, component_space
-    )
-    scope = [master]
-    last_ind = 0
-    for line in lines:
-        if not line.strip():
-            continue
-        if indent == -1:
-            indent = len(line) - len(line.lstrip())
-        if line.strip().startswith("#"):
-            continue
-        ind = len(line) - len(line.lstrip())
-        if ind % indent != 0:
-            raise ValueError("Unexpected indent", line)
-        ind = ind // indent
-        if ind == last_ind:
-            scope.pop()
-        else:
-            while last_ind >= ind:
-                scope.pop()
-                last_ind -= 1
-        instr = line.strip()
-        if instr[0] == "\\":
-            scope.append(
-                Create_Component.next(
-                    parser.State(line, ind * 2), parent=scope[-1]
-                ).eval(namespace, component_space)
-            )
-        elif instr[0] == "!":
-            if instr.startswith("!enum"):
-                scope.append(
-                    c := Enum_Component.next(
-                        parser.State(line, ind * 2), parent=scope[-1]
-                    ).eval(namespace, component_space)
-                )
-            else:
-                raise ValueError("unknown special tag:", instr)
-        else:
-            raise ValueError("unknown tag:", instr)
-        last_ind = ind
-    return master
+    master = Create_Component.next(parser.State(line, 0))
+    return parse_subinstructions(
+        master,
+        lines,
+        0,
+        indent=indent,
+        offset=offset,
+    )[1]
 
 
-from . import _Component, Component
+from . import parser
+from . import _Component

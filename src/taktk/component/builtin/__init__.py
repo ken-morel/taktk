@@ -59,6 +59,7 @@ class label(_Component):
         font: str = Nil
         image: Image | TkImage = Nil
         compound: str = Nil
+
     same = [x for x in dir(attrs) if not x.startswith("_")]
     conf_aliasses = {
         **dict(zip(same, same)),

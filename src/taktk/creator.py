@@ -144,9 +144,9 @@ class ThemeCreator(ttk.Window):
 
         # save user themes to file
         formatted = json.dumps(user.USER_THEMES, indent=4)
-        out = 'USER_THEMES = ' + formatted
+        out = "USER_THEMES = " + formatted
         filepath = user.__file__
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(out)
 
         definition = ThemeDefinition(name, colors, self.style.theme.type)

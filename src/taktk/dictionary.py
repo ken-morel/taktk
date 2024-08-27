@@ -41,18 +41,21 @@ class Dictionary(dict):
 
 
 class Dictionaries:
-    def __init__(self, path='dictionaries'):
+    def __init__(self, path="dictionaries"):
         self.path = path
-        self.languages  = {p.stem: p for p in path.glob('*.yml')}
+        self.languages = {p.stem: p for p in path.glob("*.yml")}
 
     def get(self, language=None, fallback_language="English"):
         if language is None:
             import locale as loc
+
             language = loc.getlocale()[0].split("_", 1)[0]
         if language in self.languages:
             return Dictionary(self.languages[language], language=language)
         else:
-            return Dictionary(self.languages[fallback_language], language=fallback_language)
+            return Dictionary(
+                self.languages[fallback_language], language=fallback_language
+            )
 
 
 class Translation(Writeable):

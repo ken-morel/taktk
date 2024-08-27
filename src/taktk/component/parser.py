@@ -200,14 +200,17 @@ def next_value(_state: State) -> tuple[State, str, str]:
                 raise Exception(
                     f"unmatched {c!r} at {int(state)}: {state.text!r}"
                 )
-        elif ':' in state[...] and state[...][:(n := state[...].index(':'))].isalpha():
+        elif (
+            ":" in state[...]
+            and state[...][: (n := state[...].index(":"))].isalpha()
+        ):
             begin = state.copy()
             state += n
             bc = 0
             while state:
-                if state[...][0] == '{':
+                if state[...][0] == "{":
                     bc += 1
-                elif state[...][0] == '}':
+                elif state[...][0] == "}":
                     bc -= 1
                 elif (quote := state[...][0]) in STRING_QUOTES:
                     state += 1
@@ -219,7 +222,9 @@ def next_value(_state: State) -> tuple[State, str, str]:
                         else:
                             state += 1
                     else:
-                        raise Exception("unterminated string in:", repr(state.text))
+                        raise Exception(
+                            "unterminated string in:", repr(state.text)
+                        )
                 elif state[...][0].isspace() and bc == 0:
                     break
                 state += 1
@@ -273,8 +278,9 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
 
 
 @annotate
-def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
+def evaluate_literal(string: str, namespace: "Optional[_Component]" = None):
     from ..media import get_media
+
     string_set = set(string)
     if len(string) > 1:
         b, *_, e = string
@@ -282,27 +288,31 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
         b, e = string, None
     else:
         raise ValueError("empty literal string")
-    if string[0] == '!':
+    if string[0] == "!":
         auto_eval = True
         aes_string = string[1:]
     else:
         auto_eval = False
         aes_string = string
-    if string == 'None':
+    if string == "None":
         return None
-    elif string == 'True':
+    elif string == "True":
         return True
-    elif string == 'False':
+    elif string == "False":
         return False
-    elif ':' in string and string[:string.index(':')].isalpha():
+    elif ":" in string and string[: string.index(":")].isalpha():
         return get_media(string)
     elif len(string_set - INT) == 0 and string.isnumeric():
         return int(string)
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
-    elif len(aes_string) > 2 and aes_string[0] == "{" and aes_string[-1] == "}":
+    elif (
+        len(aes_string) > 2 and aes_string[0] == "{" and aes_string[-1] == "}"
+    ):
         if namespace is None:
-            raise ValueError('Unallowed Writeable in none namespaced context', string)
+            raise ValueError(
+                "Unallowed Writeable in none namespaced context", string
+            )
         st = aes_string[1:-1]
         if len(st) >= 2 and st[0] == "{" and st[-1] == "}":
             if auto_eval:
@@ -361,5 +371,4 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
     else:
         raise ValueError("Unrecognsed literal:", repr(string))
 
-
-from . import Component
+from . import _Component

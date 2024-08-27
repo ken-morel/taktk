@@ -17,12 +17,6 @@ from dataclasses import dataclass
 from functools import cache
 
 
-@dataclass
-class TodoItem:
-    desc: str
-    done: bool = False
-
-
 class Todo(Component):
     code = __doc__
     entry = ""
@@ -70,12 +64,13 @@ class Todo(Component):
     def popup_menu(self, idx):
         menu = Menu(
             {
-                '@toggle': self.toggler(idx),
-                '@remove': self.popper(idx),
-                '@edit': self.editer(idx),
+                "@toggle": self.toggler(idx),
+                "@remove": self.popper(idx),
+                "@edit": self.editer(idx),
             },
-            translations='pages.todos.menu',
+            translations="pages.todos.menu",
         )
+
         def func(e):
             menu.post(e.x_root, e.y_root)
 
@@ -84,9 +79,13 @@ class Todo(Component):
     def editer(self, idx):
         def edit(*_):
             from customtkinter import CTkInputDialog
-            value = CTkInputDialog(text="Enter the new value", title="Todos").get_input()
+
+            value = CTkInputDialog(
+                text="Enter the new value", title="Todos"
+            ).get_input()
             self.todos[idx].desc = value
             self.update()
+
         return edit
 
 

@@ -7,32 +7,39 @@ MEDIA_DIR = None
 
 
 def parse_media_spec(spec):
-    if '{' in spec:
-        assert '}' in spec, f"Unterminated spec {spec}"
-        b = spec.index('{')
-        e = spec.index('}')
-        return spec[:b], parse_media_spec_props(spec[b + 1:e])
+    if "{" in spec:
+        assert "}" in spec, f"Unterminated spec {spec}"
+        b = spec.index("{")
+        e = spec.index("}")
+        return spec[:b], parse_media_spec_props(spec[b + 1 : e])
     else:
         return spec, {}
 
 
 def parse_media_spec_props(props):
     from .component.parser import evaluate_literal
-    props = props.split(';')
-    return {x.split(':')[0]: evaluate_literal(x.split(':')[1].strip(), None) for x in props if x.strip()}
+
+    props = props.split(";")
+    return {
+        x.split(":")[0]: evaluate_literal(x.split(":")[1].strip(), None)
+        for x in props
+        if x.strip()
+    }
 
 
 def get_media(spec):
     spec, props = parse_media_spec(spec)
-    assert (n := spec.count(':')) == 1, f"media spec should include one ':', has: {n}"
-    match tuple(spec.split(':', 1)):
-        case ('img', path):
-            if path[0] == '@':
+    assert (
+        n := spec.count(":")
+    ) == 1, f"media spec should include one ':', has: {n}"
+    match tuple(spec.split(":", 1)):
+        case ("img", path):
+            if path[0] == "@":
                 return MediaImage(path[1:], props)
             else:
                 return Image(path, props)
         case wrong:
-            raise ValueError(f'Unrecognised media {spec!r}')
+            raise ValueError(f"Unrecognised media {spec!r}")
 
 
 class Resource:
@@ -44,7 +51,7 @@ class Image(Resource):
     def image(self):
         image = PIL.Image.open(self.path)
         iw, ih = image.size
-        width, height = self.props.get('width'), self.props.get('height')
+        width, height = self.props.get("width"), self.props.get("height")
         if width == height == None:
             return image
         elif width is None:
@@ -62,8 +69,8 @@ class Image(Resource):
         return self.tk
 
     def __init__(self, path, props):
-        if not '.' in path:
-            path += '.png'
+        if not "." in path:
+            path += ".png"
         self.path = path
         self.props = props
 
@@ -73,9 +80,9 @@ class MediaImage(Resource):
     def image(self):
         if MEDIA_DIR is None:
             raise RuntimeError("Media directory not set")
-        image = PIL.Image.open(MEDIA_DIR / 'img' / self.path)
+        image = PIL.Image.open(MEDIA_DIR / "img" / self.path)
         iw, ih = image.size
-        width, height = self.props.get('width'), self.props.get('height')
+        width, height = self.props.get("width"), self.props.get("height")
         if width == height == None:
             return image
         elif width is None:
@@ -92,7 +99,7 @@ class MediaImage(Resource):
         return self.tk
 
     def __init__(self, path, props):
-        if not '.' in path:
-            path += '.png'
+        if not "." in path:
+            path += ".png"
         self.path = path
         self.props = props
