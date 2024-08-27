@@ -280,6 +280,54 @@ class EnumComponent(_Component):
             del widget
 
 
+@annotate
+class IfComponent(_Component):
+    def __init__(
+        self,
+        condition,
+        namespace,
+        parent: "Optional[_Component]" = None,
+        instructions: list = [],
+        component_space=None
+    ):
+        self.children = []
+        self.parent = parent
+        self.namespace = namespace
+        self.condition = condition
+        self.instructions = instructions #instructions
+        self.component_space = component_space
+        if parent is not None:
+            self.parent.children.append(self)
+
+    def create(self, parent=None):
+        parent = parent or self.parent.widget
+        self.render_parent = parent
+        self.widgets = []
+        if self.condition.get():
+            for instr in self.instructions:
+                comp = instr._eval(self.namespace, self.component_space)
+                elt = comp.create(parent)
+                self.widgets.append(
+                    (comp, elt),
+                )
+        if len(self.widgets) > 0:
+            return tuple(zip(*self.widgets))[1]
+        else:
+            return []
+
+    def update(self):
+        widgets = self.widgets.copy()
+        self.create(self.render_parent)
+        try:
+            self.render_parent.update()  # for smoother renderring
+        except Exception:
+            pass
+        for component, widget in widgets:
+            component.widget = None
+            widget.destroy()
+            del widget
+
+
 from .instructions import execute, Instruction, Namespace
 
 

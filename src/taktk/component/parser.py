@@ -166,7 +166,7 @@ def next_attr_value(_state: State) -> tuple[State, str, str]:
 
 
 @annotate
-def next_value(_state: State) -> tuple[State, str, str]:
+def next_value(_state: State) -> tuple[State, str]:
     """
     Gets next attribute value pair from `\\` character, may include alias
     """
@@ -275,6 +275,23 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
         raise Exception("Unterminated enum second field", state.text)
     alias = tuple(map(str.strip, state[b:state].split(",")))
     return state, obj, alias
+
+
+@annotate
+def next_if(_state: State) -> tuple[State, str, tuple[str, str]]:
+    """
+    Gets next attribute value pair from `\\` character, may include alias
+    """
+    begin = _state.copy()
+    begin |= skip_spaces(begin)
+    state = begin.copy()
+    state += len("!if ")
+    state |= skip_spaces(state)
+
+    nstate, condition = next_value(state)
+    state |= nstate
+
+    return state, condition
 
 
 @annotate

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass, field
 from pyoload import *
 from typing import Optional
-from ..writeable import Namespace
+from ..writeable import Namespace, Expression
 
 
 class Instruction:
@@ -171,6 +171,58 @@ class Create_Enum_Component(Instruction):
         raise NotImplementedError()
 
 
+@annotate
+class Create_If_Component(Instruction):
+    """
+    create_Component instruction to create a new widget
+    :param name: The widget name
+    :param params: The widget parameters
+    """
+
+    condition: str
+    alias: tuple[str, str]
+    parent: "Optional[Instruction]"
+    children: list[Instruction]
+    computed: bool = False
+
+    def __init__(
+        self,
+        condition: str,
+        parent: "Optional[Instruction]" = None,
+    ):
+        self.condition = condition
+        self.parent = parent
+        self.children = []
+        if parent:
+            parent.children.append(self)
+
+    @classmethod
+    @annotate
+    def next(cls, _state, parent: "Optional[Instruction]" = None):
+        """
+        Gets the next Create_If_Component instruction
+        """
+        state, condition = parser.next_if(_state)
+        _state |= state
+        return cls(condition=condition, parent=parent)
+
+    @annotate
+    def _eval(self, namespace: Namespace, component_space):
+        from ..writeable import NamespaceWriteable
+        parent = self.parent
+        self.component = IfComponent(
+            parent=parent.component,
+            namespace=namespace,
+            condition=Expression(namespace, self.condition),
+            instructions=self.children,
+            component_space=component_space,
+        )
+        self.computed = True
+        return self.component
+
+    def eval(*__, **_):
+        raise NotImplementedError()
+
 
 def parse_subinstructions(parent, lines, begin, indent, offset):
     base_ind = -1
@@ -207,6 +259,10 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
             elif instr[0] == "!":
                 if instr.startswith("!enum"):
                     last_component = Create_Enum_Component.next(
+                        parser.State(line, ind * 2), parent=parent
+                    )
+                elif instr.startswith("!if"):
+                    last_component = Create_If_Component.next(
                         parser.State(line, ind * 2), parent=parent
                     )
                 else:
@@ -249,4 +305,4 @@ def execute(text):
 
 
 from . import parser
-from . import _Component, EnumComponent
+from . import _Component, EnumComponent, IfComponent

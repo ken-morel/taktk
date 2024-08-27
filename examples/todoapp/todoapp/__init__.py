@@ -96,4 +96,4 @@ class Application(Application):
             self.app.forward()
 
         def is_login(self):
-            return User.current() is not None
+            return User.current() is None
