@@ -1,14 +1,16 @@
-from taktk.application import Application, Commander
-from taktk.menu import Menu
-from taktk.writeable import Writeable
-from taktk.media import get_media
-from taktk.component import Component
 from . import pages
 from pathlib import Path
+from taktk.application import Application
+from taktk.application import Commander
 from taktk.component import Component
+from taktk.component import Component
+from taktk.media import get_media
+from taktk.menu import Menu
+from taktk.writeable import Writeable
+from taktk.dictionary import Dictionary
 
+from .admin import DIR, User, Todo
 from taktk.notification import Notification
-from .admin import DIR
 
 recent_files = ["ama.py", "test.py", "ttkbootstrap.py", "label.py"]
 
@@ -48,7 +50,9 @@ class Application(Application):
         },
         translations="menu",
     )
-    settings = DIR / "settings.json"
+    settings = (DIR / "settings.json", {
+        "language": "english",
+    })
 
     def init(self):
         self.menu["@preferences/@language"] = {
@@ -56,6 +60,8 @@ class Application(Application):
             for l in self.dictionaries.languages
         }
         self.menu.update()
+        self.set_language(self.settings['language'])
+        Dictionary.subscribe(self.update_language)
 
     def back(self):
         self.view.back()
@@ -63,16 +69,21 @@ class Application(Application):
     def forward(self):
         self.view.forward()
 
+    def update_language(self):
+        self.settings['language'] = Dictionary.dictionary.language
+        self.settings.save()
+        Notification("Todos", _("preferences.success_modified"), bootstyle="info", duration=10000).show()
+
     class Layout(Component):
         r"""
         \frame
-            \frame padding=5 weight:y='1:10' weight:x='1:10' pos:grid=0,0 pos:sticky='nsew'
+            \frame padding=5 weight:y='2:10' weight:x='2:10' pos:grid=0,0 pos:sticky='nsew'
                 \button command={back}    image=img:@backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
-                \button command={forward} image=img:@forward{width: 20}  pos:grid=2,0 pos:sticky='e' bootstyle='dark outline'
+                !if is_login()
+                    \label text='logged in!' pos:grid=1,0
+                \button command={forward} image=img:@forward{width: 20}  pos:grid=3,0 pos:sticky='e' bootstyle='dark outline'
             \frame:outlet pos:grid=0,1
         """
-
-        code = __doc__
 
         def __init__(self, app):
             self.app = app
@@ -84,5 +95,5 @@ class Application(Application):
         def forward(self):
             self.app.forward()
 
-    def handle():
-        return Layout()
+        def is_login(self):
+            return User.current() is not None

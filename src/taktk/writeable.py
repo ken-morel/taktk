@@ -194,10 +194,13 @@ class NamespaceWriteable(Writeable):
             exec(
                 "obj" + self.name + " = val",
                 globals(),
-                vars(self.namespace) | locals(),
+                self.namespace.vars | locals(),
             )
         else:
-            setattr(obj, self.name, val)
+            if obj is self.namespace:
+                self.namespace[self.name] = val
+            else:
+                setattr(obj, self.name, val)
         self.warn_subscribers()
         self.namespace._watch_changes_()
 

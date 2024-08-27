@@ -5,6 +5,7 @@ from .writeable import Writeable
 
 class Dictionary(dict):
     subscribers = set()
+    dictionary = None
 
     def __init__(self, path, language=None):
         super().__init__()

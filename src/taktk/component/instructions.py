@@ -96,7 +96,7 @@ class Create_Component(Instruction):
             parent=parent.component, attrs=self.attrs, namespace=namespace
         )
         if self.alias is not None:
-            setattr(namespace, self.alias, self.component)
+            namespace[self.alias] = self.component
         self.computed = True
         for child in self.children:
             child._eval(namespace, component_space)
@@ -192,9 +192,7 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
         if ind % indent != 0:
             raise ValueError("Unexpected indent", line)
         ind = ind // indent
-        print(line_idx, ind, line)
         if ind < base_ind:
-            print("  exit!")
             return (line_idx - 1, parent)
         elif ind > base_ind:
             target_idx, _w = parse_subinstructions(last_component, lines, line_idx, indent, offset)
@@ -247,7 +245,6 @@ def execute(text):
         indent=indent,
         offset=offset,
     )
-    print(master)
     return instr
 
 

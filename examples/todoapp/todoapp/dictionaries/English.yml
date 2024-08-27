@@ -33,4 +33,5 @@ menu:
   preferences:
     __label__: Preferences
     language: Language
-
+preferences:
+  success_modified: Preferences succesfuly modified

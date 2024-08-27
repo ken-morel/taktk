@@ -11,7 +11,7 @@ from uuid import UUID, uuid1
 DIR = Path(__file__).parent
 
 data = SettingsFile(
-    DIR / "../data.json",
+    DIR / "data.json",
     {
         "users": [],
         "todos": [],

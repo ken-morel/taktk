@@ -27,7 +27,10 @@ class Application:
 
     def setup_taktk(self):
         if self.settings is not None:
-            settings.init(self.settings)
+            if isinstance(self.settings, tuple):
+                settings.init(*self.settings)
+            else:
+                settings.init(self.settings)
             self.settings = settings.settings()
         if self.dictionaries is not None:
             from .dictionary import Dictionaries
@@ -47,7 +50,7 @@ class Application:
         if self.Layout is not None:
             self.layout = self.Layout(self)
             self.layout.render(root).grid(column=0, row=0, sticky="nsew")
-            return self.layout.outlet.widget
+            return self.layout['outlet'].widget
         else:
             return root
 
