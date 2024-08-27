@@ -3,6 +3,53 @@ from typing import Callable, Any
 from functools import cached_property
 from contextlib import contextmanager
 from . import Nil
+import builtins
+
+
+class Namespace:
+    def __init__(self, parents = []):
+        self.parents = parents
+        self.vars = {}
+
+        self._subscribers_ = set()
+        self._last_ = {}
+
+    def __getitem__(self, item):
+        if item in self.vars:
+            return self.vars[item]
+        else:
+            for parent in self.parents:
+                try:
+                    return parent[item]
+                except:
+                    continue
+            else:
+                if item in dir(builtins):
+                    return getattr(builtins, item)
+                else:
+                    raise NameError(item)
+
+    def __setitem__(self, item, value):
+        self.vars[item] = value
+        self._watch_changes_()
+
+    def __repr__(self):
+        return repr(self.vars)
+
+    def _subscribe_(self, subscriber):
+        self._subscribers_.add(subscriber)
+
+    def _unsubscribe_(self, subscriber):
+        self._subscribers_.remove(subscriber)
+
+    def _warn_subscribers_(self):
+        for subscriber in self._subscribers_:
+            subscriber()
+
+    def _watch_changes_(self):
+        if self.vars != self._last_:
+            self._warn_subscribers_()
+        self._last_ = self.vars.copy()
 
 
 class Writeable:
@@ -105,7 +152,7 @@ class NamespaceWriteable(Writeable):
                 raise Exception("wrong value", state[...])
         return tuple(path)
 
-    def __init__(self, namespace, name: str):
+    def __init__(self, namespace: Namespace, name: str):
         """
         Creates the listener on the namespace with defined name
         """
@@ -122,16 +169,19 @@ class NamespaceWriteable(Writeable):
         """
         try:
             obj = self.base
-            if self.name.startswith("["):
-                string = "obj" + self.name
-                try:
-                    return eval(string, locals(), self.namespace)
-                except Exception as e:
-                    raise NameError(
-                        "Error resolving NamespaceWriteable", e, repr(string)
-                    ) from e
+            if self.base == self.namespace:
+                return self.namespace[self.name]
             else:
-                return getattr(obj, self.name)
+                if self.name.startswith("["):
+                    string = "obj" + self.name
+                    try:
+                        return eval(string, locals(), self.namespace)
+                    except Exception as e:
+                        raise NameError(
+                            "Error resolving NamespaceWriteable", e, repr(string)
+                        ) from e
+                else:
+                    return getattr(obj, self.name)
         except AttributeError as e:
             raise NameError(e).with_traceback(e.__traceback__) from None
 

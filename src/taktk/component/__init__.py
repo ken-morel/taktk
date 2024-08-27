@@ -70,6 +70,7 @@ class ModularNamespace(ComponentNamespace):
             return _component
 
 
+@annotate
 class _Component:
     parent: "Optional[_Component]"
     children: "list[_Component]"
@@ -84,9 +85,9 @@ class _Component:
 
     def __init__(
         self,
+        namespace: 'Namespace',
         parent: "Optional[_Component]" = None,
         attrs: dict[str] = {},
-        namespace: dict[str] = {},
     ):
         self.children = []
         self.parent = parent
@@ -229,30 +230,37 @@ class EnumComponent(_Component):
     def __init__(
         self,
         object,
-        alias,
         namespace,
+        alias: tuple[str, str],
         parent: "Optional[_Component]" = None,
+        instructions: list = [],
+        component_space=None
     ):
         self.children = []
         self.parent = parent
-        self.namespace = namespace
-        self.alias = alias
+        self.parent_namespace = namespace
         self.object = object
+        self.instructions = instructions #instructions
+        self.alias = alias
+        self.component_space = component_space
         if parent is not None:
             self.parent.children.append(self)
 
     def create(self, parent=None):
+        assert parent is self.parent.widget
         parent = parent or self.parent.widget
         self.render_parent = parent
         self.widgets = []
         for idx, val in enumerate(self.object.get()):
             aidx, aval = self.alias
-            setattr(self.namespace, aidx, idx)
-            setattr(self.namespace, aval, val)
-            for child in self.children:
-                elt = child.create(parent)
+            namespace = Namespace(parents=[self.parent_namespace])
+            namespace[aidx] = idx
+            namespace[aval] = val
+            for instr in self.instructions:
+                comp = instr._eval(namespace, self.component_space)
+                elt = comp.create(parent)
                 self.widgets.append(
-                    (child, elt),
+                    (comp, elt),
                 )
         if len(self.widgets) > 0:
             return tuple(zip(*self.widgets))[1]
@@ -272,21 +280,14 @@ class EnumComponent(_Component):
             del widget
 
 
-from .instructions import execute, Instruction
+from .instructions import execute, Instruction, Namespace
 
 
 @annotate
 class Component(_Component):
     _component_: _Component = None
     _instructions_: Instruction = None
-    code: str = r"\frame"
-
-    @classmethod
-    def __init_subclass__(cls):
-        try:
-            cls._component_ = execute(cls.code, cls, ModularNamespace(builtin))
-        except:
-            pass
+    _code_: str = None
 
     def init(self):
         pass
@@ -294,7 +295,7 @@ class Component(_Component):
     @annotate
     def __getitem__(self, item: str):
         try:
-            return getattr(self, item)
+            return self.namespace[item]
         except AttributeError:
             try:
                 return globals()[item]
@@ -303,43 +304,30 @@ class Component(_Component):
 
     @annotate
     def __setitem__(self, item: str, value):
-        setattr(self, item, value)
-        self._watch_changes_()
-
-    def _subscribe_(self, subscriber):
-        self._subscribers_.add(subscriber)
-
-    def _unsubscribe_(self, subscriber):
-        self._subscribers_.remove(subscriber)
-
-    def _warn_subscribers_(self):
-        for subscriber in self._subscribers_:
-            subscriber()
+        self.namespace[item] = value
 
     def __init__(self):
         from . import builtin
-
-        self._subscribers_ = set()
-        self._last_ = {
-            k: v for k, v in vars(self).items() if not k.startswith("_")
-        }
+        self.namespace = Namespace()
+        for attr_name in dir(self):
+            if not attr_name.startswith("_"):
+                try:
+                    self.namespace[attr_name] = getattr(self, attr_name)
+                except:
+                    pass
         self.init()
         if not self._component_:
             self._instructions_ = execute(
-                self.code
+                self._code_ or self.__doc__ or r'\frame'
             )
-            self._component_ = self._instructions_.eval(self, ModularNamespace(builtin))
+            self._component_ = self._instructions_.eval(self.namespace, ModularNamespace(builtin))
 
     def render(self, master):
         return self._component_.create(master)
 
     def update(self):
-        self._watch_changes_()
+        self.namespace._watch_changes_()
         self._component_.update()
 
-    def _watch_changes_(self):
-        state = {k: v for k, v in vars(self).items() if not k.startswith("_")}
-        if state != self._last_:
-            self._warn_subscribers_()
-        self._last_ = state
 
+from .instructions import Namespace

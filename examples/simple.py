@@ -12,8 +12,6 @@ class Comp(Component):
     \\label text={{number}} pos:grid=0,0
     \\ctk.button text='add +' command={add} pos:grid=1,0"""
 
-    code = __doc__
-
     label_text = "close the window"
     number = 0
 
@@ -22,8 +20,8 @@ class Comp(Component):
         print("closed")
 
     def add(self):
-        self["number"] += 1
-        self.update()
+        self.namespace['number'] += 1
+        # self["number"] += 1
 
 
 root = Tk()

@@ -278,7 +278,7 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
 
 
 @annotate
-def evaluate_literal(string: str, namespace: "Optional[_Component]" = None):
+def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
     from ..media import get_media
 
     string_set = set(string)
@@ -372,3 +372,4 @@ def evaluate_literal(string: str, namespace: "Optional[_Component]" = None):
         raise ValueError("Unrecognsed literal:", repr(string))
 
 from . import _Component
+from .instructions import Namespace

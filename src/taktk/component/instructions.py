@@ -20,38 +20,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass, field
 from pyoload import *
 from typing import Optional
+from ..writeable import Namespace
 
 
 class Instruction:
-    pass
+    def __str__(self):
+        if len(self.children) == 0:
+            return f"<{self.__class__.__name__}:{self._str_header()}>"
+        else:
+            text = f"<{self.__class__.__name__}:{self._str_header()}["
+            for child in self.children:
+                for line in str(child).splitlines():
+                    text += "\n  " + line
+            return text + "\n]"
+
+    def _str_header(self):
+        return '{}'
 
 
 Attrs = dict[str]
-
-
-class Namespace:
-    def __init__(self, parents = []):
-        self.parents = parents
-        self.vars = {}
-
-    def __getitem__(self, item):
-        if item in self.vars:
-            return self.vars[item]
-        else:
-            for parent in self.parents:
-                try:
-                    return parent[item]
-                except:
-                    continue
-            else:
-                raise NameError(item)
-
-
-class ComponentNamespace(Namespace):
-    def __init__(self, component, parents = []):
-        self.parents = parents
-        self.vars = component
-
 
 # @annotate
 class Create_Component(Instruction):
@@ -83,6 +70,9 @@ class Create_Component(Instruction):
             self.parent.children.append(self)
         self.children = []
 
+    def _str_header(self):
+        return f"{self.name}, {repr(self.attrs)[:10]}...; &{self.alias}"
+
     @classmethod
     def next(cls, _state, parent: "Optional[_Component]" = None):
         """
@@ -100,7 +90,6 @@ class Create_Component(Instruction):
 
     @annotate
     def _eval(self, namespace: Namespace, component_space):
-        print("__eval on", self.__class__.__name__)
         parent = self.parent
         assert parent.computed, "cannot compute children instructions before parent"
         self.component = component_space[self.name](
@@ -115,12 +104,11 @@ class Create_Component(Instruction):
 
     @annotate
     def eval(self, namespace: Namespace, component_space):
-        print("eval on", self.__class__.__name__)
         self.component = component_space[self.name](
             parent=None, attrs=self.attrs, namespace=namespace
         )
         if self.alias is not None:
-            namespace[self.alias] = self.component)
+            namespace[self.alias] = self.component
         self.computed = True
         for child in self.children:
             child._eval(namespace, component_space)
@@ -128,7 +116,7 @@ class Create_Component(Instruction):
 
 
 @annotate
-class Enum_Component(Instruction):
+class Create_Enum_Component(Instruction):
     """
     create_Component instruction to create a new widget
     :param name: The widget name
@@ -137,7 +125,7 @@ class Enum_Component(Instruction):
 
     object_name: str
     alias: tuple[str, str]
-    parent: "Optional[_Component]"
+    parent: "Optional[Instruction]"
     children: list[Instruction]
     computed: bool = False
 
@@ -145,14 +133,18 @@ class Enum_Component(Instruction):
         self,
         name: str,
         alias: tuple[str, str] = None,
-        parent: "Optional[_Component]" = None,
+        parent: "Optional[Instruction]" = None,
     ):
         self.object_name = name
         self.alias = alias
         self.parent = parent
+        self.children = []
+        if parent:
+            parent.children.append(self)
 
     @classmethod
-    def next(cls, _state, parent: "Optional[_Component]" = None):
+    @annotate
+    def next(cls, _state, parent: "Optional[Instruction]" = None):
         """
         Gets the next Create_Component instruction
         """
@@ -161,41 +153,32 @@ class Enum_Component(Instruction):
         return cls(name=name, alias=alias, parent=parent)
 
     @annotate
-    def _eval(self, namespace: "_Component", component_space):
-        print("eval on", self.__class__.__name__)
-        self.component = component_space[self.name](
-            parent=None, attrs=self.attrs, namespace=namespace
-        )
-        if self.alias is not None:
-            setattr(namespace, self.alias, self.component)
-        self.computed = True
-        for child in self.children:
-            child._eval(namespace, component_space)
-        return self.component
-
-    @annotate
     def _eval(self, namespace: Namespace, component_space):
         from ..writeable import NamespaceWriteable
-
-        for
         parent = self.parent
         self.component = EnumComponent(
-            parent=parent,
+            parent=parent.component,
             namespace=namespace,
             object=NamespaceWriteable(namespace, self.object_name),
+            instructions=self.children,
             alias=self.alias,
+            component_space=component_space,
         )
+        self.computed = True
         return self.component
+
+    def eval(*__, **_):
+        raise NotImplementedError()
 
 
 
 def parse_subinstructions(parent, lines, begin, indent, offset):
-    print("child")
     base_ind = -1
     last_component = None
     target_idx = 0
+    line_idx = 0
     for line_idx, line in enumerate(lines):
-        if line_idx < target_idx or line_idx < begin:
+        if line_idx < max(target_idx, begin):
             continue
         if not line.strip():
             continue
@@ -209,12 +192,13 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
         if ind % indent != 0:
             raise ValueError("Unexpected indent", line)
         ind = ind // indent
-        print(ind, base_ind, indent, line)
+        print(line_idx, ind, line)
         if ind < base_ind:
-            return (line_idx, parent)
+            print("  exit!")
+            return (line_idx - 1, parent)
         elif ind > base_ind:
             target_idx, _w = parse_subinstructions(last_component, lines, line_idx, indent, offset)
-            print(target_idx, _w)
+            target_idx += 1
             continue
         else:
             instr = line.strip()
@@ -224,7 +208,7 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
                 )
             elif instr[0] == "!":
                 if instr.startswith("!enum"):
-                    Enum_Component.next(
+                    last_component = Create_Enum_Component.next(
                         parser.State(line, ind * 2), parent=parent
                     )
                 else:
@@ -256,14 +240,16 @@ def execute(text):
         else:
             raise ValueError("Error parsing line", line)
     master = Create_Component.next(parser.State(line, 0))
-    return parse_subinstructions(
+    _, instr = parse_subinstructions(
         master,
         lines,
         0,
         indent=indent,
         offset=offset,
-    )[1]
+    )
+    print(master)
+    return instr
 
 
 from . import parser
-from . import _Component
+from . import _Component, EnumComponent
