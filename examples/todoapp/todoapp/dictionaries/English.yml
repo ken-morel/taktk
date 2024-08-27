@@ -11,6 +11,7 @@ pages:
       It is still in development, and I will be happy to hear of you issues
       at https://github.com/ken-morel/taktk/issues
     next: Go to dashboard >
+    login: Login >
   todos:
     placeholder: Enter you todo her please
     mark-done: Mark as done
@@ -20,6 +21,11 @@ pages:
       toggle: Toggle done
       remove: *todosRm
       edit: edit
+  signin:
+    label:
+      name: "Name: "
+      password: "Password: "
+    submit: Login >
 nav:
   back: < back
   next: next >

@@ -1,4 +1,10 @@
 {
-  "users": [],
+  "users": [
+    {
+      "name": "ken-morel",
+      "uuid": "9fd496a6-64a8-11ef-b107-28d244ed9304",
+      "password": "ama"
+    }
+  ],
   "todos": []
 }

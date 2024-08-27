@@ -79,11 +79,13 @@ class Application(Application):
         \frame
             \frame padding=5 weight:y='2:10' weight:x='2:10' pos:grid=0,0 pos:sticky='nsew'
                 \button command={back}    image=img:@backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
-                !if is_login()
-                    \label text='logged in!' pos:grid=1,0
+                !if User.is_login()
+                    \label text={f'logged in as {User.current().name}'} pos:grid=1,0
                 \button command={forward} image=img:@forward{width: 20}  pos:grid=3,0 pos:sticky='e' bootstyle='dark outline'
             \frame:outlet pos:grid=0,1
         """
+
+        user = None
 
         def __init__(self, app):
             self.app = app
@@ -95,5 +97,4 @@ class Application(Application):
         def forward(self):
             self.app.forward()
 
-        def is_login(self):
-            return User.current() is None
+        User = User

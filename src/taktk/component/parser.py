@@ -287,11 +287,12 @@ def next_if(_state: State) -> tuple[State, str, tuple[str, str]]:
     state = begin.copy()
     state += len("!if ")
     state |= skip_spaces(state)
+    b = state.copy()
 
-    nstate, condition = next_value(state)
-    state |= nstate
+    while state and state[...][0] != "\n":
+        state += 1
 
-    return state, condition
+    return state, state.text[b:state]
 
 
 @annotate

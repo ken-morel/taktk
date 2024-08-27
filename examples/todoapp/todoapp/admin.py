@@ -114,6 +114,10 @@ class User(Model):
             'done': done,
         })
 
+    @classmethod
+    def is_login(cls):
+        return cls.__current_user__ is not None
+
 
 @dataclass
 @annotate

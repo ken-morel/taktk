@@ -12,15 +12,21 @@ pages:
       de vos conseil or problemmes que vous rencotrerier en utilisant taktk
       sur https://github.com/ken-morel/taktk/issues
     next: Votre... vue d'enseble? >
+    login: Se connecter >
   todos:
     placeholder: Notez ici
     mark-done: Fait
     mark-undone: A faire
-    remove: retirer
+    remove: &todosRm retirer
     menu:
       toggle: Toggle done
-      remove: Remove
+      remove:  *todosRm
       edit: edit
+  signin:
+    label:
+      name: "Nom: "
+      password: "Mot de passe: "
+    submit: Proceder >
 nav:
   back: < precedant
   next: suivant >

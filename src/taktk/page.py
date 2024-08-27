@@ -1,4 +1,7 @@
 from importlib import import_module
+from urllib.parse import urlparse, parse_qsl
+import json
+# ParseResult(scheme='http', netloc='192.168.23.48', path='/todos/sign.php', params='', query='reason=3', fragment='out')
 
 
 class PageView:
@@ -60,6 +63,10 @@ class Commander:
         self.package = package
 
     def run_command(self, cmd):
-        cmd = cmd.rstrip("/")
+        parsed = urlparse(cmd)
+        cmd = parsed.path.rstrip("/")
         path = [self.package.__package__] + list(filter(bool, cmd.split("/")))
-        return import_module(".".join(path)).handle()
+        module = import_module(".".join(path))
+        function = getattr(module, parsed.fragment or 'handle')
+        args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
+        return function(**args)

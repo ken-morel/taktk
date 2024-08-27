@@ -1,6 +1,7 @@
 from ttkbootstrap import Window
 from .page import *
 from . import settings
+import json
 
 
 class Application:
@@ -63,8 +64,19 @@ class Application:
         self.view.url(entry)
         self.root.mainloop()
 
-    def __call__(self, url: str):
-        self.view.url(url)
+    def __call__(self, module, function=None, /, **params):
+        from urllib.parse import quote
+
+        path = module
+        id_ = None
+        if len(params) > 0:
+            path += "?" + "&".join([
+                f"{quote(name)}={quote(json.dumps(value))}"
+                for name, value in params.items()
+            ])
+        if function is not None:
+            path += f"#{function}"
+        self.view.url(path)
 
     def exit(self):
         self.root.destroy()
