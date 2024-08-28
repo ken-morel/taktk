@@ -1,7 +1,8 @@
 from ttkbootstrap import Window
 from .page import *
-from . import settings
 import json
+from tempfile import NamedTemporaryFile
+from .store import Store
 
 
 class Application:
@@ -11,7 +12,7 @@ class Application:
     menu = None
     layout = None
     destroy_cache: int = 5
-    settings = None
+    store = (None, {})
 
     def __init__(self):
         import taktk
@@ -27,12 +28,15 @@ class Application:
         ).install()
 
     def setup_taktk(self):
-        if self.settings is not None:
-            if isinstance(self.settings, tuple):
-                settings.init(*self.settings)
-            else:
-                settings.init(self.settings)
-            self.settings = settings.settings()
+        if isinstance(self.store, tuple):
+            store, default = self.store
+        else:
+            store = self.store
+            default = {}
+        if store is None:
+            self._store_file = NamedTemporaryFile(delete=False)
+            store = self._store_file.name
+        self.store = Store(store, default=default)
         if self.dictionaries is not None:
             from .dictionary import Dictionaries
 
@@ -59,7 +63,7 @@ class Application:
         self.setup_taktk()
         root = self.create()
         self.init()
-        self.view = PageView(root, self.commander, self, self.destroy_cache)
+        self.view = PageView(root, self.pages, self, self.destroy_cache)
         self.view.geometry()
         self.view.url(entry)
         self.root.mainloop()

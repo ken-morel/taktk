@@ -2,15 +2,16 @@
 Here simply manages the database
 """
 
-from taktk.settings import SettingsFile
+from taktk.store import Store
 from pathlib import Path
 from pyoload import annotate, Checks, Cast
 from dataclasses import dataclass
 from uuid import UUID, uuid1
+from hashlib import sha256
 
 DIR = Path(__file__).parent
 
-data = SettingsFile(
+data = Store(
     DIR / "data.json",
     {
         "users": [],
@@ -43,6 +44,7 @@ class Model:
 
     @classmethod
     def _from_uuid(cls, uuid):
+        uuid = str(uuid)
         for raw in data[cls.field()]:
             if raw["uuid"] == uuid:
                 return raw
@@ -62,8 +64,7 @@ class Model:
         return cls(**params)
 
     def save(self):
-        params = {k: v for k, v in vars(self).items() if k in self.__annotations__}
-        params['uuid'] = str(params['uuid'])
+        params = {k: str(v) if isinstance(v, UUID) else v for k, v in vars(self).items() if k in self.__annotations__}
         uuid = str(self.uuid)
         try:
             raw = self._from_uuid(uuid)
@@ -74,6 +75,17 @@ class Model:
         finally:
             data.save()
         return self
+
+    def delete(self):
+        uuid = str(self.uuid)
+        for idx, obj in enumerate(data[self.field()]):
+            if obj['uuid'] == uuid:
+                break
+        else:
+            raise self.DoesNotExist()
+        data[self.field()].pop(idx)
+        data.save()
+        return None
 
     class Exception(ValueError):
         pass
@@ -100,6 +112,7 @@ class User(Model):
     @classmethod
     @annotate
     def login(cls, name: str, password: str):
+        password = sha256(password.encode()).hexdigest()
         for raw in data[cls.field()]:
             if raw['name'] == name and raw['password'] == password:
                 cls.__current_user__ = cls.from_dict(raw)
@@ -107,9 +120,19 @@ class User(Model):
         else:
             raise cls.DoesNotExist()
 
+    @classmethod
+    @annotate
+    def signup(cls, name: str, password: str):
+        user = User.create({
+            'name': name,
+            'password': sha256(password.encode()).hexdigest()
+        })
+        user.save()
+        User.__current_user__ = user
+
     def create_todo(self, desc: str, done: bool = False):
         return Todo.create({
-            'author_id': self.uuid,
+            'author_id': str(self.uuid),
             'desc': desc,
             'done': done,
         })
@@ -132,9 +155,9 @@ class Todo(Model):
         return list(
             filter(
                 lambda t, u=user: t.has_user(u),
-                map(Todo.from_dict, data["users"]),
+                map(Todo.from_dict, data[cls.field()]),
             )
         )
 
     def has_user(self, user: User):
-        return self.user
+        return str(self.author_id) == str(user.uuid)

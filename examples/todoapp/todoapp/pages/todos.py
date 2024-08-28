@@ -3,9 +3,11 @@ from taktk.notification import Notification
 from taktk.menu import Menu
 from dataclasses import dataclass
 from functools import cache
+from ..admin import User, Todo as Todo
+from taktk.page import Redirect
 
 
-class Todo(Component):
+class TodoPage(Component):
     r"""
     \frame padding=20
         \frame pos:grid=0,0 pos:sticky='nsew'
@@ -13,22 +15,24 @@ class Todo(Component):
             \button text='+' command={add_todo} pos:grid=1,0 pos:sticky='nse'
         \frame pos:grid=0,1 pos:sticky='nsew'
             !enum todos:(idx, todo)
-                \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(idx)} bind:3={popup_menu(idx)}
-                \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
-                \button text=[pages.todos.remove] command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
+                \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(todo.uuid)} bind:3={popup_menu(todo.uuid)}
+                \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(todo.uuid)} pos:grid={(1, idx)} pos:sticky='nse'
+                \button text=[pages.todos.remove] command={popper(todo.uuid)} pos:grid={(2, idx)} pos:sticky='nse'
     """
-    entry = ""
-    todos = []
+
+    def __init__(self, user):
+        self.user = user
+        super().__init__()
 
     def init(self):
-        self.entry = _("pages.todos.placeholder")
-        self.todos = []
+        self['entry'] = _("pages.todos.placeholder")
+        self['todos'] = Todo.for_user(self.user)
 
     def close(self):
         root.destroy()
 
     def add_todo(self, *_):
-        if not self.entry.strip():
+        if not self['entry'].strip():
             return Notification(
                 "Empty field",
                 "Please, enter an item",
@@ -37,34 +41,36 @@ class Todo(Component):
                 bootstyle="warning",
                 source="todo-empty-notification",
             ).show()
-        self.todos.append(TodoItem(desc=self.entry))
-        self.entry = ""
+        self['user'].create_todo(self['entry']).save()
+        self['entry'] = ""
         self.update()
 
-    def clear(self):
-        self.todos.clear()
-        self.update()
-
-    def popper(self, idx):
+    def popper(self, uuid):
         def func(*_):
-            self.todos.pop(idx)
+            Todo.from_uuid(uuid).delete()
             self.update()
 
         return func
 
-    def toggler(self, idx):
+    def toggler(self, uuid):
         def func(*_):
-            self.todos[idx].done = not self.todos[idx].done
+            obj = Todo.from_uuid(uuid)
+            obj.done = not obj.done
+            obj.save()
             self.update()
 
         return func
 
-    def popup_menu(self, idx):
+    def update(self):
+        self['todos'] = Todo.for_user(self.user)
+        super().update()
+
+    def popup_menu(self, uuid):
         menu = Menu(
             {
-                "@toggle": self.toggler(idx),
-                "@remove": self.popper(idx),
-                "@edit": self.editer(idx),
+                "@toggle": self.toggler(uuid),
+                "@remove": self.popper(uuid),
+                "@edit": self.editer(uuid),
             },
             translations="pages.todos.menu",
         )
@@ -74,19 +80,24 @@ class Todo(Component):
 
         return func
 
-    def editer(self, idx):
+    def editer(self, uuid):
         def edit(*_):
             from customtkinter import CTkInputDialog
 
             value = CTkInputDialog(
                 text="Enter the new value", title="Todos"
             ).get_input()
-            self.todos[idx].desc = value
+            todo = Todo.from_uuid(uuid)
+            todo.desc = value
+            todo.save()
             self.update()
 
         return edit
 
 
 @cache
-def handle():
-    return Todo()
+def handle(store, /):
+    if User.is_login():
+        return TodoPage(user=User.current())
+    else:
+        raise Redirect('sign#signin')

@@ -27,6 +27,8 @@ pages:
       name: "Nom: "
       password: "Mot de passe: "
     submit: Proceder >
+    gt_signin: < avez vous un compte? se connecter
+    gt_signup: < Pas de compte?, s'enregistrer
 nav:
   back: < precedant
   next: suivant >

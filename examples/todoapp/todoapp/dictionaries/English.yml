@@ -26,6 +26,8 @@ pages:
       name: "Name: "
       password: "Password: "
     submit: Login >
+    gt_signup: < No account, signup
+    gt_signin: < Already have an account? signin
 nav:
   back: < back
   next: next >

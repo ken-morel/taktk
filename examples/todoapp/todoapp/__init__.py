@@ -1,7 +1,6 @@
 from . import pages
 from pathlib import Path
 from taktk.application import Application
-from taktk.application import Commander
 from taktk.component import Component
 from taktk.component import Component
 from taktk.media import get_media
@@ -27,14 +26,14 @@ def opener_file(file):
 
 
 class Application(Application):
-    commander = Commander(pages)
+    pages = pages
     dictionaries = DIR / "dictionaries"
     media = DIR / "media"
     minsize = (400, 500)
     params = dict(
         themename="darkly",
     )
-    destroy_cache = 1
+    destroy_cache = 5
     menu = Menu(
         {
             "@file": {
@@ -50,7 +49,7 @@ class Application(Application):
         },
         translations="menu",
     )
-    settings = (DIR / "settings.json", {
+    store = (DIR / "store.json", {
         "language": "english",
     })
 
@@ -60,7 +59,7 @@ class Application(Application):
             for l in self.dictionaries.languages
         }
         self.menu.update()
-        self.set_language(self.settings['language'])
+        self.set_language(self.store['language'])
         Dictionary.subscribe(self.update_language)
 
     def back(self):
@@ -70,17 +69,17 @@ class Application(Application):
         self.view.forward()
 
     def update_language(self):
-        self.settings['language'] = Dictionary.dictionary.language
-        self.settings.save()
+        self.store['language'] = Dictionary.dictionary.language
+        self.store.save()
         Notification("Todos", _("preferences.success_modified"), bootstyle="info", duration=10000).show()
 
     class Layout(Component):
         r"""
-        \frame
+        \frame weight:x='1: 10' weight:y='1: 10, 2: 10'
             \frame padding=5 weight:y='2:10' weight:x='2:10' pos:grid=0,0 pos:sticky='nsew'
                 \button command={back}    image=img:@backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
                 !if User.is_login()
-                    \label text={f'logged in as {User.current().name}'} pos:grid=1,0
+                    \label text={f'logged in as: {User.current().name}'} pos:grid=1,0
                 \button command={forward} image=img:@forward{width: 20}  pos:grid=3,0 pos:sticky='e' bootstyle='dark outline'
             \frame:outlet pos:grid=0,1
         """

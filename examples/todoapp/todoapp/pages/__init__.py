@@ -28,5 +28,5 @@ class Index(Component):
     User = User
 
 
-def handle():
+def handle(store, /, **params):
     return Index()

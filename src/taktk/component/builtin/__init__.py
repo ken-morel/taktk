@@ -131,6 +131,7 @@ class entry(_Component):
         width: int = Nil
         font: str = Nil
         textvariable: StringVar = Nil
+        show: str = Nil
 
     same = [
         x for x in dir(attrs) if not x.startswith("_") and x not in ("text",)

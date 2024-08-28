@@ -1,4 +1,6 @@
 from ttkbootstrap import Menu as ttkMenu
+from logging import getLogger
+log = getLogger(__name__)
 
 
 class Menu:
@@ -86,9 +88,12 @@ class Menu:
             for idx, k in self._last:
                 try:
                     self.menu.delete(k)
-                except:
-                    pass
-            self.build_submenus(self.menu, self.eval_structure())
+                except Exception as e:
+                    log.info("while deleting menu field:")
+                    log.error(e)
+            #self.menu.delete('*')
+            self._last = self.eval_structure()
+            self.build_submenus(self.menu, self._last)
 
     def eval_structure(self):
         def build_sub(alias, structure):
@@ -125,5 +130,4 @@ class Menu:
                 else:
                     ret[name] = child_contents
             return ret
-
         return build_sub(self.translations, self.structure)
