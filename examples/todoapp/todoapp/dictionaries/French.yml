@@ -42,5 +42,6 @@ menu:
   preferences:
     __label__: Preferences
     language: Langue
+    theme: Theme
 preferences:
-  success_modified: "Preferences linguistiques modifie avec success, (PS: j'aime le francais!)"
+  success_modified: "Preferences modifie avec success, (PS: j'aime le francais!)"

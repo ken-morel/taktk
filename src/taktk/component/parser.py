@@ -389,5 +389,6 @@ def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
     else:
         raise ValueError("Unrecognsed literal:", repr(string))
 
+
 from . import _Component
 from .instructions import Namespace

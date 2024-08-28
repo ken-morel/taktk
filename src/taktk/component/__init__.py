@@ -85,7 +85,7 @@ class _Component:
 
     def __init__(
         self,
-        namespace: 'Namespace',
+        namespace: "Namespace",
         parent: "Optional[_Component]" = None,
         attrs: dict[str] = {},
     ):
@@ -145,6 +145,7 @@ class _Component:
     def update(self):
         for child in self.children:
             child.update()
+        # self._update()
 
     def _update(self):
         if self.widget is None:
@@ -234,13 +235,13 @@ class EnumComponent(_Component):
         alias: tuple[str, str],
         parent: "Optional[_Component]" = None,
         instructions: list = [],
-        component_space=None
+        component_space=None,
     ):
         self.children = []
         self.parent = parent
         self.parent_namespace = namespace
         self.object = object
-        self.instructions = instructions #instructions
+        self.instructions = instructions  # instructions
         self.alias = alias
         self.component_space = component_space
         if parent is not None:
@@ -288,13 +289,13 @@ class IfComponent(_Component):
         namespace,
         parent: "Optional[_Component]" = None,
         instructions: list = [],
-        component_space=None
+        component_space=None,
     ):
         self.children = []
         self.parent = parent
         self.namespace = namespace
         self.condition = condition
-        self.instructions = instructions #instructions
+        self.instructions = instructions  # instructions
         self.component_space = component_space
         if parent is not None:
             self.parent.children.append(self)
@@ -303,6 +304,7 @@ class IfComponent(_Component):
         parent = parent or self.parent.widget
         self.render_parent = parent
         self.widgets = []
+        self.condition.subscribe(self._update)
         if self.condition.get():
             for instr in self.instructions:
                 comp = instr._eval(self.namespace, self.component_space)
@@ -316,6 +318,7 @@ class IfComponent(_Component):
             return []
 
     def update(self):
+        super().update()
         widgets = self.widgets.copy()
         self.create(self.render_parent)
         try:
@@ -356,6 +359,7 @@ class Component(_Component):
 
     def __init__(self):
         from . import builtin
+
         self.namespace = Namespace()
         for attr_name in dir(self):
             if not attr_name.startswith("_"):
@@ -366,9 +370,11 @@ class Component(_Component):
         self.init()
         if not self._component_:
             self._instructions_ = execute(
-                self._code_ or self.__doc__ or r'\frame'
+                self._code_ or self.__doc__ or r"\frame"
             )
-            self._component_ = self._instructions_.eval(self.namespace, ModularNamespace(builtin))
+            self._component_ = self._instructions_.eval(
+                self.namespace, ModularNamespace(builtin)
+            )
 
     def render(self, master):
         return self._component_.create(master)

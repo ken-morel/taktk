@@ -20,7 +20,7 @@ class Comp(Component):
         print("closed")
 
     def add(self):
-        self.namespace['number'] += 1
+        self.namespace["number"] += 1
         # self["number"] += 1
 
 

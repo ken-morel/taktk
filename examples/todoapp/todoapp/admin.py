@@ -34,11 +34,11 @@ class Model:
     def create(cls, params):
         for raw in data[cls.field()]:
             raw = raw.copy()
-            raw.pop('uuid')
+            raw.pop("uuid")
             if raw == params:
                 raise cls.DoesExist()
         else:
-            params['uuid'] = str(uuid1())
+            params["uuid"] = str(uuid1())
             data[cls.field()].append(params)
             return cls.from_dict(params)
 
@@ -64,7 +64,11 @@ class Model:
         return cls(**params)
 
     def save(self):
-        params = {k: str(v) if isinstance(v, UUID) else v for k, v in vars(self).items() if k in self.__annotations__}
+        params = {
+            k: str(v) if isinstance(v, UUID) else v
+            for k, v in vars(self).items()
+            if k in self.__annotations__
+        }
         uuid = str(self.uuid)
         try:
             raw = self._from_uuid(uuid)
@@ -79,7 +83,7 @@ class Model:
     def delete(self):
         uuid = str(self.uuid)
         for idx, obj in enumerate(data[self.field()]):
-            if obj['uuid'] == uuid:
+            if obj["uuid"] == uuid:
                 break
         else:
             raise self.DoesNotExist()
@@ -114,7 +118,7 @@ class User(Model):
     def login(cls, name: str, password: str):
         password = sha256(password.encode()).hexdigest()
         for raw in data[cls.field()]:
-            if raw['name'] == name and raw['password'] == password:
+            if raw["name"] == name and raw["password"] == password:
                 cls.__current_user__ = cls.from_dict(raw)
                 return cls.current()
         else:
@@ -123,19 +127,20 @@ class User(Model):
     @classmethod
     @annotate
     def signup(cls, name: str, password: str):
-        user = User.create({
-            'name': name,
-            'password': sha256(password.encode()).hexdigest()
-        })
+        user = User.create(
+            {"name": name, "password": sha256(password.encode()).hexdigest()}
+        )
         user.save()
         User.__current_user__ = user
 
     def create_todo(self, desc: str, done: bool = False):
-        return Todo.create({
-            'author_id': str(self.uuid),
-            'desc': desc,
-            'done': done,
-        })
+        return Todo.create(
+            {
+                "author_id": str(self.uuid),
+                "desc": desc,
+                "done": done,
+            }
+        )
 
     @classmethod
     def is_login(cls):

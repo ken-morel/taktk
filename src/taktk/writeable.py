@@ -7,7 +7,7 @@ import builtins
 
 
 class Namespace:
-    def __init__(self, parents = []):
+    def __init__(self, parents=[]):
         self.parents = parents
         self.vars = {}
 
@@ -178,7 +178,9 @@ class NamespaceWriteable(Writeable):
                         return eval(string, locals(), self.namespace)
                     except Exception as e:
                         raise NameError(
-                            "Error resolving NamespaceWriteable", e, repr(string)
+                            "Error resolving NamespaceWriteable",
+                            e,
+                            repr(string),
                         ) from e
                 else:
                     return getattr(obj, self.name)

@@ -41,5 +41,6 @@ menu:
   preferences:
     __label__: Preferences
     language: Language
+    theme: Theme
 preferences:
   success_modified: Preferences succesfuly modified

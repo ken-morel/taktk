@@ -22,6 +22,7 @@ class Todo(Component):
                 \button text={'mark done' if not todo.done else 'mark undone'} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
                 \button text='remove' command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
     """
+
     todos = [TodoItem("a", True), TodoItem("b", False)]
     entry = "Enter todo here"
 

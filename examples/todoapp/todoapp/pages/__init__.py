@@ -7,9 +7,9 @@ from ..admin import User
 
 class Index(Component):
     r"""
-    \frame padding=30 weight:x='1:5'
+    \frame padding=30 weight:x='1:5' weight:y='0:5'
         \frame pos:grid=0,1  padding=5 pos:sticky=''
-            \label text=[pages.index.welcome] pos:grid=0,0 font="{courier 10 bold}"
+            \label text=[pages.index.welcome] pos:grid=0,0 font='"Nova Round" 15'
         !if User.is_login()
             \ctk.button pos:grid=0,2 text=[pages.index.next] pos:sticky='se' command={gt_next}
         !if not User.is_login()
@@ -23,7 +23,8 @@ class Index(Component):
 
     def gt_login(self):
         import taktk
-        taktk.application("sign", "signin", redirect='todos')
+
+        taktk.application("sign", "signin", redirect="todos")
 
     User = User
 

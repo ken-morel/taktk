@@ -1,6 +1,7 @@
 import os
 import json
 from logging import getLogger
+
 log = getLogger(__name__)
 
 
@@ -60,9 +61,9 @@ class Store(dict):
             log.error(e)
             raise
 
-    def for_page(self, page):
+    def for_page(self, page, default={}):
         if page not in self.page_stores:
-            self.page_stores[page] = Pagestore(self, page)
+            self.page_stores[page] = Pagestore(self, page, default=default)
         return self.page_stores[page]
 
     def __hash__(self):
@@ -71,11 +72,12 @@ class Store(dict):
 
 class Pagestore(Store):
     FORMAT = "__pageStore_{0}__"
+
     def __init__(self, store, page_name, default={}):
         self.store = store
         self.page = self.FORMAT.format(page_name)
-        if not page_name in store or not isinstance(store[page_name], dict):
-            store[page_name] = default
+        if self.page not in store or not isinstance(store[self.page], dict):
+            store[self.page] = default
 
     def __setitem__(self, item, value):
         self.store[self.page][item] = value

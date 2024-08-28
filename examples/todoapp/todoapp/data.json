@@ -9,6 +9,16 @@
       "name": "ama",
       "password": "02a6efa44deef545bc56c1aae1e1d9feb53d505bb269a2abd6efe8d8f4e237f2",
       "uuid": "eb69e633-6546-11ef-b3f9-28b2bda8b9ca"
+    },
+    {
+      "uuid": "adf19125-6566-11ef-b2d9-28b2bda8b9ca",
+      "name": "ama",
+      "password": "4bb7a8b99609b0b8b1d534694bb1f31f129138a2f2a11f8e8702eedbb792922e"
+    },
+    {
+      "uuid": "c83f3c24-6566-11ef-9750-28b2bda8b9ca",
+      "name": "amas",
+      "password": "02a6efa44deef545bc56c1aae1e1d9feb53d505bb269a2abd6efe8d8f4e237f2"
     }
   ],
   "todos": [
@@ -47,6 +57,24 @@
       "desc": "if ama is colorama then colorama will not be ama still of course, you know: thas is life",
       "done": true,
       "uuid": "0e4a7b31-6547-11ef-ac34-28b2bda8b9ca"
+    },
+    {
+      "uuid": "cab51d13-6566-11ef-a1a5-28b2bda8b9ca",
+      "author_id": "c83f3c23-6566-11ef-bb8b-28b2bda8b9ca",
+      "desc": "Enter you todo her please",
+      "done": false
+    },
+    {
+      "uuid": "c87360e4-6567-11ef-9ba3-28b2bda8b9ca",
+      "author_id": "9fd496a6-64a8-11ef-b107-28d244ed9304",
+      "desc": "I love eating",
+      "done": false
+    },
+    {
+      "uuid": "daea88ec-6568-11ef-ac06-28b2bda8b9ca",
+      "author_id": "eb69e633-6546-11ef-b3f9-28b2bda8b9ca",
+      "desc": "I love it!",
+      "done": false
     }
   ]
 }

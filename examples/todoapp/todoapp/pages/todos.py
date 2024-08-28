@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from functools import cache
 from ..admin import User, Todo as Todo
 from taktk.page import Redirect
+from taktk.writeable import NamespaceWriteable
+
+store = STORE = None
 
 
 class TodoPage(Component):
@@ -20,19 +23,25 @@ class TodoPage(Component):
                 \button text=[pages.todos.remove] command={popper(todo.uuid)} pos:grid={(2, idx)} pos:sticky='nse'
     """
 
-    def __init__(self, user):
+    def __init__(self, user, entry):
         self.user = user
+        self.entry = entry
         super().__init__()
 
     def init(self):
-        self['entry'] = _("pages.todos.placeholder")
-        self['todos'] = Todo.for_user(self.user)
+        self["todos"] = Todo.for_user(self.user)
+        NamespaceWriteable(self.namespace, "entry").subscribe(
+            self.update_entry
+        )
+
+    def update_entry(self):
+        store[label] = self["entry"]
 
     def close(self):
         root.destroy()
 
     def add_todo(self, *_):
-        if not self['entry'].strip():
+        if not self["entry"].strip():
             return Notification(
                 "Empty field",
                 "Please, enter an item",
@@ -41,8 +50,8 @@ class TodoPage(Component):
                 bootstyle="warning",
                 source="todo-empty-notification",
             ).show()
-        self['user'].create_todo(self['entry']).save()
-        self['entry'] = ""
+        self["user"].create_todo(self["entry"]).save()
+        self["entry"] = ""
         self.update()
 
     def popper(self, uuid):
@@ -62,7 +71,7 @@ class TodoPage(Component):
         return func
 
     def update(self):
-        self['todos'] = Todo.for_user(self.user)
+        self["todos"] = Todo.for_user(self.user)
         super().update()
 
     def popup_menu(self, uuid):
@@ -96,8 +105,17 @@ class TodoPage(Component):
 
 
 @cache
-def handle(store, /):
+def handle(_store, /):
+    global store, STORE, label
+    STORE = _store
     if User.is_login():
-        return TodoPage(user=User.current())
+        user = User.current()
+        label = f"entry:{user.name}"
+        store = STORE.for_page(__name__)
+        try:
+            entry = store[label]
+        except:
+            store[label] = entry = _("pages.todos.placeholder")
+        return TodoPage(user=user, entry=entry)
     else:
-        raise Redirect('sign#signin')
+        raise Redirect("sign#signin")

@@ -1,3 +1,8 @@
 {
-  "language": "English"
+  "language": "French",
+  "__pageStore_todoapp.pages.todos__": {
+    "entry:ama": "I love enterring my todos here!",
+    "entry:ken-morel": "Noo!"
+  },
+  "theme": "sandstone"
 }

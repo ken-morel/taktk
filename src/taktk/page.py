@@ -3,6 +3,11 @@ from urllib.parse import urlparse, parse_qsl
 import json
 import re
 from decimal import Decimal
+from uuid import UUID
+from logging import getLogger
+
+log = getLogger(__name__)
+
 # ParseResult(scheme='http', netloc='192.168.23.48', path='/todos/sign.php', params='', query='reason=3', fragment='out')
 
 
@@ -72,11 +77,12 @@ class PageView:
 
     def __call__(self, module, handler, params={}, /, **kwparams):
         from .component import Component
+
         if isinstance(module, str):
             module, urlparams = self.import_module(module)
-        function = getattr(module, handler or 'handle')
+        function = getattr(module, handler or "handle")
         comp = None
-        http = {'ok': True, 'error': None}
+        http = {"ok": True, "error": None}
         page = function(
             self.store,
             *urlparams,
@@ -97,16 +103,18 @@ class PageView:
     def import_module(self, path):
         module = self.package
         params = []
-        for package in path.strip('/').split('/'):
+        for package in path.strip("/").split("/"):
             if not package.strip():
                 continue
             try:
-                module = import_module(module.__package__ + '.' + package)
+                module = import_module(module.__package__ + "." + package)
             except ImportError:
                 for regex, name, converter in URLPATTERNS:
                     if match := regex.fullmatch(package):
                         try:
-                            module = import_module(module.__package__ + '.' + name)
+                            module = import_module(
+                                module.__package__ + "." + name
+                            )
                         except ImportError:
                             continue
                         else:
@@ -128,9 +136,16 @@ class Redirect(Exception):
 
 
 URLPATTERNS = [
-    (re.compile(r'^\d+$'), 'int', int),
-    (re.compile(r'^\d+\.\d+$'), 'decimal', Decimal),
-    (re.compile(r'.+'), 'str', str),
+    (re.compile(r"^\d+$"), "int", int),
+    (re.compile(r"^\d+\.\d+$"), "decimal", Decimal),
+    (re.compile(r".+"), "str", str),
+    (
+        re.compile(
+            r"[\da-f]{8}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{12}"
+        ),
+        "uuid",
+        UUID,
+    ),
 ]
 
 
@@ -140,4 +155,4 @@ def register_urlpattern(regex, name=None, position=-2):
             name = func.__name__.lower()
         if not isinstance(regex, re.Pattern):
             regex = re.compile(regex)
-        URLPATTERNS.insert(position, (regex, '_' + name, converter))
+        URLPATTERNS.insert(position, (regex, "_" + name, converter))

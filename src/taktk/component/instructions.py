@@ -35,10 +35,11 @@ class Instruction:
             return text + "\n]"
 
     def _str_header(self):
-        return '{}'
+        return "{}"
 
 
 Attrs = dict[str]
+
 
 # @annotate
 class Create_Component(Instruction):
@@ -91,7 +92,9 @@ class Create_Component(Instruction):
     @annotate
     def _eval(self, namespace: Namespace, component_space):
         parent = self.parent
-        assert parent.computed, "cannot compute children instructions before parent"
+        assert (
+            parent.computed
+        ), "cannot compute children instructions before parent"
         self.component = component_space[self.name](
             parent=parent.component, attrs=self.attrs, namespace=namespace
         )
@@ -155,6 +158,7 @@ class Create_Enum_Component(Instruction):
     @annotate
     def _eval(self, namespace: Namespace, component_space):
         from ..writeable import NamespaceWriteable
+
         parent = self.parent
         self.component = EnumComponent(
             parent=parent.component,
@@ -209,6 +213,7 @@ class Create_If_Component(Instruction):
     @annotate
     def _eval(self, namespace: Namespace, component_space):
         from ..writeable import NamespaceWriteable
+
         parent = self.parent
         self.component = IfComponent(
             parent=parent.component,
@@ -247,7 +252,9 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
         if ind < base_ind:
             return (line_idx - 1, parent)
         elif ind > base_ind:
-            target_idx, _w = parse_subinstructions(last_component, lines, line_idx, indent, offset)
+            target_idx, _w = parse_subinstructions(
+                last_component, lines, line_idx, indent, offset
+            )
             target_idx += 1
             continue
         else:

@@ -3,6 +3,9 @@ from .page import *
 import json
 from tempfile import NamedTemporaryFile
 from .store import Store
+from logging import getLogger
+
+log = getLogger(__name__)
 
 
 class Application:
@@ -50,12 +53,14 @@ class Application:
 
     def create(self):
         self.root = root = Window(**self.params)
+        root.columnconfigure(0, weight=10)
+        root.rowconfigure(0, weight=10)
         if self.menu is not None:
             self.menu.toplevel(root)
         if self.Layout is not None:
             self.layout = self.Layout(self)
             self.layout.render(root).grid(column=0, row=0, sticky="nsew")
-            return self.layout['outlet'].widget
+            return self.layout["outlet"].widget
         else:
             return root
 
@@ -69,18 +74,8 @@ class Application:
         self.root.mainloop()
 
     def __call__(self, module, function=None, /, **params):
-        from urllib.parse import quote
-
-        path = module
-        id_ = None
-        if len(params) > 0:
-            path += "?" + "&".join([
-                f"{quote(name)}={quote(json.dumps(value))}"
-                for name, value in params.items()
-            ])
-        if function is not None:
-            path += f"#{function}"
-        self.view.url(path)
+        self.view(module, function, params)
+        self.layout.update()
 
     def exit(self):
         self.root.destroy()
