@@ -158,7 +158,7 @@ def next_attr_value(_state: State) -> tuple[State, str, str]:
         attr += state[...][0]
         state += 1
     if not state or state[...][0] != "=":
-        raise Exception("missing equal sign in:", _state.text)
+        raise Exception(f"missing equal after {attr!r} sign in:", state.text)
     state += 1
     nstate, val = next_value(state)
     state |= nstate
@@ -176,7 +176,36 @@ def next_value(_state: State) -> tuple[State, str]:
 
     val = ""
     brackets = []
-
+    if (
+        ":" in state[...]
+        and state[...][: (n := state[...].index(":"))].isalpha()
+        and len(brackets) == 0
+    ):
+        begin = state.copy()
+        state += n
+        bc = 0
+        while state:
+            if state[...][0] == "{":
+                bc += 1
+            elif state[...][0] == "}":
+                bc -= 1
+            elif (quote := state[...][0]) in STRING_QUOTES:
+                state += 1
+                while state:
+                    if state[...][0] == quote:
+                        break
+                    elif state[...][0] == "\\":
+                        state += 2
+                    else:
+                        state += 1
+                else:
+                    raise Exception(
+                        "unterminated string in:", repr(state.text)
+                    )
+            elif state[...][0].isspace() and bc == 0:
+                break
+            state += 1
+        return state, state.text[begin:state]
     while state:
         c = state[...][0]
         if c in BRACKETS:
@@ -200,35 +229,6 @@ def next_value(_state: State) -> tuple[State, str]:
                 raise Exception(
                     f"unmatched {c!r} at {int(state)}: {state.text!r}"
                 )
-        elif (
-            ":" in state[...]
-            and state[...][: (n := state[...].index(":"))].isalpha()
-        ):
-            begin = state.copy()
-            state += n
-            bc = 0
-            while state:
-                if state[...][0] == "{":
-                    bc += 1
-                elif state[...][0] == "}":
-                    bc -= 1
-                elif (quote := state[...][0]) in STRING_QUOTES:
-                    state += 1
-                    while state:
-                        if state[...][0] == quote:
-                            break
-                        elif state[...][0] == "\\":
-                            state += 2
-                        else:
-                            state += 1
-                    else:
-                        raise Exception(
-                            "unterminated string in:", repr(state.text)
-                        )
-                elif state[...][0].isspace() and bc == 0:
-                    break
-                state += 1
-            return state, state.text[begin:state]
         elif len(brackets) == 0 and c.isspace():
             break
         state += 1

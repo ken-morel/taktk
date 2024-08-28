@@ -3,6 +3,7 @@ from taktk.component import Component
 from . import todos
 from taktk.notification import Notification
 from ..admin import User
+from taktk.page import register_urlpattern
 
 
 class Index(Component):
@@ -31,3 +32,11 @@ class Index(Component):
 
 def handle(store, /, **params):
     return Index()
+
+
+@register_urlpattern(
+    r"[\da-f]{8}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{12}",
+    position=0,
+)
+def user(uuid):
+    return User.from_uuid(uuid)

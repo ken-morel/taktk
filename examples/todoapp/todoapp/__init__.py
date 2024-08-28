@@ -53,6 +53,7 @@ class Application(Application):
         DIR / "store.json",
         {
             "language": "english",
+            "theme": "darkly",
         },
     )
 
@@ -102,10 +103,11 @@ class Application(Application):
     class Layout(Component):
         r"""
         \frame weight:x='0: 10' weight:y='1: 10, 2: 10'
-            \frame padding=5 weight:y='2:10' weight:x='2:10' pos:grid=0,0 pos:sticky='nsew'
+            \frame padding=5 weight:y='2:10' weight:x='3:10' pos:grid=0,0 pos:sticky='nsew'
                 \button command={back}    image=img:@backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
-                \label text={f'logged in as: {User.current().name}' if User.current() else "not logged in!"} pos:grid=1,0
-                \button command={forward} image=img:@forward{width: 20}  pos:grid=3,0 pos:sticky='e' bootstyle='dark outline'
+                \button command={gt_users}    image=img:@users-between-lines{height: 20} pos:grid=1,0 pos:sticky='w' bootstyle='dark outline'
+                \label text={f'logged in as: {User.current().name}' if User.current() else "not logged in!"} pos:grid=2,0
+                \button command={forward} image=img:@forward{width: 20}  pos:grid=4,0 pos:sticky='e' bootstyle='dark outline'
             \frame:outlet pos:grid=0,1
         """
 
@@ -120,5 +122,8 @@ class Application(Application):
 
         def forward(self):
             self.app.forward()
+
+        def gt_users(self):
+            self.app("users")
 
         User = User

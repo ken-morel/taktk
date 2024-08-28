@@ -10,6 +10,7 @@ def rmbg(
     infile: Path,
     outfile: Path = None,
     color: tuple[int, int, int] = (255, 255, 255),
+    replace: tuple[int, int, int, int] = (0, 0, 0, 0),
     tolerance: int = 10,
 ):
     from PIL import Image
@@ -20,9 +21,9 @@ def rmbg(
         for y in range(height):
             pixel = image.getpixel((x, y))[:3]
             if pixel_difference(pixel, color) < tolerance:
-                image.putpixel((x, y), pixel + (0,))
+                image.putpixel((x, y), replace)
     image.save(outfile or infile)
 
 
 for x in Path(".").glob("*.png"):
-    rmbg(x)
+    rmbg(x, color=(0, 0, 0), replace=(50, 50, 70))

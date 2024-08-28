@@ -14,13 +14,12 @@ class Menu:
         Dictionary.subscribe(self.update)
         self.structure = structure
         self.translations = translations
-        self._last = None  # self.eval_structure()
 
     def create(self):
         menubar = ttkMenu()
         Menu.build_submenus(menubar, self.eval_structure())
         self.menu = menubar
-        self.menu_structure = self._last = self.eval_structure()
+        self.menu_structure = self.eval_structure()
         return menubar
 
     @classmethod
@@ -85,16 +84,8 @@ class Menu:
         return val
 
     def update(self):
-        if self._last is not None:
-            for idx, k in self._last:
-                try:
-                    self.menu.delete(k)
-                except Exception as e:
-                    log.info("while deleting menu field:")
-                    log.error(e)
-            # self.menu.delete('*')
-            self._last = self.eval_structure()
-            self.build_submenus(self.menu, self._last)
+        self.menu.delete(0, 'end')
+        self.build_submenus(self.menu, self.eval_structure())
 
     def eval_structure(self):
         def build_sub(alias, structure):

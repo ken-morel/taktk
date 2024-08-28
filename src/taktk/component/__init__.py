@@ -248,7 +248,6 @@ class EnumComponent(_Component):
             self.parent.children.append(self)
 
     def create(self, parent=None):
-        assert parent is self.parent.widget
         parent = parent or self.parent.widget
         self.render_parent = parent
         self.widgets = []

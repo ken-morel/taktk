@@ -85,3 +85,6 @@ class Pagestore(Store):
 
     def __getitem__(self, item):
         return self.store[self.page][item]
+
+    def save(self):
+        self.store.save()

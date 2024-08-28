@@ -4,6 +4,7 @@ import json
 from tempfile import NamedTemporaryFile
 from .store import Store
 from logging import getLogger
+from . import ON_CREATE_HANDLERS
 
 log = getLogger(__name__)
 
@@ -68,6 +69,8 @@ class Application:
         self.setup_taktk()
         root = self.create()
         self.init()
+        for handler in ON_CREATE_HANDLERS:
+            handler(self)
         self.view = PageView(root, self.pages, self, self.destroy_cache)
         self.view.geometry()
         self.view.url(entry)
@@ -79,3 +82,7 @@ class Application:
 
     def exit(self):
         self.root.destroy()
+
+    def listen_at(self, port):
+        from .application_server import ApplicationServer
+        ApplicationServer(self).thread_serve()

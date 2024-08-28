@@ -29,6 +29,8 @@ pages:
     submit: Proceder >
     gt_signin: < avez vous un compte? se connecter
     gt_signup: < Pas de compte?, s'enregistrer
+  users:
+    view: visiter >
 nav:
   back: < precedant
   next: suivant >

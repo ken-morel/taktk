@@ -8,17 +8,9 @@ from pyoload import annotate, Checks, Cast
 from dataclasses import dataclass
 from uuid import UUID, uuid1
 from hashlib import sha256
+import taktk
 
 DIR = Path(__file__).parent
-
-data = Store(
-    DIR / "data.json",
-    {
-        "users": [],
-        "todos": [],
-    },
-)
-
 
 class Model:
     @classmethod
@@ -28,24 +20,24 @@ class Model:
 
     @classmethod
     def all(cls):
-        return list(map(cls.from_dict, data[cls.field()]))
+        return list(map(cls.from_dict, store[cls.field()]))
 
     @classmethod
     def create(cls, params):
-        for raw in data[cls.field()]:
+        for raw in store[cls.field()]:
             raw = raw.copy()
             raw.pop("uuid")
             if raw == params:
                 raise cls.DoesExist()
         else:
             params["uuid"] = str(uuid1())
-            data[cls.field()].append(params)
+            store[cls.field()].append(params)
             return cls.from_dict(params)
 
     @classmethod
     def _from_uuid(cls, uuid):
         uuid = str(uuid)
-        for raw in data[cls.field()]:
+        for raw in store[cls.field()]:
             if raw["uuid"] == uuid:
                 return raw
         else:
@@ -77,18 +69,18 @@ class Model:
         else:
             raw.update(params)
         finally:
-            data.save()
+            store.save()
         return self
 
     def delete(self):
         uuid = str(self.uuid)
-        for idx, obj in enumerate(data[self.field()]):
+        for idx, obj in enumerate(store[self.field()]):
             if obj["uuid"] == uuid:
                 break
         else:
             raise self.DoesNotExist()
-        data[self.field()].pop(idx)
-        data.save()
+        store[self.field()].pop(idx)
+        store.save()
         return None
 
     class Exception(ValueError):
@@ -117,7 +109,7 @@ class User(Model):
     @annotate
     def login(cls, name: str, password: str):
         password = sha256(password.encode()).hexdigest()
-        for raw in data[cls.field()]:
+        for raw in store[cls.field()]:
             if raw["name"] == name and raw["password"] == password:
                 cls.__current_user__ = cls.from_dict(raw)
                 return cls.current()
@@ -160,9 +152,18 @@ class Todo(Model):
         return list(
             filter(
                 lambda t, u=user: t.has_user(u),
-                map(Todo.from_dict, data[cls.field()]),
+                map(Todo.from_dict, store[cls.field()]),
             )
         )
 
     def has_user(self, user: User):
         return str(self.author_id) == str(user.uuid)
+
+
+@taktk.on_create
+def init(app):
+    global store
+    store = app.store.for_page(__name__, {
+        "users": [],
+        "todos": [],
+    })

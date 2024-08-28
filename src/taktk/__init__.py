@@ -40,3 +40,10 @@ def resolve(value):
         return value.get()
     else:
         return value
+
+
+ON_CREATE_HANDLERS = set()
+
+
+def on_create(func):
+    ON_CREATE_HANDLERS.add(func)

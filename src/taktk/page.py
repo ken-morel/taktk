@@ -149,10 +149,15 @@ URLPATTERNS = [
 ]
 
 
-def register_urlpattern(regex, name=None, position=-2):
+def register_urlpattern(regex, converter=None, name=None, position=-2):
     def registerrer(func):
+        nonlocal name, regex
         if name is None:
             name = func.__name__.lower()
         if not isinstance(regex, re.Pattern):
             regex = re.compile(regex)
-        URLPATTERNS.insert(position, (regex, "_" + name, converter))
+        URLPATTERNS.insert(position, (regex, "_" + name, func))
+    if converter is not None:
+        return registerrer(converter)
+    else:
+        return registerrer

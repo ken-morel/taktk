@@ -28,6 +28,8 @@ pages:
     submit: Login >
     gt_signup: < No account, signup
     gt_signin: < Already have an account? signin
+  users:
+    view: view >
 nav:
   back: < back
   next: next >
