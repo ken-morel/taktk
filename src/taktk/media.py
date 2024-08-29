@@ -31,7 +31,7 @@ def get_media(spec):
     spec, props = parse_media_spec(spec)
     assert (
         n := spec.count(":")
-    ) == 1, f"media spec should include one ':', has: {n}"
+    ) >= 1, f"media spec should include one ':', has: {n}"
     match tuple(spec.split(":", 1)):
         case ("img", path):
             if path[0] == "@":
@@ -41,6 +41,10 @@ def get_media(spec):
         case wrong:
             raise ValueError(f"Unrecognised media {spec!r}")
 
+def get_image(spec):
+    if not spec.startswith('img:'):
+        spec = 'img:' + spec
+    return get_media(spec)
 
 class Resource:
     pass
@@ -49,7 +53,7 @@ class Resource:
 class Image(Resource):
     @cached_property
     def image(self):
-        image = PIL.Image.open(self.path)
+        image = PIL.Image.open(self.full_path)
         iw, ih = image.size
         width, height = self.props.get("width"), self.props.get("height")
         if width == height == None:
@@ -65,13 +69,13 @@ class Image(Resource):
         return PIL.ImageTk.PhotoImage(self.image)
 
     def get(self):
-        print(self, self.tk)
         return self.tk
 
     def __init__(self, path, props):
         if not "." in path:
             path += ".png"
         self.path = path
+        self.full_path = path
         self.props = props
 
 
@@ -80,7 +84,7 @@ class MediaImage(Resource):
     def image(self):
         if MEDIA_DIR is None:
             raise RuntimeError("Media directory not set")
-        image = PIL.Image.open(MEDIA_DIR / "img" / self.path)
+        image = PIL.Image.open(self.full_path)
         iw, ih = image.size
         width, height = self.props.get("width"), self.props.get("height")
         if width == height == None:
@@ -90,6 +94,10 @@ class MediaImage(Resource):
         elif height is None:
             height = width / iw * ih
         return image.resize((int(width), int(height)))
+
+    @property
+    def full_path(self):
+        return MEDIA_DIR / "img" / self.path
 
     @cached_property
     def tk(self):

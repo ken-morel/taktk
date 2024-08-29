@@ -1,6 +1,6 @@
 {
-  "language": "French",
-  "theme": "journal",
+  "language": "English",
+  "theme": "darkly",
   "__pageStore_todoapp.admin__": {
     "users": [
       {
@@ -56,6 +56,30 @@
         "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
         "desc": "kenpd",
         "done": true
+      },
+      {
+        "uuid": "00bbcaed-65f2-11ef-a2f7-28d244ed9304",
+        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
+        "desc": "I love python!",
+        "done": false
+      },
+      {
+        "uuid": "07ca2fd9-65f2-11ef-b1d9-28d244ed9304",
+        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
+        "desc": "I love tkinter!",
+        "done": true
+      },
+      {
+        "uuid": "0afbe6e3-65f2-11ef-8b72-28d244ed9304",
+        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
+        "desc": "I love Tk!",
+        "done": false
+      },
+      {
+        "uuid": "346f294e-65f2-11ef-825c-28d244ed9304",
+        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
+        "desc": "kkkdmc",
+        "done": false
       }
     ]
   },

@@ -21,6 +21,7 @@ class PageView:
         self.store = app.store
         self.destroy_cache = destroy_cache
         self.package = page
+        self.current_url = None
 
     def geometry(self):
         self.parent.columnconfigure(0, weight=1)
@@ -28,13 +29,13 @@ class PageView:
 
     def url(self, url):
         target = url
-        while target is not None:
+        while True:
             try:
                 result = self.exec_url(target)
             except Redirect as r:
                 target = r.url
             else:
-                target = None
+                return result
 
     def view_component(self, component):
         if self.current_page is None:
@@ -56,10 +57,16 @@ class PageView:
     def back(self):
         if self.current_page > 0:
             self.focus_page(self.current_page - 1)
+            return True
+        else:
+            return False
 
     def forward(self):
         if self.current_page < len(self.history) - 1:
             self.focus_page(self.current_page + 1)
+            return True
+        else:
+            return False
 
     def focus_page(self, idx):
         page = self.history[idx]
@@ -70,19 +77,44 @@ class PageView:
         self.current_page = idx
 
     def exec_url(self, cmd):
-        parsed = urlparse(cmd)
-        path = [self.package.__package__] + list(filter(bool, cmd.split("/")))
-        args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
-        return self(parsed.path, parsed.fragment, args)
+        if cmd.strip('/') == "!current":
+            return (None, {
+                "ok": True,
+                "url": self.current_url,
+            })
+        elif cmd.strip('/') == "!back":
+            return (None, {
+                "ok": True,
+                "changed": self.back(),
+                "url": self.current_url,
+            })
+        elif cmd.strip('/') == "!forward":
+            return (None, {
+                "ok": True,
+                "changed": self.forward(),
+                "url": self.current_url,
+            })
+        else:
+            parsed = urlparse(cmd)
+            path = [self.package.__package__] + list(filter(bool, cmd.split("/")))
+            args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
+            handler = parsed.fragment
+            path = parsed.path
+            if ':' in path:
+                path, handler = path.rsplit(':', 1)
+            self.current_url = parsed.path
+            return self(path, handler, args)
 
     def __call__(self, module, handler, params={}, /, **kwparams):
         from .component import Component
 
         if isinstance(module, str):
             module, urlparams = self.import_module(module)
-        function = getattr(module, handler or "handle")
-        comp = None
-        http = {"ok": True, "error": None}
+        try:
+            function = getattr(module, handler or "handle")
+        except AttributeError:
+            raise Error404()
+        http = comp = None
         page = function(
             self.store,
             *urlparams,
@@ -118,7 +150,12 @@ class PageView:
                         except ImportError:
                             continue
                         else:
-                            params.append(converter(package))
+                            try:
+                                param = converter(package)
+                            except:
+                                raise Error404()
+                            else:
+                                params.append(param)
                             break
                 else:
                     raise Error404(path)

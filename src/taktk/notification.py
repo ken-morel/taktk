@@ -9,6 +9,8 @@ from threading import Thread
 from ttkbootstrap import *
 from ttkbootstrap.icons import *
 from ttkbootstrap.utility import *
+from .media import get_image
+from . import Nil
 
 DEFAULT_ICON_WIN32 = "\ue154"
 DEFAULT_ICON = "\u25f0"
@@ -28,7 +30,7 @@ class Notification:
         duration=None,
         bootstyle="dark",
         alert=False,
-        icon=None,
+        icon=Nil,
         source=None,
     ):
         self.source = source
@@ -37,11 +39,22 @@ class Notification:
         self.duration = duration
         self.bootstyle = bootstyle
 
-        if isinstance(icon, str):
-            image = Image.open(icon)
+        self.setup_icon(icon)
+        self.titlefont = None
+
+    def setup_icon(self, icon=Nil):
+        image = None
+        if icon is Nil:
+            import taktk
+            if taktk.application is None:
+                return
+            image = taktk.application.icon.image
+        elif isinstance(icon, str):
+            image = get_image(icon).image
+        if image is not None:
             w, h = image.size
             sc = Notification.IMAGE_WIDTH / w
-            icon = ImageTk.PhotoImage(image.resize((int(w * sc), int(h * sc))))
+            self.icon = ImageTk.PhotoImage(image.resize((int(w * sc), int(h * sc))))
         else:
             try:
                 sc = Notification.IMAGE_WIDTH / icon.width()
@@ -49,10 +62,9 @@ class Notification:
                     width=int(sc * icon.width()),
                     height=int(sc * icon.height()),
                 )
+                self.icon = icon
             except Exception:
                 pass
-        self.icon = icon
-        self.titlefont = None
 
     def show(self):
         self.root = window = Toplevel(overrideredirect=True, alpha=0.7)
@@ -110,14 +122,6 @@ class Notification:
 
     @classmethod
     def add(cls, notification):
-        for x in range(len(cls._STACK)):
-            if (
-                cls._STACK[x].source == notification.source
-                and notification.source is not None
-            ):
-                cls.remove(cls._STACK[x])
-                cls._STACK.insert(x, notification)
-                return cls.position_widgets()
 
         marg = Notification.MARGIN
         width = Notification.WIDTH
@@ -125,19 +129,30 @@ class Notification:
 
         height = notification.root.winfo_height()
         screen_height = notification.root.winfo_screenheight()
-
-        while True:
-            taken = 0
-            for notif in Notification._STACK:
-                taken += marg + notif.root.winfo_height()
-
-            if screen_height - (taken + marg) < height:
-                Notification.remove_earliset()
-                continue
-            else:
+        for x in range(len(cls._STACK)):
+            if (
+                cls._STACK[x].source == notification.source
+                and notification.source is not None
+            ):
+                px, py = cls._STACK[x].root.winfo_rootx(), cls._STACK[x].root.winfo_rooty()
+                cls.remove(cls._STACK[x])
+                cls._STACK.insert(x, notification)
+                notification.root.geometry(f"{width}x{height}{px:+}{py:+}")
+                cls.position_widgets()
                 break
-        cls._STACK.append(notification)
-        notification.root.geometry(f"{width}x{height}-{marg}-{taken+marg}")
+        else:
+            while True:
+                taken = 0
+                for notif in Notification._STACK:
+                    taken += marg + notif.root.winfo_height()
+
+                if screen_height - (taken + marg) < height:
+                    Notification.remove_earliset()
+                    continue
+                else:
+                    break
+            cls._STACK.append(notification)
+            notification.root.geometry(f"{width}x{height}-{marg}-{taken+marg}")
 
     @classmethod
     def remove_earliset(cls):

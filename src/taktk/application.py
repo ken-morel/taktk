@@ -3,6 +3,7 @@ from .page import *
 import json
 from tempfile import NamedTemporaryFile
 from .store import Store
+from .media import get_media, get_image
 from logging import getLogger
 from . import ON_CREATE_HANDLERS
 
@@ -17,6 +18,8 @@ class Application:
     layout = None
     destroy_cache: int = 5
     store = (None, {})
+    address = None
+    icon = None
 
     def __init__(self):
         import taktk
@@ -52,7 +55,11 @@ class Application:
 
             media.MEDIA_DIR = Path(self.media)
 
+
     def create(self):
+        if self.icon is not None:
+            self.icon = get_image(self.icon)
+            self.params['iconphoto'] = self.icon.full_path
         self.root = root = Window(**self.params)
         root.columnconfigure(0, weight=10)
         root.rowconfigure(0, weight=10)
@@ -71,18 +78,41 @@ class Application:
         self.init()
         for handler in ON_CREATE_HANDLERS:
             handler(self)
+        if self.address is not None:
+            self.listen_at(self.address)
         self.view = PageView(root, self.pages, self, self.destroy_cache)
         self.view.geometry()
         self.view.url(entry)
         self.root.mainloop()
 
-    def __call__(self, module, function=None, /, **params):
-        self.view(module, function, params)
+    def __call__(self, module, function=None, redirect=True, /, **params):
+        try:
+            self.view(module, function, params)
+        except Redirect as e:
+            target = e.url
+            if redirect:
+                self.view.url(target)
+            else:
+                raise
         self.layout.update()
+
+    def url(self, url):
+        return self.view.url(url)
 
     def exit(self):
         self.root.destroy()
 
-    def listen_at(self, port):
+    def listen_at(self, address):
         from .application_server import ApplicationServer
-        ApplicationServer(self).thread_serve()
+        ApplicationServer(self, address).thread_serve()
+
+    def redirect_to_singleton(self, url=""):
+        from urllib.request import urlopen
+        try:
+            urlopen(f"http://localhost:{self.address[1]}/!current")
+        except Exception as e:
+            self.run(url)
+            return True
+        else:
+            urlopen(f"http://localhost:{self.address[1]}/" + url.lstrip('/'))
+            return False

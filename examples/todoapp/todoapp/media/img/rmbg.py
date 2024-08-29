@@ -26,4 +26,4 @@ def rmbg(
 
 
 for x in Path(".").glob("*.png"):
-    rmbg(x, color=(0, 0, 0), replace=(50, 50, 70))
+    rmbg(x, color=(255, 255, 255), replace=(255, 255, 255, 0))

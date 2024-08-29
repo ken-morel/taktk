@@ -45,8 +45,7 @@ class TodoPage(Component):
             return Notification(
                 "Empty field",
                 "Please, enter an item",
-                icon=r"C:\taktk\images\example-simple.png",
-                duration=10000,
+                duration=1000,
                 bootstyle="warning",
                 source="todo-empty-notification",
             ).show()
