@@ -1,7 +1,9 @@
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from threading import Thread
 import json
-from .page import Error404, Redirect
+from http.server import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from threading import Thread
+
+from . import page
 
 
 class ApplicationServer(HTTPServer):
@@ -9,7 +11,7 @@ class ApplicationServer(HTTPServer):
         def do_GET(self):
             try:
                 _, response = self.server.app.url(self.path)
-            except Error404:
+            except page.Error404:
                 self.send_response(404)
                 self.send_header(
                     'Content-Type', 'application/x-json',

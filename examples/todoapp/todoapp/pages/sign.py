@@ -1,6 +1,7 @@
+import taktk
 from taktk.component import Component
 from taktk.notification import Notification
-import taktk
+
 from ..admin import User
 
 

@@ -1,19 +1,16 @@
-import yaml
-
 import time
-
-from PIL import ImageTk
-from pyoload import *
 from threading import Lock
 from threading import Thread
+
+import yaml
+from PIL import ImageTk
+from pyoload import *
 from ttkbootstrap import *
 from ttkbootstrap.icons import *
 from ttkbootstrap.utility import *
-from .media import get_image
-from . import Nil
 
-DEFAULT_ICON_WIN32 = "\ue154"
-DEFAULT_ICON = "\u25f0"
+from . import Nil
+from .media import get_image
 
 
 class Notification:

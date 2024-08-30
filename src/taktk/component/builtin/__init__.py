@@ -1,13 +1,23 @@
-from ttkbootstrap import Label, Frame, Button, Entry, Checkbutton
-from tkinter import StringVar, BooleanVar, Image as TkImage
-from .. import _Component
-from ... import Nil, resolve
-from pyoload import annotate
-from typing import Optional
-from typing import Callable
 import sys
-from ...writeable import Writeable, NamespaceWriteable
+from tkinter import BooleanVar
+from tkinter import Image as TkImage
+from tkinter import StringVar
+from typing import Callable
+from typing import Optional
+
+from pyoload import annotate
+from ttkbootstrap import Button
+from ttkbootstrap import Checkbutton
+from ttkbootstrap import Entry
+from ttkbootstrap import Frame
+from ttkbootstrap import Label
+
+from ... import Nil
+from ... import resolve
 from ...media import Image
+from ...writeable import NamespaceWriteable
+from ...writeable import Writeable
+from .. import _Component
 
 
 class frame(_Component):

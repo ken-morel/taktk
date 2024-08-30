@@ -1,6 +1,13 @@
-from customtkinter import CTkLabel, CTkFrame, CTkButton, CTkEntry
-from . import frame, label, button, entry
+from customtkinter import CTkButton
+from customtkinter import CTkEntry
+from customtkinter import CTkFrame
+from customtkinter import CTkLabel
+
 from ... import Nil
+from . import button
+from . import entry
+from . import frame
+from . import label
 
 
 class frame(frame):

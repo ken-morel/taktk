@@ -1,7 +1,8 @@
 from tkinter import Tk
+
 from taktk.component import Component
-from taktk.notification import Notification
 from taktk.media import Image
+from taktk.notification import Notification
 
 
 class Notifica(Component):

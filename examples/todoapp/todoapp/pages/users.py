@@ -1,6 +1,7 @@
-from taktk.component import Component
-from ..admin import User
 import taktk
+from taktk.component import Component
+
+from ..admin import User
 
 
 class Users(Component):
@@ -13,9 +14,13 @@ class Users(Component):
                         \label text={user.name} pos:grid=0,0 pos:sticky='w' font='arial 20'
                         \button bootstyle='info' text=[pages.users.view] pos:grid=2,0 command={lambda u=user.uuid, v=visit: v(u)}
     """
+
     def init(self):
         users = User.all()
-        self['users'] = [(users[x], users[x + 1] if x + 1 < len(users) else None) for x in range(0, len(users), 2)]
+        self["users"] = [
+            (users[x], users[x + 1] if x + 1 < len(users) else None)
+            for x in range(0, len(users), 2)
+        ]
 
     def visit(self, uuid):
         taktk.application(str(uuid))

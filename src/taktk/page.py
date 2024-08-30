@@ -1,18 +1,53 @@
-from importlib import import_module
-from urllib.parse import urlparse, parse_qsl
 import json
 import re
 from decimal import Decimal
-from uuid import UUID
+from importlib import import_module
 from logging import getLogger
+from urllib.parse import parse_qsl
+from urllib.parse import urlparse
+from uuid import UUID
+from types import ModuleType
+from pyoload import annotate
+from tkinter import Tk, Widget
+from typing import Any, Optional
+from . import application
+from . import store as store_
+from . import component
+
 
 log = getLogger(__name__)
 
-# ParseResult(scheme='http', netloc='192.168.23.48', path='/todos/sign.php', params='', query='reason=3', fragment='out')
 
-
+@annotate
 class PageView:
-    def __init__(self, parent, page, app, destroy_cache: int = 5):
+    """
+    Applictaions page view, performs page routing, caching and history for a
+    taktk application.
+    """
+
+    history: list
+    current_page: Any
+    app: "application.Application"
+    store: store_.Store
+    destroy_cache: int
+    package: ModuleType
+    current_url: Optional[str]
+
+    def __init__(
+        self,
+        parent: Tk | Widget,
+        page: ModuleType,
+        app: "application.Application",
+        destroy_cache: int = 5,
+    ):
+        """\
+        :param parent: the parent widget to view the pages in, usually the
+        outlet of an apps layout.
+
+        :param page: The module the app will fetch pages from.
+
+        :param destroy_cache: Experimental destroy cache
+        """
         self.history = []
         self.current_page = None
         self.parent = parent
@@ -24,20 +59,32 @@ class PageView:
         self.current_url = None
 
     def geometry(self):
+        """\
+        Prepares the parent's geometry.
+        """
         self.parent.columnconfigure(0, weight=1)
         self.parent.rowconfigure(0, weight=1)
 
-    def url(self, url):
+    def url(self, url: str, redirect: bool = True):
+        """
+        Targets the app to the url following redirects except
+        redirect parameter set to false.
+
+        :raises taktk.pages.Redirect: In case redrect set to false and a
+        redirect occured
+        """
         target = url
         while True:
             try:
                 result = self.exec_url(target)
             except Redirect as r:
                 target = r.url
+                if not redirect:
+                    raise
             else:
                 return result
 
-    def view_component(self, component):
+    def view_component(self, component: "component.Component"):
         if self.current_page is None:
             self.current_page = 0
         else:
@@ -77,31 +124,42 @@ class PageView:
         self.current_page = idx
 
     def exec_url(self, cmd):
-        if cmd.strip('/') == "!current":
-            return (None, {
-                "ok": True,
-                "url": self.current_url,
-            })
-        elif cmd.strip('/') == "!back":
-            return (None, {
-                "ok": True,
-                "changed": self.back(),
-                "url": self.current_url,
-            })
-        elif cmd.strip('/') == "!forward":
-            return (None, {
-                "ok": True,
-                "changed": self.forward(),
-                "url": self.current_url,
-            })
+        if cmd.strip("/") == "!current":
+            return (
+                None,
+                {
+                    "ok": True,
+                    "url": self.current_url,
+                },
+            )
+        elif cmd.strip("/") == "!back":
+            return (
+                None,
+                {
+                    "ok": True,
+                    "changed": self.back(),
+                    "url": self.current_url,
+                },
+            )
+        elif cmd.strip("/") == "!forward":
+            return (
+                None,
+                {
+                    "ok": True,
+                    "changed": self.forward(),
+                    "url": self.current_url,
+                },
+            )
         else:
             parsed = urlparse(cmd)
-            path = [self.package.__package__] + list(filter(bool, cmd.split("/")))
+            path = [self.package.__package__] + list(
+                filter(bool, cmd.split("/"))
+            )
             args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
             handler = parsed.fragment
             path = parsed.path
-            if ':' in path:
-                path, handler = path.rsplit(':', 1)
+            if ":" in path:
+                path, handler = path.rsplit(":", 1)
             self.current_url = parsed.path
             return self(path, handler, args)
 
@@ -194,6 +252,7 @@ def register_urlpattern(regex, converter=None, name=None, position=-2):
         if not isinstance(regex, re.Pattern):
             regex = re.compile(regex)
         URLPATTERNS.insert(position, (regex, "_" + name, func))
+
     if converter is not None:
         return registerrer(converter)
     else:

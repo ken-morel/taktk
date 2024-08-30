@@ -1,9 +1,12 @@
-from tkinter import StringVar, IntVar
-from typing import Callable, Any
-from functools import cached_property
-from contextlib import contextmanager
-from . import Nil
 import builtins
+from contextlib import contextmanager
+from functools import cached_property
+from tkinter import IntVar
+from tkinter import StringVar
+from typing import Any
+from typing import Callable
+
+from . import Nil
 
 
 class Namespace:
@@ -115,7 +118,8 @@ class NamespaceWriteable(Writeable):
 
     @staticmethod
     def parse_path(text):
-        from .component.parser import State, VARNAME
+        from .component.parser import VARNAME
+        from .component.parser import State
 
         begin = State(text=text)
         state = begin.copy()

@@ -1,15 +1,18 @@
-import shutil
 import json
-from uuid import uuid4
+import shutil
 from pathlib import Path
-import ttkbootstrap as ttk
 from tkinter import Frame
 from tkinter.colorchooser import askcolor
-from tkinter.filedialog import askopenfilename, asksaveasfilename
-from ttkbootstrap.themes import standard, user
-from ttkbootstrap.style import ThemeDefinition
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
+from uuid import uuid4
+
+import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
+from ttkbootstrap.style import ThemeDefinition
+from ttkbootstrap.themes import standard
+from ttkbootstrap.themes import user
 
 
 class ThemeCreator(ttk.Window):

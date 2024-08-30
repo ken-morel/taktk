@@ -1,5 +1,6 @@
-from todoapp import Application
 import sys
+
+from todoapp import Application
 
 entry = "/todos"
 

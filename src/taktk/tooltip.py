@@ -1,9 +1,9 @@
 import time
+from threading import Lock
+from threading import Thread
 
 from PIL import ImageTk
 from pyoload import *
-from threading import Lock
-from threading import Thread
 from ttkbootstrap import *
 from ttkbootstrap.icons import *
 from ttkbootstrap.tooltip import *

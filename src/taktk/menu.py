@@ -1,5 +1,6 @@
-from ttkbootstrap import Menu as ttkMenu
 from logging import getLogger
+
+from ttkbootstrap import Menu as ttkMenu
 
 log = getLogger(__name__)
 
@@ -24,8 +25,8 @@ class Menu:
 
     @classmethod
     def build_submenus(cls, menu, structure):
-        from .writeable import Writeable
         from .dictionary import Translation
+        from .writeable import Writeable
 
         for label, contents in structure.items():
             try:

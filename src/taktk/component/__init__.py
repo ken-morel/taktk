@@ -17,13 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from types import ModuleType
-from pyoload import annotate
-from importlib import import_module
-from typing import Optional
 from dataclasses import dataclass
-from ..writeable import Writeable, resolve
+from importlib import import_module
+from types import ModuleType
+from typing import Optional
+
+from pyoload import annotate
+
 from .. import Nil
+from ..writeable import Writeable
+from ..writeable import resolve
 
 
 class ComponentNamespace:
@@ -330,7 +333,9 @@ class IfComponent(_Component):
             del widget
 
 
-from .instructions import execute, Instruction, Namespace
+from .instructions import Instruction
+from .instructions import Namespace
+from .instructions import execute
 
 
 @annotate

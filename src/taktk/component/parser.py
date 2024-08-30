@@ -18,14 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import string
-
-from pyoload import annotate
-from typing import Optional
 from dataclasses import dataclass
 from decimal import Decimal
-from ..writeable import NamespaceWriteable, Expression
-from ..dictionary import Translation
+from typing import Optional
 
+from pyoload import annotate
+
+from ..dictionary import Translation
+from ..writeable import Expression
+from ..writeable import NamespaceWriteable
 
 SPACE: set = set(" ")
 VARNAME = set(string.ascii_letters + string.digits + "_")

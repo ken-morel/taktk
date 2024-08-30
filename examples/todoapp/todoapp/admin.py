@@ -2,15 +2,21 @@
 Here simply manages the database
 """
 
-from taktk.store import Store
-from pathlib import Path
-from pyoload import annotate, Checks, Cast
 from dataclasses import dataclass
-from uuid import UUID, uuid1
 from hashlib import sha256
+from pathlib import Path
+from uuid import UUID
+from uuid import uuid1
+
+from pyoload import Cast
+from pyoload import Checks
+from pyoload import annotate
+
 import taktk
+from taktk.store import Store
 
 DIR = Path(__file__).parent
+
 
 class Model:
     @classmethod
@@ -163,7 +169,10 @@ class Todo(Model):
 @taktk.on_create
 def init(app):
     global store
-    store = app.store.for_page(__name__, {
-        "users": [],
-        "todos": [],
-    })
+    store = app.store.for_page(
+        __name__,
+        {
+            "users": [],
+            "todos": [],
+        },
+    )

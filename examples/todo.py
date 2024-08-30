@@ -1,6 +1,7 @@
-from tkinter import Tk
-from taktk.component import Component
 from dataclasses import dataclass
+from tkinter import Tk
+
+from taktk.component import Component
 
 
 @dataclass

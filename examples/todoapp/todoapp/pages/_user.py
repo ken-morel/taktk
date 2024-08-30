@@ -1,5 +1,5 @@
-from taktk.component import Component
 import taktk
+from taktk.component import Component
 
 
 class User(Component):

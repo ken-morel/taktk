@@ -17,10 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass, field
-from pyoload import *
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Optional
-from ..writeable import Namespace, Expression
+
+from pyoload import *
+
+from ..writeable import Expression
+from ..writeable import Namespace
 
 
 class Instruction:
@@ -311,5 +315,7 @@ def execute(text):
     return instr
 
 
+from . import EnumComponent
+from . import IfComponent
+from . import _Component
 from . import parser
-from . import _Component, EnumComponent, IfComponent

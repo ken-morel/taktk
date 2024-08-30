@@ -1,9 +1,9 @@
 from taktk.component import Component
-
-from . import todos
 from taktk.notification import Notification
-from ..admin import User
 from taktk.page import register_urlpattern
+
+from ..admin import User
+from . import todos
 
 
 class Index(Component):

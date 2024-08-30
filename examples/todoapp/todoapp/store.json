@@ -1,6 +1,6 @@
 {
-  "language": "English",
-  "theme": "darkly",
+  "language": "French",
+  "theme": "litera",
   "__pageStore_todoapp.admin__": {
     "users": [
       {
@@ -12,6 +12,11 @@
         "uuid": "3a779793-6592-11ef-8e09-28d244ed9304",
         "name": "ken-morel",
         "password": "02a6efa44deef545bc56c1aae1e1d9feb53d505bb269a2abd6efe8d8f4e237f2"
+      },
+      {
+        "uuid": "241d53bc-66b7-11ef-aba4-28b2bda8b9ca",
+        "name": "",
+        "password": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     ],
     "todos": [
@@ -55,7 +60,7 @@
         "uuid": "f13382e0-6593-11ef-a86c-28d244ed9304",
         "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
         "desc": "kenpd",
-        "done": true
+        "done": false
       },
       {
         "uuid": "00bbcaed-65f2-11ef-a2f7-28d244ed9304",
@@ -67,7 +72,7 @@
         "uuid": "07ca2fd9-65f2-11ef-b1d9-28d244ed9304",
         "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
         "desc": "I love tkinter!",
-        "done": true
+        "done": false
       },
       {
         "uuid": "0afbe6e3-65f2-11ef-8b72-28d244ed9304",
@@ -85,6 +90,7 @@
   },
   "__pageStore_todoapp.pages.todos__": {
     "entry:ama": "",
-    "entry:ken-morel": "Notez ici"
+    "entry:ken-morel": "Notez ici",
+    "entry:": "Enter you todo her please"
   }
 }

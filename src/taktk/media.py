@@ -1,7 +1,8 @@
-import PIL.Image
-import PIL.ImageTk
 from functools import cached_property
 from pathlib import Path
+
+import PIL.Image
+import PIL.ImageTk
 
 MEDIA_DIR = None
 
@@ -79,7 +80,7 @@ class Image(Resource):
         self.props = props
 
 
-class MediaImage(Resource):
+class MediaImage(Image):
     @cached_property
     def image(self):
         if MEDIA_DIR is None:

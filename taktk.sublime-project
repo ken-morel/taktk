@@ -4,39 +4,32 @@
             "path": ".",
         },
         {
-			"path": "C:\\Program Files\\Python313\\Lib"
+			"path": "C:\\Program Files\\Python313\\Lib",
 		},
     ],
     "build_systems": [
         {
             "file_regex": "^[ ]*error: cannot format (...*?): Cannot parse: ([0-9]*):\\d+:.+",
             "name": "Black taktk",
-            "selector": "source.python",
             "shell_cmd": "black \"$project_path\" --config \"$project_path\"/pyproject.toml",
+        },
+        {
+            "file_regex": "^[ ]*error: cannot format (...*?): Cannot parse: ([0-9]*):\\d+:.+",
+            "name": "isort taktk",
+            "shell_cmd": "isort . --sl",
+            "working_dir": "$project_path/src",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Anaconda Python Builder",
             "selector": "source.python",
-            "shell_cmd": "\"c:\\taktk/Scripts/python.exe\" -u \"$file\"",
+            "shell_cmd": "\"/Scripts/python.exe\" -u \"$file\"",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Taktk",
             "cmd": ["py", "-3.12", "$project_path/examples/todoapp/main.py"],
             "working_dir": "$project_path/examples/locale",
-        },
-        {
-            "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
-            "name": "Taktk simple test",
-            "cmd": ["py", "-3.12", "$project_path/examples/todo.py"],
-            "working_dir": "$project_path/images",
-        },
-        {
-            "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
-            "name": "Taktk admin",
-            "cmd": ["py", "-3.12", "$project_path/examples/todoapp/todoapp/admin.py"],
-            "working_dir": "$project_path/examples/todoapp",
         },
     ],
     "settings": {
