@@ -11,11 +11,11 @@ from . import label
 
 
 class frame(frame):
-    WIDGET = CTkFrame
+    Widget = CTkFrame
 
 
 class label(label):
-    WIDGET = CTkLabel
+    Widget = CTkLabel
 
     class attrs:
         text: str = "fake"
@@ -28,8 +28,8 @@ class label(label):
 
 
 class button(button):
-    WIDGET = CTkButton
+    Widget = CTkButton
 
 
 class entry(entry):
-    WIDGET = CTkEntry
+    Widget = CTkEntry

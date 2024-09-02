@@ -83,6 +83,10 @@ def on_create(func: Callable) -> Callable:
     return func
 
 
+def notify(*args, **kw):
+    from . import notification
+    notification.Notification(*args, **kw).show()
+
 __version__ = "0.1.0a1"
 __author__ = "ken-morel"
 __all__ = ['Nil', 'on_create']

@@ -78,13 +78,16 @@ class _Component:
     parent: "Optional[_Component]"
     children: "list[_Component]"
     _pos_ = None
-    widget = None
+    container = None
+    outlet = None
+    _aligner = None
 
-    @classmethod
-    def __init_subclass__(cls):
-        if not hasattr(cls, "attrs"):
-            cls.attrs = type("attrs", (object,), {})
-        cls.attrs = dataclass(cls.attrs)
+    def _init_subclass(cls):
+        if not hasattr(cls, "Attrs"):
+            cls.Attrs = type("Attrs", (object,), {})
+        cls.Attrs = dataclass(cls.Attrs)
+
+    __init_subclass__ = _init_subclass
 
     def __init__(
         self,
@@ -99,28 +102,48 @@ class _Component:
             self.parent.children.append(self)
         self.raw_attrs = attrs
 
+    def _align_widget(self, widget, params):
+        if self._children_align == 'r':
+            widget.grid(column=self._align_offset, row=0, **params)
+        elif self._children_align == 'c':
+            widget.grid(row=self._align_offset, column=0, **params)
+        else:
+            raise ValueError("unknown align offset:", self._children_align)
+        self._align_offset += 1
+
     def _position_(self):
+        grid_params = ("sticky",)
+        grid = {
+            k: v
+            for k, v in self._pos_params_.items()
+            if k in grid_params
+        }
         if "xweights" in self._pos_params_:
             for col, weight in self._pos_params_["xweights"].items():
-                self.widget.columnconfigure(col, weight=weight)
+                self.container.columnconfigure(col, weight=weight)
         if "yweights" in self._pos_params_:
             for row, weight in self._pos_params_["yweights"].items():
-                self.widget.rowconfigure(row, weight=weight)
+                self.container.rowconfigure(row, weight=weight)
 
+        if "align" in self._pos_params_:
+            full_direction = self._pos_params_['align']
+            self._align_offset = 0
+            assert len(full_direction) > 0, "invalid empty direction in align"
+            direction = full_direction[0]
+            assert direction in "rc", "invalid direction"
+            self._children_align = direction
+            for child in self.children:
+                child._aligner = self
+        if self._aligner is not None:
+            return self._aligner._align_widget(self.container, grid)
         pos = self._pos_
         if pos is None:
             return
         match pos:
             case ("pack", _):
-                self.widget.pack()
+                self.container.pack()
             case ("grid", coord):
                 coord = resolve(coord)
-                grid_params = ("sticky",)
-                grid = {
-                    k: v
-                    for k, v in self._pos_params_.items()
-                    if k in grid_params
-                }
                 if len(coord) == 2:
                     (x, y) = coord
                     grid["column"] = x
@@ -134,14 +157,14 @@ class _Component:
                 else:
                     raise ValueError("wrong grid tuple", coord)
                 if "xweight" in self._pos_params_:
-                    self.widget.master.columnconfigure(
+                    self.container.master.columnconfigure(
                         x, weight=int(self._pos_params_["xweight"])
                     )
                 if "yweight" in self._pos_params_:
-                    self.widget.master.rowconfigure(
+                    self.container.master.rowconfigure(
                         y, weight=int(self._pos_params_["yweight"])
                     )
-                self.widget.grid(**grid)
+                self.container.grid(**grid)
             case wrong:
                 raise ValueError("unrecognised position tuple:", wrong)
 
@@ -151,20 +174,11 @@ class _Component:
         # self._update()
 
     def _update(self):
-        if self.widget is None:
-            return
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        self.widget.configure(**params)
+        pass
 
     def make_bindings(self):
         for event, handler in self.event_binds.items():
-            self.widget.bind(f"<{event}>", resolve(handler))
+            self.container.bind(f"<{event}>", resolve(handler))
 
     def create(self):
         self.event_binds = {}
@@ -178,7 +192,7 @@ class _Component:
                         value, self.namespace
                     )
                 elif st == "pos":
-                    if name == "grid":
+                    if name in ("grid",):
                         self._pos_ = (
                             name,
                             parser.evaluate_literal(value, self.namespace),
@@ -220,7 +234,7 @@ class _Component:
             if isinstance(val, Writeable):
                 val.subscribe(self._update)
         try:
-            self.attrs = self.__class__.attrs(**vals)
+            self.attrs = self.__class__.Attrs(**vals)
         except TypeError as e:
             raise TypeError(
                 f"error while binding arguments to {self.__class__!r}",
@@ -251,7 +265,7 @@ class EnumComponent(_Component):
             self.parent.children.append(self)
 
     def create(self, parent=None):
-        parent = parent or self.parent.widget
+        parent = parent or self.parent.outlet
         self.render_parent = parent
         self.widgets = []
         for idx, val in enumerate(self.object.get()):
@@ -261,14 +275,11 @@ class EnumComponent(_Component):
             namespace[aval] = val
             for instr in self.instructions:
                 comp = instr._eval(namespace, self.component_space)
-                elt = comp.create(parent)
+                comp.create(parent)
+                elt = comp.container
                 self.widgets.append(
                     (comp, elt),
                 )
-        if len(self.widgets) > 0:
-            return tuple(zip(*self.widgets))[1]
-        else:
-            return []
 
     def update(self):
         widgets = self.widgets.copy()
@@ -278,7 +289,7 @@ class EnumComponent(_Component):
         except Exception:
             pass
         for component, widget in widgets:
-            component.widget = None
+            component.container = component.outlet = None
             widget.destroy()
             del widget
 
@@ -303,21 +314,17 @@ class IfComponent(_Component):
             self.parent.children.append(self)
 
     def create(self, parent=None):
-        parent = parent or self.parent.widget
+        parent = parent or self.parent.outlet
         self.render_parent = parent
         self.widgets = []
         self.condition.subscribe(self._update)
         if self.condition.get():
             for instr in self.instructions:
                 comp = instr._eval(self.namespace, self.component_space)
-                elt = comp.create(parent)
+                comp.create(parent)
                 self.widgets.append(
-                    (comp, elt),
+                    (comp.container, comp.container),
                 )
-        if len(self.widgets) > 0:
-            return tuple(zip(*self.widgets))[1]
-        else:
-            return []
 
     def update(self):
         super().update()
@@ -361,10 +368,12 @@ class Component(_Component):
     def __setitem__(self, item: str, value):
         self.namespace[item] = value
 
-    def __init__(self):
+    def __init__(self, store=None, **params):
         from . import builtin
 
         self.namespace = Namespace()
+        self.namespace.vars.update(params)
+        self.namespace.vars['store'] = store
         for attr_name in dir(self):
             if not attr_name.startswith("_"):
                 try:
@@ -381,11 +390,30 @@ class Component(_Component):
             )
 
     def render(self, master):
-        return self._component_.create(master)
+        self._component_.create(master)
+        self.container = self._component_.container
 
     def update(self):
         self.namespace._watch_changes_()
         self._component_.update()
+
+    def expose(self, func):
+        self.namespace[func.__name__] = func
+
+
+def component(func):
+    def component_init(self):
+        var = func(self)
+        if var is not None:
+            self.namespace.vars.update(var)
+    return type(
+        func.__name__,
+        (Component,),
+        {
+            "init": component_init,
+            "__doc__": func.__doc__,
+        }
+    )
 
 
 from .instructions import Namespace

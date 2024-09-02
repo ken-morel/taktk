@@ -38,7 +38,7 @@ class TodoPage(Component):
         )
 
     def update_entry(self):
-        store[label] = self["entry"]
+        store['entry'] = self["entry"]
 
     def close(self):
         root.destroy()
@@ -107,17 +107,14 @@ class TodoPage(Component):
 
 
 @cache
-def handle(_store, /):
-    global store, STORE, label
+def default(_store, /):
+    global store, STORE, user
     STORE = _store
     if User.is_login():
         user = User.current()
-        label = f"entry:{user.name}"
-        store = STORE.for_page(__name__)
-        try:
-            entry = store[label]
-        except:
-            store[label] = entry = _("pages.todos.placeholder")
-        return TodoPage(user=user, entry=entry)
+        store = STORE.for_page(__name__).partition(user.name, {
+            "entry": _("pages.todos.placeholder"),
+        })
+        return TodoPage(user=user, entry=store['entry'])
     else:
-        raise Redirect("sign#signin")
+        raise Redirect("sign@signin")

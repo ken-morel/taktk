@@ -13,9 +13,13 @@ from typing import Any, Optional
 from . import application
 from . import store as store_
 from . import component
-
+import string
 
 log = getLogger(__name__)
+
+
+HANDLER_NAME = set(string.ascii_letters + "_")
+DEFAULT_HANDLER = "default"
 
 
 @annotate
@@ -91,7 +95,8 @@ class PageView:
             self.current_page += 1
         current = self.current_widget
         self.history.insert(self.current_page, component)
-        self.current_widget = component.render(self.parent)
+        component.render(self.parent)
+        self.current_widget = component.container
         self.current_widget.grid(column=0, row=0, sticky="nsew")
         if current is not None:
             self.destroy_later(current)
@@ -119,7 +124,8 @@ class PageView:
         page = self.history[idx]
         if self.current_widget is not None:
             self.current_widget.destroy()
-        self.current_widget = self.history[idx].render(self.parent)
+        self.history[idx].render(self.parent)
+        self.current_widget = self.history[idx].container
         self.current_widget.grid(column=0, row=0, sticky="nsew")
         self.current_page = idx
 
@@ -151,15 +157,20 @@ class PageView:
                 },
             )
         else:
+            print(cmd, flush=True)
             parsed = urlparse(cmd)
-            path = [self.package.__package__] + list(
-                filter(bool, cmd.split("/"))
-            )
+            print(parsed, flush=True)
             args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
             handler = parsed.fragment
             path = parsed.path
-            if ":" in path:
-                path, handler = path.rsplit(":", 1)
+            print(path, flush=True)
+            if "@" in path and len(set(path[path.index("@") + 1:]) - HANDLER_NAME) == 0:
+                path, handler = path.rsplit("@", 1)
+            # path = [self.package.__package__] + list(
+            #     filter(bool, path.split("/"))
+            # )
+            print(args, path, handler, flush=True)
+            print("-" * 10, flush=True)
             self.current_url = parsed.path
             return self(path, handler, args)
 
@@ -169,9 +180,9 @@ class PageView:
         if isinstance(module, str):
             module, urlparams = self.import_module(module)
         try:
-            function = getattr(module, handler or "handle")
-        except AttributeError:
-            raise Error404()
+            function = getattr(module, handler or DEFAULT_HANDLER)
+        except AttributeError as e:
+            raise Error404(e)
         http = comp = None
         page = function(
             self.store,
@@ -230,18 +241,21 @@ class Redirect(Exception):
         super().__init__()
 
 
-URLPATTERNS = [
-    (re.compile(r"^\d+$"), "int", int),
-    (re.compile(r"^\d+\.\d+$"), "decimal", Decimal),
-    (re.compile(r".+"), "str", str),
-    (
-        re.compile(
-            r"[\da-f]{8}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{12}"
-        ),
-        "uuid",
-        UUID,
+SHORTCUTS = {
+    "int": re.compile(r"^\d+$"),
+    "decimal": re.compile(r"^\d+\.\d+$"),
+    "str": re.compile(r".+"),
+    "uuid": re.compile(
+        r"[\da-f]{8}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{4}\-[\da-f]{12}",
     ),
+}
+URLPATTERNS = [
+    ("int", int),
+    ("decimal", Decimal),
+    ("str", str),
+    ("uuid", UUID),
 ]
+URLPATTERNS = [(SHORTCUTS[n], n, c) for n, c in URLPATTERNS]
 
 
 def register_urlpattern(regex, converter=None, name=None, position=-2):
@@ -249,7 +263,12 @@ def register_urlpattern(regex, converter=None, name=None, position=-2):
         nonlocal name, regex
         if name is None:
             name = func.__name__.lower()
-        if not isinstance(regex, re.Pattern):
+        if len(regex) > 2 and regex[0] == "<" and regex[-1] == ">":
+            try:
+                regex = SHORTCUTS[regex[1:-1]]
+            except IndexError:
+                raise ValueError(f"Unknown url shortcut: {regex!r}")
+        elif not isinstance(regex, re.Pattern):
             regex = re.compile(regex)
         URLPATTERNS.insert(position, (regex, "_" + name, func))
 

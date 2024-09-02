@@ -56,7 +56,7 @@ class Application:
     - **layout**: an instance of `Layout` class you should define yourself
     - **destroy_cache**: Experimental: destroys only the last {x} viewed
       component's widget to reduce chances for app to abruptly resize
-    - **store**: A before initialization: a
+    - **store**: A before initialization: a *sjd*
     """
 
     dictionaries: dictionary.Dictionaries = None
@@ -166,14 +166,17 @@ class Application:
             store_,
             *__,
         ) = self._create_params
-        if isinstance(store_, tuple):
-            store_, default = store_
+        if isinstance(store_, store.Store):
+            self.store = store_
         else:
-            default = {}
-        if store_ is None:
-            self._store_file = NamedTemporaryFile(delete=False)
-            store_ = self._store_file.name
-        self.store = store.Store(store_, default=default)
+            if isinstance(store_, tuple):
+                store_, default = store_
+            else:
+                default = {}
+            if store_ is None:
+                self._store_file = NamedTemporaryFile(delete=False)
+                store_ = self._store_file.name
+            self.store = store.Store(store_, default=default)
         if dictionaries_path is not None:
             self.dictionaries = dictionary.Dictionaries(dictionaries_path)
             self.set_language()
@@ -209,10 +212,9 @@ class Application:
         if self.menu is not None:
             self.menu.toplevel(root)
         if self.layout is not None:
-            layout_parent = self.layout.render(self.root)
-            container = self.layout["outlet"].widget
-            layout_parent.grid(column=0, row=0, sticky='nsew')
-            return container
+            self.layout.render(self.root)
+            self.layout.container.grid(column=0, row=0, sticky='nsew')
+            return self.layout["outlet"].outlet
         else:
             return root
 
@@ -250,8 +252,10 @@ class Application:
         :param params: Extra parameters passed to the handler
         """
         try:
+            if "@" in module or "#" in module:
+                raise ValueError(module, f"Did you mean app.url(...)?")
             self.view(module, function, params)
-        except Redirect as e:
+        except page.Redirect as e:
             target = e.url
             if redirect:
                 self.view.url(target)

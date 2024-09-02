@@ -2,12 +2,13 @@ import json
 import os
 from logging import getLogger
 
+
 log = getLogger(__name__)
 
 
 class Store(dict):
     """
-    Creates a json settings file at path
+    Creates a json settings file at path *sjs* _dkd df_ **ama**
     """
 
     def __init__(self, path: str, default: dict = {}):
@@ -16,6 +17,7 @@ class Store(dict):
         """
         self.path = path
         self.page_stores = {}
+        self.partitions = {}
         super().__init__(default)
         try:
             self.load()
@@ -23,6 +25,12 @@ class Store(dict):
             self.save()
 
     def load(self):
+        """
+        Loads the file from specified `path`
+
+        :raises OSError: in case the faile to open the file
+        :param c: dd
+        """
         with open(self.path) as f:
             self.update(json.loads(f.read()))
 
@@ -66,25 +74,43 @@ class Store(dict):
             self.page_stores[page] = Pagestore(self, page, default=default)
         return self.page_stores[page]
 
+    def partition(self, name, default={}):
+        if name not in self.partitions:
+            self.partitions[name] = StorePartition(self, name, default=default)
+        return self.partitions[name]
+
     def __hash__(self):
         return hash(self.path)
 
 
-class Pagestore(Store):
-    FORMAT = "__pageStore_{0}__"
+class StorePartition(Store):
+    FORMAT = "~~[$__partition__('{0}')]~~"
 
-    def __init__(self, store, page_name, default={}):
+    def __init__(self, store, name, default={}):
         self.store = store
-        self.page = self.FORMAT.format(page_name)
-        if self.page not in store or not isinstance(store[self.page], dict):
-            store[self.page] = default
+        self.partitions = {}
+        self.name = self.FORMAT.format(name)
+        dict.__init__(self, default)
+        try:
+            self.load()
+        except:
+            self.save()
 
     def __setitem__(self, item, value):
-        self.store[self.page][item] = value
-        self.store.save()
+        dict.__setitem__(self, item, value)
+        self.save()
 
     def __getitem__(self, item):
-        return self.store[self.page][item]
+        return dict.__getitem__(self, item)
 
     def save(self):
+        self.store[self.name] = self
         self.store.save()
+
+    def load(self):
+        data = self.store[self.name]
+        self.update(data)
+
+
+class Pagestore(StorePartition):
+    FORMAT = "~~[$__pageStore__('{0}')]~~"

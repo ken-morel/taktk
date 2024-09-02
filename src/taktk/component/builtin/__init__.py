@@ -12,7 +12,7 @@ from ttkbootstrap import Entry
 from ttkbootstrap import Frame
 from ttkbootstrap import Label
 
-from ... import Nil
+from ... import Nil, NilType
 from ... import resolve
 from ...media import Image
 from ...writeable import NamespaceWriteable
@@ -20,26 +20,25 @@ from ...writeable import Writeable
 from .. import _Component
 
 
-class frame(_Component):
-    WIDGET = Frame
 
-    class attrs:
-        bootstyle: str = Nil
-        padding: int = Nil
-        borderwidth: int = Nil
-        relief: str = Nil
-        width: int = Nil
-        height: int = Nil
+class TkComponent(_Component):
+    Widget = None
+    _attr_ignore = ()
 
-    same = [x for x in dir(attrs) if not x.startswith("_")]
-    conf_aliasses = {
-        **dict(zip(same, same)),
-    }
-    del same
+    class Attrs:
+        pass
 
-    def create(self, parent: "Optional[_Component]" = None):
+    def __init_subclass__(cls):
+        _Component._init_subclass(cls)
+
+        same = [x for x in dir(cls.Attrs) if not x.startswith("_") and x not in cls._attr_ignore]
+        cls.conf_aliasses = {
+            **dict(zip(same, same)),
+        }
+        del same
+
+    def create(self, parent):
         super().create()
-        parent = parent or self.parent.widget
         params = {
             **{
                 self.conf_aliasses[k]: resolve(v)
@@ -47,113 +46,78 @@ class frame(_Component):
                 if k in self.conf_aliasses and v is not Nil
             }
         }
-        self.widget = self.WIDGET(master=parent, **params)
+        self._create(parent, params)
         self.make_bindings()
         self._position_()
         for child in self.children:
-            w = child.create(self.widget)
-        return self.widget
+            child.create(self.outlet)
+
+    def _create(self, parent, params={}):
+        self.outlet = self.container = self.Widget(parent, **params)
 
 
-class label(_Component):
-    WIDGET = Label
+class frame(TkComponent):
+    Widget = Frame
 
-    class attrs:
-        bootstyle: str = Nil
+    class Attrs:
+        bootstyle: str | NilType = Nil
+        padding: int | NilType = Nil
+        borderwidth: int | NilType = Nil
+        relief: str | NilType = Nil
+        width: int | NilType = Nil
+        height: int | NilType = Nil
+
+
+class label(TkComponent):
+    Widget = Label
+
+    class Attrs:
+        bootstyle: str | NilType = Nil
         text: str = "fake"
-        foreground: str = Nil
-        background: str = Nil
-        text_color: str = Nil
-        padx: int = Nil
-        pady: int = Nil
-        font: str = Nil
-        image: Image | TkImage = Nil
-        compound: str = Nil
-
-    same = [x for x in dir(attrs) if not x.startswith("_")]
-    conf_aliasses = {
-        **dict(zip(same, same)),
-    }
-    del same
-
-    def create(self, parent: "Optional[_Component]" = None):
-        super().create()
-        parent = parent or self.parent.widget
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        self.widget = self.WIDGET(master=parent, **params)
-        self._position_()
-        self.make_bindings()
-        return self.widget
+        foreground: str | NilType = Nil
+        background: str | NilType = Nil
+        text_color: str | NilType = Nil
+        padx: int | NilType = Nil
+        pady: int | NilType = Nil
+        font: str | NilType = Nil
+        image: Image | TkImage | NilType = Nil
+        compound: str | NilType = Nil
 
 
-class button(_Component):
-    WIDGET = Button
+class button(TkComponent):
+    Widget = Button
 
-    class attrs:
-        bootstyle: str = Nil
+    class Attrs:
+        bootstyle: str | NilType = Nil
         text: str = "fake"
         command: Callable = lambda: None
-        padx: int = Nil
-        pady: int = Nil
-        fg: str = Nil
-        bg: str = Nil
-        image: Image | TkImage = Nil
-        compound: str = Nil
-        background: str = Nil
-        foreground: str = Nil
-
-    same = [x for x in dir(attrs) if not x.startswith("_")]
-    conf_aliasses = {
-        **dict(zip(same, same)),
-    }
-    del same
-
-    def create(self, parent: "Optional[_Component]" = None):
-        super().create()
-        parent = parent or self.parent.widget
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        self.widget = self.WIDGET(master=parent, **params)
-        self._position_()
-        self.make_bindings()
-        return self.widget
+        padx: int | NilType = Nil
+        pady: int | NilType = Nil
+        fg: str | NilType = Nil
+        bg: str | NilType = Nil
+        image: Image | TkImage | NilType = Nil
+        compound: str | NilType = Nil
+        background: str | NilType = Nil
+        foreground: str | NilType = Nil
 
 
-class entry(_Component):
-    WIDGET = Entry
+class entry(TkComponent):
+    Widget = Entry
+    _attr_ignore = ("text",)
 
-    class attrs:
-        bootstyle: str = Nil
+    class Attrs:
+        bootstyle: str | NilType = Nil
         text: str = "fake"
-        padx: int = Nil
-        pady: int = Nil
-        width: int = Nil
-        font: str = Nil
-        textvariable: StringVar = Nil
-        show: str = Nil
-
-    same = [
-        x for x in dir(attrs) if not x.startswith("_") and x not in ("text",)
-    ]
-    conf_aliasses = {
-        **dict(zip(same, same)),
-    }
-    del same
+        padx: int | NilType = Nil
+        pady: int | NilType = Nil
+        width: int | NilType = Nil
+        font: str | NilType = Nil
+        textvariable: StringVar | NilType = Nil
+        show: str | NilType = Nil
 
     def create(self, parent: "Optional[_Component]" = None):
-        super().create()
-        parent = parent or self.parent.widget
+        _Component.create(self)
+        parent = parent
         params = {
             **{
                 self.conf_aliasses[k]: resolve(v)
@@ -170,39 +134,30 @@ class entry(_Component):
             params["textvariable"] = self.textvariable
         else:
             self.textvariable = params[textvariable]
-        self.widget = self.WIDGET(
+        self.container = self.outlet = self.Widget(
             master=parent,
             **params,
         )
         self._position_()
         self.make_bindings()
-        return self.widget
 
 
-class checkbutton(_Component):
-    WIDGET = Checkbutton
+class checkbutton(TkComponent):
+    Widget = Checkbutton
+    _attr_ignore = ("checked",)
 
-    class attrs:
-        bootstyle: str = Nil
+    class Attrs:
+        bootstyle: str | NilType = Nil
         checked: bool = False
-        padx: int = Nil
-        pady: int = Nil
-        width: int = Nil
-        variable: BooleanVar = Nil
-
-    same = [
-        x
-        for x in dir(attrs)
-        if not x.startswith("_") and x not in ("checked",)
-    ]
-    conf_aliasses = {
-        **dict(zip(same, same)),
-    }
-    del same
+        padx: int | NilType = Nil
+        pady: int | NilType = Nil
+        width: int | NilType = Nil
+        variable: BooleanVar | NilType = Nil
+        _ignore = ("checked",)
 
     def create(self, parent: "Optional[_Component]" = None):
-        super().create()
-        parent = parent or self.parent.widget
+        _Component.create(self)
+        parent = parent
         params = {
             **{
                 self.conf_aliasses[k]: resolve(v)
@@ -218,10 +173,10 @@ class checkbutton(_Component):
             params["variable"] = self.variable
         else:
             self.variable = params["variable"]
-        self.widget = self.WIDGET(
+        self.container = self.Widget(
             master=parent,
             **params,
         )
+        self.outlet = None
         self._position_()
         self.make_bindings()
-        return self.widget

@@ -36,16 +36,16 @@ class Menu:
             if isinstance(name, (Writeable, Translation)):
                 name = name.get()
             if callable(contents):  # it is a command
-                menu.add_command(label=name, command=contents)
+                menu.add_command(label=name, command=contents, underline=idx)
             elif isinstance(contents, dict):  # a submenu
                 submenu = ttkMenu(menu)
-                menu.add_cascade(menu=submenu, label=name)
+                menu.add_cascade(menu=submenu, label=name, underline=idx)
                 cls.build_submenus(submenu, contents)
             elif isinstance(contents, Writeable):
                 val = contents.get()
                 if isinstance(val, bool):
                     menu.add_checkbutton(
-                        label=name, variable=contents.booleanvar
+                        label=name, variable=contents.booleanvar, underline=idx
                     )
             elif name == "!sep":
                 menu.add_separator()

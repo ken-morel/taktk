@@ -1,96 +1,78 @@
 {
-  "language": "French",
-  "theme": "litera",
-  "__pageStore_todoapp.admin__": {
+  "language": "english",
+  "theme": "cosmo",
+  "~~[$__pageStore__('todoapp.admin')]~~": {
     "users": [
       {
-        "uuid": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
+        "uuid": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
         "name": "ama",
         "password": "02a6efa44deef545bc56c1aae1e1d9feb53d505bb269a2abd6efe8d8f4e237f2"
       },
       {
-        "uuid": "3a779793-6592-11ef-8e09-28d244ed9304",
-        "name": "ken-morel",
-        "password": "02a6efa44deef545bc56c1aae1e1d9feb53d505bb269a2abd6efe8d8f4e237f2"
+        "uuid": "966ea413-68cb-11ef-9a04-28d244ed9304",
+        "name": "a",
+        "password": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
       },
       {
-        "uuid": "241d53bc-66b7-11ef-aba4-28b2bda8b9ca",
         "name": "",
-        "password": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "password": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "uuid": "a7be354b-6919-11ef-9755-28d244ed9304"
       }
     ],
     "todos": [
       {
-        "uuid": "d73a63ff-6577-11ef-b372-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "colorama",
+        "uuid": "9846f9f7-68cb-11ef-abd4-28d244ed9304",
+        "author_id": "966c42eb-68cb-11ef-b745-28d244ed9304",
+        "desc": "Enter you todo her please",
         "done": false
       },
       {
-        "uuid": "db640900-6577-11ef-976c-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "I love colorama",
+        "uuid": "30bafca2-68cc-11ef-8de1-28d244ed9304",
+        "author_id": "966ea413-68cb-11ef-9a04-28d244ed9304",
+        "desc": "wr",
+        "done": true
+      },
+      {
+        "uuid": "34dfdf46-68cc-11ef-9f92-28d244ed9304",
+        "author_id": "966ea413-68cb-11ef-9a04-28d244ed9304",
+        "desc": "er",
         "done": false
       },
       {
-        "uuid": "dec7d133-6577-11ef-9190-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "WHat is?",
-        "done": false
+        "author_id": "966ea413-68cb-11ef-9a04-28d244ed9304",
+        "desc": "Enter you todo, like it!djdjdjddkjddkjdkdkdkkdkd and",
+        "done": true,
+        "uuid": "f7316748-68cd-11ef-9684-28d244ed9304"
       },
       {
-        "uuid": "e986fad6-6577-11ef-8973-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "I love it!",
-        "done": false
+        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
+        "desc": "No I do not!",
+        "done": false,
+        "uuid": "db7e079b-68ce-11ef-b30d-28d244ed9304"
       },
       {
-        "uuid": "ed72a4ba-6577-11ef-ad77-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "I love eating",
-        "done": false
+        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
+        "desc": "Or do I@ msjdjd",
+        "done": false,
+        "uuid": "e13a94dd-68ce-11ef-b4f3-28d244ed9304"
       },
       {
-        "uuid": "f12c3ef2-6577-11ef-99d3-28b2bda8b9ca",
-        "author_id": "d23acc8c-6577-11ef-9b00-28b2bda8b9ca",
-        "desc": "You do so too!",
-        "done": false
-      },
-      {
-        "uuid": "f13382e0-6593-11ef-a86c-28d244ed9304",
-        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
-        "desc": "kenpd",
-        "done": false
-      },
-      {
-        "uuid": "00bbcaed-65f2-11ef-a2f7-28d244ed9304",
-        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
-        "desc": "I love python!",
-        "done": false
-      },
-      {
-        "uuid": "07ca2fd9-65f2-11ef-b1d9-28d244ed9304",
-        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
-        "desc": "I love tkinter!",
-        "done": false
-      },
-      {
-        "uuid": "0afbe6e3-65f2-11ef-8b72-28d244ed9304",
-        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
-        "desc": "I love Tk!",
-        "done": false
-      },
-      {
-        "uuid": "346f294e-65f2-11ef-825c-28d244ed9304",
-        "author_id": "d23acc8d-6577-11ef-82f6-28b2bda8b9ca",
-        "desc": "kkkdmc",
-        "done": false
+        "author_id": "a7be354b-6919-11ef-9755-28d244ed9304",
+        "desc": "df",
+        "done": true,
+        "uuid": "ade6b013-6919-11ef-b74c-28d244ed9304"
       }
     ]
   },
-  "__pageStore_todoapp.pages.todos__": {
-    "entry:ama": "",
-    "entry:ken-morel": "Notez ici",
-    "entry:": "Enter you todo her please"
+  "~~[$__pageStore__('todoapp.pages.todos')]~~": {
+    "~~[$__partition__('a')]~~": {
+      "entry": "kklklkdffge"
+    },
+    "~~[$__partition__('ama')]~~": {
+      "entry": "nope!"
+    },
+    "~~[$__partition__('')]~~": {
+      "entry": ""
+    }
   }
 }

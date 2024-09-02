@@ -13,5 +13,5 @@ class User(Component):
         super().__init__()
 
 
-def handle(store, user):
+def default(store, user):
     return User(user=user)

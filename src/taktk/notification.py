@@ -98,7 +98,7 @@ class Notification:
         ).grid(row=1, column=1, sticky=NSEW, padx=10, pady=(0, 5))
 
         window.bind("<ButtonPress>", self.hide)
-        Notification.add(self)
+        Thread(target=Notification.add, args=(self,)).start()
         window.bell()
 
         if self.duration is not None:
@@ -163,22 +163,23 @@ class Notification:
 
     @classmethod
     def position_widgets(cls):
-        marg = cls.MARGIN
+        with cls.rearange_lock:
+            marg = cls.MARGIN
 
-        for idx, notification in enumerate(cls._STACK):
-            taken = 0
-            height = notification.root.winfo_height()
-            for notif in cls._STACK[:idx]:
-                taken += marg + notif.root.winfo_height()
+            for idx, notification in enumerate(cls._STACK):
+                taken = 0
+                height = notification.root.winfo_height()
+                for notif in cls._STACK[:idx]:
+                    taken += marg + notif.root.winfo_height()
 
-            pos2 = taken + marg
-            swidth = notification.root.winfo_screenheight()
-            while (swidth - notification.root.winfo_y() - height) > pos2:
-                for notif in cls._STACK[idx:]:
-                    notif.root.geometry(
-                        f"-{marg}+{notif.root.winfo_y() + 1}",
-                    )
-                    notif.root.update_idletasks()
-                # time.sleep(0.005)
-            notification.root.geometry(f"-{marg}-{pos2}")
-            notification.root.update_idletasks()
+                pos2 = taken + marg
+                swidth = notification.root.winfo_screenheight()
+                while (swidth - notification.root.winfo_y() - height) > pos2:
+                    for notif in cls._STACK[idx:]:
+                        notif.root.geometry(
+                            f"-{marg}+{notif.root.winfo_y() + 10}",
+                        )
+                        notif.root.update_idletasks()
+                    # time.sleep(0.005)
+                notification.root.geometry(f"-{marg}-{pos2}")
+                notification.root.update_idletasks()

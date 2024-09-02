@@ -26,5 +26,5 @@ class Users(Component):
         taktk.application(str(uuid))
 
 
-def handle(store):
+def default(store):
     return Users()
