@@ -84,6 +84,7 @@ class Notification:
         ttk.Label(
             root,
             text=self.title,
+            wraplength=scale_size(root, Notification.WIDTH - 100),
             font="{20px arial}",
             bootstyle=f"{self.bootstyle}-inverse",
             anchor=NW,
@@ -92,7 +93,7 @@ class Notification:
         ttk.Label(
             root,
             text=self.message,
-            wraplength=scale_size(root, Notification.WIDTH - 130),
+            wraplength=scale_size(root, Notification.WIDTH - 100),
             bootstyle=f"{self.bootstyle}-inverse",
             anchor=NW,
         ).grid(row=1, column=1, sticky=NSEW, padx=10, pady=(0, 5))

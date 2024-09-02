@@ -18,6 +18,7 @@ class Namespace:
         self._last_ = {}
 
     def __getitem__(self, item):
+        self._watch_changes_()
         if item in self.vars:
             return self.vars[item]
         else:
@@ -46,13 +47,13 @@ class Namespace:
         self._subscribers_.remove(subscriber)
 
     def _warn_subscribers_(self):
-        for subscriber in self._subscribers_:
+        for subscriber in set(self._subscribers_):
             subscriber()
 
     def _watch_changes_(self):
         if self.vars != self._last_:
+            self._last_ = self.vars.copy()
             self._warn_subscribers_()
-        self._last_ = self.vars.copy()
 
 
 class Writeable:
@@ -66,22 +67,28 @@ class Writeable:
         Creates the object with the specified value
         """
         self._value_ = val
+        self.last - val
         self.subscribers = set()
 
-    def set(self, value: Any, warn: bool = True):
+    def set(self, value: Any):
         """
         Sets the value of the Writeable, and warns
         notifiers except warn=False
         """
         self._value_ = value
-        if warn:
-            self.warn_subscribers()
+        self.watch_changes()
         return self._value_
+
+    def watch_changes(self):
+        if self.last != (val := self.get()):
+            self.last = val
+            self.warn_subscribers()
 
     def get(self):
         """
         Returns the value of the variable
         """
+        self.watch_changes()
         return self._value_
 
     def subscribe(self, func: Callable):
@@ -95,7 +102,7 @@ class Writeable:
         self.subscribers.remove(func)
 
     def warn_subscribers(self):
-        for subscriber in self.subscribers:
+        for subscriber in set(self.subscribers):
             subscriber()
 
     @cached_property
@@ -171,6 +178,7 @@ class NamespaceWriteable(Writeable):
         """
         Gets value from namespace
         """
+        self.watch_changes()
         try:
             obj = self.base
             if self.base == self.namespace:
@@ -207,7 +215,7 @@ class NamespaceWriteable(Writeable):
                 self.namespace[self.name] = val
             else:
                 setattr(obj, self.name, val)
-        self.warn_subscribers()
+        self.watch_changes()
         self.namespace._watch_changes_()
 
     @property
@@ -225,10 +233,6 @@ class NamespaceWriteable(Writeable):
             else:
                 obj = getattr(obj, sub)
         self._base = obj
-
-    def warn_subscribers(self):
-        super().warn_subscribers()
-        self.last = self.get()
 
     def update(self) -> bool:
         try:
@@ -343,15 +347,9 @@ class Expression(NamespaceWriteable):
         except Exception:
             pass
         else:
+            self.warn_subscribers()
             if val != self.last:
                 self.warn_subscribers()
                 return True
             else:
                 return False
-
-
-def resolve(val):
-    if isinstance(val, Writeable):
-        return val.get()
-    else:
-        return val

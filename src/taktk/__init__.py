@@ -54,7 +54,7 @@ Nil = NilType()
 
 
 @annotate
-def resolve(value: Any) -> Any:
+def resolve(value: Any, callback: Callable = None) -> Any:
     """
     basicly resolves from taktk descriptors as Media or Writeable
     to the underlying value. if it is not a media resource or
@@ -64,6 +64,8 @@ def resolve(value: Any) -> Any:
     from .writeable import Writeable
 
     if isinstance(value, Resource | Writeable):
+        if isinstance(value, Writeable) and callback is not None:
+            value.subscribe(callback)
         return value.get()
     else:
         return value
@@ -80,6 +82,8 @@ def on_create(func: Callable) -> Callable:
     :returns: The passed callable
     """
     ON_CREATE_HANDLERS.add(func)
+    if application is not None:
+        func(application)
     return func
 
 

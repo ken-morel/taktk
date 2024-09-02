@@ -24,6 +24,7 @@ from .. import _Component
 class TkComponent(_Component):
     Widget = None
     _attr_ignore = ()
+    _params = None
 
     class Attrs:
         pass
@@ -39,7 +40,7 @@ class TkComponent(_Component):
 
     def create(self, parent):
         super().create()
-        params = {
+        self._params = params = {
             **{
                 self.conf_aliasses[k]: resolve(v)
                 for k, v in vars(self.attrs).items()
@@ -54,6 +55,33 @@ class TkComponent(_Component):
 
     def _create(self, parent, params={}):
         self.outlet = self.container = self.Widget(parent, **params)
+
+    def _update(self):
+        params = {
+            **{
+                self.conf_aliasses[k]: resolve(v, self.update)
+                for k, v in vars(self.attrs).items()
+                if k in self.conf_aliasses and v is not Nil
+            }
+        }
+        for k, v in params.items():
+            try:
+                self.container.configure(k, v)
+            except:
+                pass
+
+    def update(self):
+        params = {
+            **{
+                self.conf_aliasses[k]: resolve(v, self.update)
+                for k, v in vars(self.attrs).items()
+                if k in self.conf_aliasses and v is not Nil
+            }
+        }
+        if params != self._params:
+            self._update()
+            self._params = params
+        super().update()
 
 
 class frame(TkComponent):
@@ -132,6 +160,7 @@ class entry(TkComponent):
                 self.textvariable = StringVar()
                 self.textvariable.set(self.attrs.text)
             params["textvariable"] = self.textvariable
+            self.attrs.textvariable = self.textvariable
         else:
             self.textvariable = params[textvariable]
         self.container = self.outlet = self.Widget(

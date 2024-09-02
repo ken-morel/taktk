@@ -83,7 +83,10 @@ class Translation(Writeable):
         """
         Gets value from namespace
         """
-        return dictionary(self.expr)
+        try:
+            return dictionary(self.expr)
+        except TypeError:
+            return ':-('
 
     def set(self, val) -> None:
         """

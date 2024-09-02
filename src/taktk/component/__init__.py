@@ -26,7 +26,7 @@ from pyoload import annotate
 
 from .. import Nil
 from ..writeable import Writeable
-from ..writeable import resolve
+from .. import resolve
 
 
 class ComponentNamespace:
@@ -75,8 +75,8 @@ class ModularNamespace(ComponentNamespace):
 
 @annotate
 class _Component:
-    parent: "Optional[_Component]"
-    children: "list[_Component]"
+    parent = None
+    children: list
     _pos_ = None
     container = None
     outlet = None
@@ -92,7 +92,7 @@ class _Component:
     def __init__(
         self,
         namespace: "Namespace",
-        parent: "Optional[_Component]" = None,
+        parent = None,
         attrs: dict[str] = {},
     ):
         self.children = []
@@ -171,7 +171,6 @@ class _Component:
     def update(self):
         for child in self.children:
             child.update()
-        # self._update()
 
     def _update(self):
         pass
