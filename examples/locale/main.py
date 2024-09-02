@@ -1,4 +1,5 @@
 from tkinter import Tk
+
 from taktk.component import Component
 from taktk.dictionary import Dictionary
 

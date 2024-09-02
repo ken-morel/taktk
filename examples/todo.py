@@ -1,19 +1,7 @@
-r"""
-\frame
-    \ctk.frame pos:grid=0,0 width=350 pos:sticky='nsew'
-        \ctk.entry width=300 pos:grid=0,0 text={{entry}} pos:xweight=2
-        \button text='+' command={add_todo} pos:grid=1,0 pos:xweight=0
-    \ctk.frame pos:grid=0,1 width=350 pos:sticky='nsew'
-        !enum todos:(idx, todo)
-            \ctk.label fg_color={'#cfc' if todo.done else '#fcc'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:sticky='nsw' bind:1={toggler(idx)}
-            # popper closure does popping for you
-            \button text={'mark done' if not todo.done else 'mark undone'} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
-            \button text='remove' command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
-"""
-
-from tkinter import Tk
-from taktk.component import Component
 from dataclasses import dataclass
+from tkinter import Tk
+
+from taktk.component import Component
 
 
 @dataclass
@@ -23,7 +11,18 @@ class TodoItem:
 
 
 class Todo(Component):
-    code = __doc__
+    r"""
+    \frame
+        \ctk.frame pos:grid=0,0 width=350 pos:sticky='nsew'
+            \ctk.entry width=300 pos:grid=0,0 text={{entry}} pos:xweight=2
+            \button text='+' command={add_todo} pos:grid=1,0 pos:xweight=0
+        \frame pos:grid=0,1 width=350 pos:sticky='nsew'
+            !enum todos:(idx, todo)
+                \ctk.label fg_color={'#cfc' if todo.done else '#fcc'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:sticky='nsw' bind:1={toggler(idx)}
+                # popper closure does popping for you
+                \button text={'mark done' if not todo.done else 'mark undone'} command={toggler(idx)} pos:grid={(1, idx)} pos:sticky='nse'
+                \button text='remove' command={popper(idx)} pos:grid={(2, idx)} pos:sticky='nse'
+    """
 
     todos = [TodoItem("a", True), TodoItem("b", False)]
     entry = "Enter todo here"

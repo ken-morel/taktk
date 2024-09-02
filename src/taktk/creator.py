@@ -1,15 +1,18 @@
-import shutil
 import json
-from uuid import uuid4
+import shutil
 from pathlib import Path
-import ttkbootstrap as ttk
 from tkinter import Frame
 from tkinter.colorchooser import askcolor
-from tkinter.filedialog import askopenfilename, asksaveasfilename
-from ttkbootstrap.themes import standard, user
-from ttkbootstrap.style import ThemeDefinition
+from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
+from uuid import uuid4
+
+import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.dialogs import Messagebox
+from ttkbootstrap.style import ThemeDefinition
+from ttkbootstrap.themes import standard
+from ttkbootstrap.themes import user
 
 
 class ThemeCreator(ttk.Window):
@@ -144,9 +147,9 @@ class ThemeCreator(ttk.Window):
 
         # save user themes to file
         formatted = json.dumps(user.USER_THEMES, indent=4)
-        out = 'USER_THEMES = ' + formatted
+        out = "USER_THEMES = " + formatted
         filepath = user.__file__
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(out)
 
         definition = ThemeDefinition(name, colors, self.style.theme.type)
