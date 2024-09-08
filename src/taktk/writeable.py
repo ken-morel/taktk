@@ -88,7 +88,6 @@ class Writeable:
         """
         Returns the value of the variable
         """
-        self.watch_changes()
         return self._value_
 
     def subscribe(self, func: Callable):
@@ -178,7 +177,6 @@ class NamespaceWriteable(Writeable):
         """
         Gets value from namespace
         """
-        self.watch_changes()
         try:
             obj = self.base
             if self.base == self.namespace:
@@ -353,3 +351,7 @@ class Expression(NamespaceWriteable):
                 return True
             else:
                 return False
+
+
+
+# 698663284 rodrige:670932342
