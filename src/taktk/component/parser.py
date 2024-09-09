@@ -28,15 +28,16 @@ from ..dictionary import Translation
 from ..writeable import Expression
 from ..writeable import NamespaceWriteable
 
-SPACE: set = set(" ")
-VARNAME = set(string.ascii_letters + string.digits + "_")
-COMPONENT_NAME = VARNAME | set(".")
+SPACE = frozenset(" ")
+VARNAME = frozenset(string.ascii_letters + string.digits + "_")
+COMPONENT_NAME = VARNAME | frozenset(".")
 BRACKETS = dict(map(tuple, "(),[],{}".split(",")))
-STRING_QUOTES = set("\"'")
-INT = set(string.digits)
-DECIMAL = set(string.digits + ".")
-SLICE = INT | set(":")
-POINT = DECIMAL | set(",")
+STRING_QUOTES = frozenset("\"'")
+INT = frozenset(string.digits)
+DECIMAL = frozenset(string.digits + ".")
+SLICE = INT | frozenset(":")
+POINT = DECIMAL | frozenset(",")
+ATTR_NAME = frozenset(':') | VARNAME
 
 
 class State:
@@ -155,15 +156,18 @@ def next_attr_value(_state: State) -> tuple[State, str, str]:
 
     attr = ""
 
-    while state and state[...][0] != "=":
+    while state and state[...][0] in ATTR_NAME:
         attr += state[...][0]
         state += 1
     if not state or state[...][0] != "=":
-        raise Exception(f"missing equal after {attr!r} sign in:", state.text)
-    state += 1
-    nstate, val = next_value(state)
-    state |= nstate
-    return state, attr, val
+        state += 1
+        # raise Exception(f"missing equal after {attr!r} sign in:", state.text)
+        return state, attr, 'True'
+    else:
+        state += 1
+        nstate, val = next_value(state)
+        state |= nstate
+        return state, attr, val
 
 
 @annotate
@@ -299,6 +303,7 @@ def next_if(_state: State) -> tuple[State, str, tuple[str, str]]:
 @annotate
 def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
     from ..media import get_media
+    import tkinter.constants
 
     string_set = set(string)
     if len(string) > 1:
@@ -313,7 +318,9 @@ def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
     else:
         auto_eval = False
         aes_string = string
-    if string == "None":
+    if hasattr(tkinter.constants, string):
+        return getattr(tkinter.constants, string)
+    elif string == "None":
         return None
     elif string == "True":
         return True

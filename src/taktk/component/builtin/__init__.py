@@ -18,6 +18,7 @@ from ...media import Image
 from ...writeable import NamespaceWriteable
 from ...writeable import Writeable
 from .. import _Component
+from dataclasses import dataclass, field
 
 
 
@@ -26,12 +27,8 @@ class TkComponent(_Component):
     _attr_ignore = ()
     _params = None
 
-    class Attrs:
-        pass
-
     def __init_subclass__(cls):
-        _Component._init_subclass(cls)
-
+        cls.Attrs = dataclass(cls.Attrs)
         same = [x for x in dir(cls.Attrs) if not x.startswith("_") and x not in cls._attr_ignore]
         cls.conf_aliasses = {
             **dict(zip(same, same)),
@@ -49,7 +46,7 @@ class TkComponent(_Component):
         }
         self._create(parent, params)
         self.make_bindings()
-        self._position_()
+        self.init_geometry()
         for child in self.children:
             child.create(self.outlet)
 
@@ -88,6 +85,9 @@ class frame(TkComponent):
     Widget = Frame
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         padding: int | NilType = Nil
         borderwidth: int | NilType = Nil
@@ -100,6 +100,9 @@ class label(TkComponent):
     Widget = Label
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         text: str = "fake"
         foreground: str | NilType = Nil
@@ -116,6 +119,9 @@ class button(TkComponent):
     Widget = Button
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         text: str = "fake"
         command: Callable = lambda: None
@@ -134,6 +140,9 @@ class entry(TkComponent):
     _attr_ignore = ("text",)
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         text: str = "fake"
         padx: int | NilType = Nil
@@ -167,7 +176,7 @@ class entry(TkComponent):
             master=parent,
             **params,
         )
-        self._position_()
+        self.init_geometry()
         self.make_bindings()
 
 
@@ -176,6 +185,9 @@ class checkbutton(TkComponent):
     _attr_ignore = ("checked",)
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         checked: bool = False
         padx: int | NilType = Nil
@@ -207,5 +219,5 @@ class checkbutton(TkComponent):
             **params,
         )
         self.outlet = None
-        self._position_()
+        self.init_geometry()
         self.make_bindings()

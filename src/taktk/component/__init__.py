@@ -75,6 +75,9 @@ class ModularNamespace(ComponentNamespace):
 
 @annotate
 class _Component:
+    """
+    The base component class
+    """
     parent = None
     children: list
     _pos_ = None
@@ -84,7 +87,7 @@ class _Component:
 
     def _init_subclass(cls):
         if not hasattr(cls, "Attrs"):
-            cls.Attrs = type("Attrs", (object,), {})
+            cls.Attrs = type(cls.__name__ + ".Attrs", (), {})
         cls.Attrs = dataclass(cls.Attrs)
 
     __init_subclass__ = _init_subclass
@@ -100,9 +103,20 @@ class _Component:
         self.namespace = namespace
         if parent is not None:
             self.parent.children.append(self)
-        self.raw_attrs = attrs
+        self.bind_attrs(self.collect_params(attrs))
 
-    def _align_widget(self, widget, params):
+    def bind_attrs(self, attrs: dict[str]):
+        try:
+            self.attrs = self.__class__.Attrs(**attrs)
+        except TypeError as e:
+            raise TypeError(
+                f"error while binding arguments to {self.__class__!r}",
+                e,
+                self.Attrs,
+            ) from None
+
+
+    def _align_widget(self, widget, params: dict[str]):
         if self._children_align == 'r':
             widget.grid(column=self._align_offset, row=0, **params)
         elif self._children_align == 'c':
@@ -110,63 +124,6 @@ class _Component:
         else:
             raise ValueError("unknown align offset:", self._children_align)
         self._align_offset += 1
-
-    def _position_(self):
-        grid_params = ("sticky",)
-        grid = {
-            k: v
-            for k, v in self._pos_params_.items()
-            if k in grid_params
-        }
-        if "xweights" in self._pos_params_:
-            for col, weight in self._pos_params_["xweights"].items():
-                self.container.columnconfigure(col, weight=weight)
-        if "yweights" in self._pos_params_:
-            for row, weight in self._pos_params_["yweights"].items():
-                self.container.rowconfigure(row, weight=weight)
-
-        if "align" in self._pos_params_:
-            full_direction = self._pos_params_['align']
-            self._align_offset = 0
-            assert len(full_direction) > 0, "invalid empty direction in align"
-            direction = full_direction[0]
-            assert direction in "rc", "invalid direction"
-            self._children_align = direction
-            for child in self.children:
-                child._aligner = self
-        if self._aligner is not None:
-            return self._aligner._align_widget(self.container, grid)
-        pos = self._pos_
-        if pos is None:
-            return
-        match pos:
-            case ("pack", _):
-                self.container.pack()
-            case ("grid", coord):
-                coord = resolve(coord)
-                if len(coord) == 2:
-                    (x, y) = coord
-                    grid["column"] = x
-                    grid["row"] = y
-                elif len(coord) == 4:
-                    (x, y, xs, ys) = coord
-                    grid["column"] = x
-                    grid["row"] = y
-                    grid["columnspan"] = xs
-                    grid["rowspan"] = ys
-                else:
-                    raise ValueError("wrong grid tuple", coord)
-                if "xweight" in self._pos_params_:
-                    self.container.master.columnconfigure(
-                        x, weight=int(self._pos_params_["xweight"])
-                    )
-                if "yweight" in self._pos_params_:
-                    self.container.master.rowconfigure(
-                        y, weight=int(self._pos_params_["yweight"])
-                    )
-                self.container.grid(**grid)
-            case wrong:
-                raise ValueError("unrecognised position tuple:", wrong)
 
     def update(self):
         for child in self.children:
@@ -181,65 +138,74 @@ class _Component:
 
     def create(self):
         self.event_binds = {}
-        vals = {}
-        self._pos_params_ = {}
-        for key, value in self.raw_attrs.items():
+
+    def init_geometry(self):
+        grid_params = ("sticky",)
+        pack_params = ("side", "anchor", "expand", "fill", "ipadx", "padx", "ipady", "pady")
+        if hasattr(self.attrs, 'lay'):
+            lay = self.attrs.lay
+            if 'w' in lay:
+                if 'x' in lay['w']:
+                    layx = resolve(lay['w']['x'])
+                    if isinstance(layx, str):
+                        layx = dict([tuple(map(str.strip, x.split(":", 1))) for x in layx.split(',')])
+                    for col, weight in layx.items():
+                        self.outlet.columnconfigure(int(col), weight=int(weight))
+                if 'y' in lay['w']:
+                    layy = resolve(self.attrs.lay['w']['y'])
+                    if isinstance(layy, str):
+                        layy = dict([tuple(map(str.strip, x.split(":", 1))) for x in layy.split(',')])
+                    for col, weight in layy.items():
+                        self.outlet.columnconfigure(int(col), weight=int(weight))
+
+        if hasattr(self.attrs, 'pos'):
+            pos = self.attrs.pos
+            if 'pack' in pos and pos['pack']:
+                params = {
+                    k: v
+                    for k, v in pos.items()
+                    if k in pack_params
+                }
+                if isinstance(pos['pack'], str):
+                    params['side'] = pos['pack']
+                self.container.pack(**params)
+            elif 'grid' in pos:
+                grid = {
+                    k: v
+                    for k, v in pos.items()
+                    if k in grid_params
+                }
+                coord = resolve(pos['grid'])
+                if isinstance(coord, tuple):
+                    if len(coord) == 2:
+                        (x, y) = coord
+                        grid["column"] = x
+                        grid["row"] = y
+                    elif len(coord) == 4:
+                        (x, y, xs, ys) = coord
+                        grid["column"] = x
+                        grid["row"] = y
+                        grid["columnspan"] = xs
+                        grid["rowspan"] = ys
+                    else:
+                        raise ValueError("wrong grid tuple", coord)
+                self.container.grid(**grid)
+
+    def collect_params(self, raw_attrs: dict[str]):
+        def set_param(obj, key, value):
             if ":" in key:
-                st, name = key.split(":", 1)
-                if st == "bind":
-                    self.event_binds[name] = parser.evaluate_literal(
-                        value, self.namespace
-                    )
-                elif st == "pos":
-                    if name in ("grid",):
-                        self._pos_ = (
-                            name,
-                            parser.evaluate_literal(value, self.namespace),
-                        )
-                    else:
-                        self._pos_params_[name] = parser.evaluate_literal(
-                            value, self.namespace
-                        )
-                elif st == "weight":
-                    value = parser.evaluate_literal(value, self.namespace)
-                    if name == "x":
-                        xweights = {}
-                        for x in value.split(","):
-                            i, w = map(
-                                lambda s: int(s.strip()), x.strip().split(":")
-                            )
-                            xweights[i] = w
-                        self._pos_params_["xweights"] = xweights
-                    elif name == "y":
-                        yweights = {}
-                        for x in value.split(","):
-                            i, w = map(
-                                lambda s: int(s.strip()), x.strip().split(":")
-                            )
-                            yweights[i] = w
-                        self._pos_params_["yweights"] = yweights
-                    else:
-                        raise ValueError(
-                            f"Wrong weight direction: {name!r}, should be x or y"
-                        )
-                else:
-                    raise ValueError(
-                        f"Unrecognised special attribute type {st!r}"
-                        f"in attribute {key!r}"
-                    )
+                pre, key = key.split(":", 1)
+
+                if not pre in obj or not isinstance(obj[pre], dict):
+                    obj[pre] = {}
+                set_param(obj[pre], key, value)
             else:
-                vals[key] = parser.evaluate_literal(value, self.namespace)
-        for val in vals.values():
-            if isinstance(val, Writeable):
-                val.subscribe(self._update)
-        try:
-            self.attrs = self.__class__.Attrs(**vals)
-        except TypeError as e:
-            raise TypeError(
-                f"error while binding arguments to {self.__class__!r}",
-                e,
-                self.attrs,
-            ) from None
+                obj[key] = parser.evaluate_literal(value, self.namespace)
+
+        attrs = {}
+        for key, value in raw_attrs.items():
+            set_param(attrs, key, value)
+        return attrs
 
 
 @annotate

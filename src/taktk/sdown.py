@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from contextlib import contextmanager
 from .writeable import Expression
 import re
+from dataclasses import field
 
 
 class State:
@@ -384,6 +385,9 @@ class SdownViewer(TkComponent):
     }
 
     class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
         text: str | dictionary.Translation = ""
         width: int | NilType = Nil
         height: int | NilType = Nil
