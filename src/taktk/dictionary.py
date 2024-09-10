@@ -1,10 +1,13 @@
-import yaml
 from pathlib import Path
+
+import yaml
+
 from .writeable import Writeable
 
 
 class Dictionary(dict):
     subscribers = set()
+    dictionary = None
 
     def __init__(self, path, language=None):
         super().__init__()
@@ -31,8 +34,11 @@ class Dictionary(dict):
 
     def __call__(self, path):
         obj = self
-        for sub in path.split("."):
-            obj = obj[sub]
+        try:
+            for sub in path.split("."):
+                obj = obj[sub]
+        except KeyError as e:
+            raise TranslationNotFound(path) from e
         return obj
 
     @classmethod
@@ -41,18 +47,27 @@ class Dictionary(dict):
 
 
 class Dictionaries:
-    def __init__(self, path='dictionaries'):
+    def __init__(self, path="dictionaries"):
         self.path = path
-        self.languages  = {p.stem: p for p in path.glob('*.yml')}
+        self.languages = (
+            {p.stem.lower(): p for p in path.glob("*.yml")}
+            | {p.stem.lower(): p for p in path.glob("*.yaml")}
+            | {p.stem.lower(): p for p in path.glob("*.dictionary")}
+        )
 
-    def get(self, language=None, fallback_language="English"):
+    def get(self, language=None, fallback_language="english"):
         if language is None:
             import locale as loc
+
             language = loc.getlocale()[0].split("_", 1)[0]
+        language = language.lower()
+        fallback_language = fallback_language.lower()
         if language in self.languages:
             return Dictionary(self.languages[language], language=language)
         else:
-            return Dictionary(self.languages[fallback_language], language=fallback_language)
+            return Dictionary(
+                self.languages[fallback_language], language=fallback_language
+            )
 
 
 class Translation(Writeable):
@@ -68,7 +83,10 @@ class Translation(Writeable):
         """
         Gets value from namespace
         """
-        return dictionary(self.expr)
+        try:
+            return dictionary(self.expr)
+        except TypeError:
+            return ':-('
 
     def set(self, val) -> None:
         """
@@ -79,5 +97,8 @@ class Translation(Writeable):
     def update(self) -> bool:
         self.warn_subscribers()
 
+
+class TranslationNotFound(ValueError):
+    pass
 
 dictionary = None

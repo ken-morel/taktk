@@ -18,24 +18,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import string
-
-from pyoload import annotate
-from typing import Optional
 from dataclasses import dataclass
 from decimal import Decimal
-from ..writeable import NamespaceWriteable, Expression
+from typing import Optional
+
+from pyoload import annotate
+
 from ..dictionary import Translation
+from ..writeable import Expression
+from ..writeable import NamespaceWriteable
 
-
-SPACE: set = set(" ")
-VARNAME = set(string.ascii_letters + string.digits + "_")
-COMPONENT_NAME = VARNAME | set(".")
+SPACE = frozenset(" ")
+VARNAME = frozenset(string.ascii_letters + string.digits + "_")
+COMPONENT_NAME = VARNAME | frozenset(".")
 BRACKETS = dict(map(tuple, "(),[],{}".split(",")))
-STRING_QUOTES = set("\"'")
-INT = set(string.digits)
-DECIMAL = set(string.digits + ".")
-SLICE = INT | set(":")
-POINT = DECIMAL | set(",")
+STRING_QUOTES = frozenset("\"'")
+INT = frozenset(string.digits)
+DECIMAL = frozenset(string.digits + ".")
+SLICE = INT | frozenset(":")
+POINT = DECIMAL | frozenset(",")
+ATTR_NAME = frozenset(':') | VARNAME
 
 
 class State:
@@ -154,19 +156,22 @@ def next_attr_value(_state: State) -> tuple[State, str, str]:
 
     attr = ""
 
-    while state and state[...][0] != "=":
+    while state and state[...][0] in ATTR_NAME:
         attr += state[...][0]
         state += 1
     if not state or state[...][0] != "=":
-        raise Exception("missing equal sign in:", _state.text)
-    state += 1
-    nstate, val = next_value(state)
-    state |= nstate
-    return state, attr, val
+        state += 1
+        # raise Exception(f"missing equal after {attr!r} sign in:", state.text)
+        return state, attr, 'True'
+    else:
+        state += 1
+        nstate, val = next_value(state)
+        state |= nstate
+        return state, attr, val
 
 
 @annotate
-def next_value(_state: State) -> tuple[State, str, str]:
+def next_value(_state: State) -> tuple[State, str]:
     """
     Gets next attribute value pair from `\\` character, may include alias
     """
@@ -176,7 +181,36 @@ def next_value(_state: State) -> tuple[State, str, str]:
 
     val = ""
     brackets = []
-
+    if (
+        ":" in state[...]
+        and state[...][: (n := state[...].index(":"))].isalpha()
+        and len(brackets) == 0
+    ):
+        begin = state.copy()
+        state += n
+        bc = 0
+        while state:
+            if state[...][0] == "{":
+                bc += 1
+            elif state[...][0] == "}":
+                bc -= 1
+            elif (quote := state[...][0]) in STRING_QUOTES:
+                state += 1
+                while state:
+                    if state[...][0] == quote:
+                        break
+                    elif state[...][0] == "\\":
+                        state += 2
+                    else:
+                        state += 1
+                else:
+                    raise Exception(
+                        "unterminated string in:", repr(state.text)
+                    )
+            elif state[...][0].isspace() and bc == 0:
+                break
+            state += 1
+        return state, state.text[begin:state]
     while state:
         c = state[...][0]
         if c in BRACKETS:
@@ -200,30 +234,6 @@ def next_value(_state: State) -> tuple[State, str, str]:
                 raise Exception(
                     f"unmatched {c!r} at {int(state)}: {state.text!r}"
                 )
-        elif ':' in state[...] and state[...][:(n := state[...].index(':'))].isalpha():
-            begin = state.copy()
-            state += n
-            bc = 0
-            while state:
-                if state[...][0] == '{':
-                    bc += 1
-                elif state[...][0] == '}':
-                    bc -= 1
-                elif (quote := state[...][0]) in STRING_QUOTES:
-                    state += 1
-                    while state:
-                        if state[...][0] == quote:
-                            break
-                        elif state[...][0] == "\\":
-                            state += 2
-                        else:
-                            state += 1
-                    else:
-                        raise Exception("unterminated string in:", repr(state.text))
-                elif state[...][0].isspace() and bc == 0:
-                    break
-                state += 1
-            return state, state.text[begin:state]
         elif len(brackets) == 0 and c.isspace():
             break
         state += 1
@@ -273,8 +283,28 @@ def next_enum(_state: State) -> tuple[State, str, tuple[str, str]]:
 
 
 @annotate
-def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
+def next_if(_state: State) -> tuple[State, str, tuple[str, str]]:
+    """
+    Gets next attribute value pair from `\\` character, may include alias
+    """
+    begin = _state.copy()
+    begin |= skip_spaces(begin)
+    state = begin.copy()
+    state += len("!if ")
+    state |= skip_spaces(state)
+    b = state.copy()
+
+    while state and state[...][0] != "\n":
+        state += 1
+
+    return state, state.text[b:state]
+
+
+@annotate
+def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
     from ..media import get_media
+    import tkinter.constants
+
     string_set = set(string)
     if len(string) > 1:
         b, *_, e = string
@@ -282,26 +312,44 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
         b, e = string, None
     else:
         raise ValueError("empty literal string")
-    if string == 'None':
+    if string[0] == "!":
+        auto_eval = True
+        aes_string = string[1:]
+    else:
+        auto_eval = False
+        aes_string = string
+    if hasattr(tkinter.constants, string):
+        return getattr(tkinter.constants, string)
+    elif string == "None":
         return None
-    elif string == 'True':
+    elif string == "True":
         return True
-    elif string == 'False':
+    elif string == "False":
         return False
-    elif ':' in string and string[:string.index(':')].isalpha():
+    elif ":" in string and string[: string.index(":")].isalpha():
         return get_media(string)
     elif len(string_set - INT) == 0 and string.isnumeric():
         return int(string)
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
-    elif b == "{" and e == "}":
+    elif (
+        len(aes_string) > 2 and aes_string[0] == "{" and aes_string[-1] == "}"
+    ):
         if namespace is None:
-            raise ValueError('Unallowed Writeable in none namespaced context', string)
-        st = string[1:-1]
+            raise ValueError(
+                "Unallowed Writeable in none namespaced context", string
+            )
+        st = aes_string[1:-1]
         if len(st) >= 2 and st[0] == "{" and st[-1] == "}":
-            return NamespaceWriteable(namespace, st[1:-1])
+            if auto_eval:
+                return NamespaceWriteable(namespace, st[1:-1]).get()
+            else:
+                return NamespaceWriteable(namespace, st[1:-1])
         else:
-            return Expression(namespace, st)
+            if auto_eval:
+                return Expression(namespace, st).get()
+            else:
+                return Expression(namespace, st)
     elif b in STRING_QUOTES:
         if e == b:
             return string[1:-1]
@@ -350,4 +398,5 @@ def evaluate_literal(string: str, namespace: "Optional[Component]" = None):
         raise ValueError("Unrecognsed literal:", repr(string))
 
 
-from . import Component
+from . import _Component
+from .instructions import Namespace

@@ -1,8 +1,59 @@
-from tkinter import StringVar, IntVar
-from typing import Callable, Any
-from functools import cached_property
+import builtins
 from contextlib import contextmanager
+from functools import cached_property
+from tkinter import IntVar
+from tkinter import StringVar
+from typing import Any
+from typing import Callable
+
 from . import Nil
+
+
+class Namespace:
+    def __init__(self, parents=[]):
+        self.parents = parents
+        self.vars = {}
+
+        self._subscribers_ = set()
+        self._last_ = {}
+
+    def __getitem__(self, item):
+        self._watch_changes_()
+        if item in self.vars:
+            return self.vars[item]
+        else:
+            for parent in self.parents:
+                try:
+                    return parent[item]
+                except:
+                    continue
+            else:
+                if item in dir(builtins):
+                    return getattr(builtins, item)
+                else:
+                    raise NameError(item)
+
+    def __setitem__(self, item, value):
+        self.vars[item] = value
+        self._watch_changes_()
+
+    def __repr__(self):
+        return repr(self.vars)
+
+    def _subscribe_(self, subscriber):
+        self._subscribers_.add(subscriber)
+
+    def _unsubscribe_(self, subscriber):
+        self._subscribers_.remove(subscriber)
+
+    def _warn_subscribers_(self):
+        for subscriber in set(self._subscribers_):
+            subscriber()
+
+    def _watch_changes_(self):
+        if self.vars != self._last_:
+            self._last_ = self.vars.copy()
+            self._warn_subscribers_()
 
 
 class Writeable:
@@ -16,17 +67,22 @@ class Writeable:
         Creates the object with the specified value
         """
         self._value_ = val
+        self.last - val
         self.subscribers = set()
 
-    def set(self, value: Any, warn: bool = True):
+    def set(self, value: Any):
         """
         Sets the value of the Writeable, and warns
         notifiers except warn=False
         """
         self._value_ = value
-        if warn:
-            self.warn_subscribers()
+        self.watch_changes()
         return self._value_
+
+    def watch_changes(self):
+        if self.last != (val := self.get()):
+            self.last = val
+            self.warn_subscribers()
 
     def get(self):
         """
@@ -45,7 +101,7 @@ class Writeable:
         self.subscribers.remove(func)
 
     def warn_subscribers(self):
-        for subscriber in self.subscribers:
+        for subscriber in set(self.subscribers):
             subscriber()
 
     @cached_property
@@ -68,7 +124,8 @@ class NamespaceWriteable(Writeable):
 
     @staticmethod
     def parse_path(text):
-        from .component.parser import State, VARNAME
+        from .component.parser import VARNAME
+        from .component.parser import State
 
         begin = State(text=text)
         state = begin.copy()
@@ -105,7 +162,7 @@ class NamespaceWriteable(Writeable):
                 raise Exception("wrong value", state[...])
         return tuple(path)
 
-    def __init__(self, namespace, name: str):
+    def __init__(self, namespace: Namespace, name: str):
         """
         Creates the listener on the namespace with defined name
         """
@@ -122,16 +179,21 @@ class NamespaceWriteable(Writeable):
         """
         try:
             obj = self.base
-            if self.name.startswith("["):
-                string = "obj" + self.name
-                try:
-                    return eval(string, locals(), self.namespace)
-                except Exception as e:
-                    raise NameError(
-                        "Error resolving NamespaceWriteable", e, repr(string)
-                    ) from e
+            if self.base == self.namespace:
+                return self.namespace[self.name]
             else:
-                return getattr(obj, self.name)
+                if self.name.startswith("["):
+                    string = "obj" + self.name
+                    try:
+                        return eval(string, locals(), self.namespace)
+                    except Exception as e:
+                        raise NameError(
+                            "Error resolving NamespaceWriteable",
+                            e,
+                            repr(string),
+                        ) from e
+                else:
+                    return getattr(obj, self.name)
         except AttributeError as e:
             raise NameError(e).with_traceback(e.__traceback__) from None
 
@@ -144,11 +206,14 @@ class NamespaceWriteable(Writeable):
             exec(
                 "obj" + self.name + " = val",
                 globals(),
-                vars(self.namespace) | locals(),
+                self.namespace.vars | locals(),
             )
         else:
-            setattr(obj, self.name, val)
-        self.warn_subscribers()
+            if obj is self.namespace:
+                self.namespace[self.name] = val
+            else:
+                setattr(obj, self.name, val)
+        self.watch_changes()
         self.namespace._watch_changes_()
 
     @property
@@ -166,10 +231,6 @@ class NamespaceWriteable(Writeable):
             else:
                 obj = getattr(obj, sub)
         self._base = obj
-
-    def warn_subscribers(self):
-        super().warn_subscribers()
-        self.last = self.get()
 
     def update(self) -> bool:
         try:
@@ -284,6 +345,7 @@ class Expression(NamespaceWriteable):
         except Exception:
             pass
         else:
+            self.warn_subscribers()
             if val != self.last:
                 self.warn_subscribers()
                 return True
@@ -291,8 +353,5 @@ class Expression(NamespaceWriteable):
                 return False
 
 
-def resolve(val):
-    if isinstance(val, Writeable):
-        return val.get()
-    else:
-        return val
+
+# 698663284 rodrige:670932342

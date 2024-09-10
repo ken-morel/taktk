@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taktk"
-version = "0.1.0a1.dev1"
+version = "0.1.0a1"
 classifiers = [
   "Intended Audience :: Developers",
   "Development Status :: 2 - Pre-Alpha",
@@ -21,11 +21,13 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "customtkinter",
+  "ttkbootstrap",
   "pyoload",
   "comberload",
   "PyYAML",
-  "PIllow"
+  "PIllow",
+  "customtkinter",
+  "shellsy",
 ]
 description = "Order your tkinter apps"
 keywords = ["customtkinter", "framework", "tkinter"]
