@@ -353,5 +353,4 @@ class Expression(NamespaceWriteable):
                 return False
 
 
-
 # 698663284 rodrige:670932342

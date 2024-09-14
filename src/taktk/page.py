@@ -1,19 +1,19 @@
 import json
 import re
+import string
 from decimal import Decimal
 from importlib import import_module
 from logging import getLogger
-from urllib.parse import parse_qsl
-from urllib.parse import urlparse
-from uuid import UUID
-from types import ModuleType
-from pyoload import annotate
 from tkinter import Tk, Widget
+from types import ModuleType
 from typing import Any, Optional
-from . import application
+from urllib.parse import parse_qsl, urlparse
+from uuid import UUID
+
+from pyoload import annotate
+
+from . import application, component
 from . import store as store_
-from . import component
-import string
 
 log = getLogger(__name__)
 
@@ -88,18 +88,32 @@ class PageView:
             else:
                 return result
 
-    def view_component(self, component: "component.Component"):
+    def view_component(self, components: "tuple", *, _cache={}):
         if self.current_page is None:
             self.current_page = 0
         else:
             self.current_page += 1
         current = self.current_widget
-        self.history.insert(self.current_page, component)
-        component.render(self.parent)
-        self.current_widget = component.container
-        self.current_widget.grid(column=0, row=0, sticky="nsew")
+        self.history.insert(self.current_page, components)
+        parent = self.parent
+        master = None
+        for component in components:
+            if isinstance(component, type):
+                if component not in _cache:
+                    _cache[component] = component()
+                component = _cache[component]
+
+            component = component
+            parent.columnconfigure(0, weight=1)
+            parent.rowconfigure(0, weight=1)
+            component.render(parent)
+            container = component.container
+            container.grid(column=0, row=0, sticky="nsew")
+            master = master or container
+            parent = component.outlet
+        self.current_widget = master
         if current is not None:
-            self.destroy_later(current)
+            self.destroy_later(master)
 
     def destroy_later(self, widget, cache=[]):
         cache.append(widget)
@@ -157,20 +171,15 @@ class PageView:
                 },
             )
         else:
-            print(cmd, flush=True)
             parsed = urlparse(cmd)
-            print(parsed, flush=True)
             args = {k: json.loads(v) for k, v in parse_qsl(parsed.query)}
             handler = parsed.fragment
             path = parsed.path
-            print(path, flush=True)
-            if "@" in path and len(set(path[path.index("@") + 1:]) - HANDLER_NAME) == 0:
+            if (
+                "@" in path
+                and len(set(path[path.index("@") + 1 :]) - HANDLER_NAME) == 0
+            ):
                 path, handler = path.rsplit("@", 1)
-            # path = [self.package.__package__] + list(
-            #     filter(bool, path.split("/"))
-            # )
-            print(args, path, handler, flush=True)
-            print("-" * 10, flush=True)
             self.current_url = parsed.path
             return self(path, handler, args)
 
@@ -178,7 +187,7 @@ class PageView:
         from .component import Component
 
         if isinstance(module, str):
-            module, urlparams = self.import_module(module)
+            module, urlparams, layouts = self.import_module(module)
         try:
             function = getattr(module, handler or DEFAULT_HANDLER)
         except AttributeError as e:
@@ -198,12 +207,16 @@ class PageView:
         else:
             http = page
         if comp is not None:
-            self.view_component(comp)
-        return (comp, http)
+            layouts.append(comp)
+            self.view_component(tuple(layouts))
+        return (tuple(layouts), http)
 
     def import_module(self, path):
         module = self.package
         params = []
+        layouts = []
+        if hasattr(module, "layout"):
+            layouts.append(module.layout)
         for package in path.strip("/").split("/"):
             if not package.strip():
                 continue
@@ -228,7 +241,10 @@ class PageView:
                             break
                 else:
                     raise Error404(path)
-        return module, params
+            if hasattr(module, "layout"):
+                layouts.append(module.layout)
+
+        return module, params, layouts
 
 
 class Error404(ValueError):

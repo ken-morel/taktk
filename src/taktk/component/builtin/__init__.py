@@ -1,84 +1,17 @@
 import sys
+from dataclasses import dataclass, field
 from tkinter import BooleanVar
 from tkinter import Image as TkImage
 from tkinter import StringVar
-from typing import Callable
-from typing import Optional
+from typing import Callable, Optional
 
 from pyoload import annotate
-from ttkbootstrap import Button
-from ttkbootstrap import Checkbutton
-from ttkbootstrap import Entry
-from ttkbootstrap import Frame
-from ttkbootstrap import Label
+from ttkbootstrap import Button, Checkbutton, Entry, Frame, Label
 
-from ... import Nil, NilType
-from ... import resolve
+from ... import Nil, NilType, resolve
 from ...media import Image
-from ...writeable import NamespaceWriteable
-from ...writeable import Writeable
-from .. import _Component
-from dataclasses import dataclass, field
-
-
-
-class TkComponent(_Component):
-    Widget = None
-    _attr_ignore = ()
-    _params = None
-
-    def __init_subclass__(cls):
-        cls.Attrs = dataclass(cls.Attrs)
-        same = [x for x in dir(cls.Attrs) if not x.startswith("_") and x not in cls._attr_ignore]
-        cls.conf_aliasses = {
-            **dict(zip(same, same)),
-        }
-        del same
-
-    def create(self, parent):
-        super().create()
-        self._params = params = {
-            **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        self._create(parent, params)
-        self.make_bindings()
-        self.init_geometry()
-        for child in self.children:
-            child.create(self.outlet)
-
-    def _create(self, parent, params={}):
-        self.outlet = self.container = self.Widget(parent, **params)
-
-    def _update(self):
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v, self.update)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        for k, v in params.items():
-            try:
-                self.container.configure(k, v)
-            except:
-                pass
-
-    def update(self):
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v, self.update)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        if params != self._params:
-            self._update()
-            self._params = params
-        super().update()
+from ...writeable import NamespaceWriteable, Writeable
+from .. import TkComponent, _Component
 
 
 class frame(TkComponent):

@@ -25,8 +25,7 @@ from typing import Optional
 from pyoload import annotate
 
 from ..dictionary import Translation
-from ..writeable import Expression
-from ..writeable import NamespaceWriteable
+from ..writeable import Expression, Namespace, NamespaceWriteable
 
 SPACE = frozenset(" ")
 VARNAME = frozenset(string.ascii_letters + string.digits + "_")
@@ -37,7 +36,7 @@ INT = frozenset(string.digits)
 DECIMAL = frozenset(string.digits + ".")
 SLICE = INT | frozenset(":")
 POINT = DECIMAL | frozenset(",")
-ATTR_NAME = frozenset(':') | VARNAME
+ATTR_NAME = frozenset(":") | VARNAME
 
 
 class State:
@@ -162,7 +161,7 @@ def next_attr_value(_state: State) -> tuple[State, str, str]:
     if not state or state[...][0] != "=":
         state += 1
         # raise Exception(f"missing equal after {attr!r} sign in:", state.text)
-        return state, attr, 'True'
+        return state, attr, "True"
     else:
         state += 1
         nstate, val = next_value(state)
@@ -396,7 +395,3 @@ def evaluate_literal(string: str, namespace: "Optional[Namespace]" = None):
         return tuple(values)
     else:
         raise ValueError("Unrecognsed literal:", repr(string))
-
-
-from . import _Component
-from .instructions import Namespace

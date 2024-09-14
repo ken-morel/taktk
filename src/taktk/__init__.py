@@ -15,15 +15,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
-from typing import Callable
+from typing import Any, Callable
+
 from pyoload import annotate
+
 
 class NilType:
     """
     Simple type to describe inexistence of value, used in components
     some other parts of taktk
     """
+
     _instance = None
 
     def __new__(cls):
@@ -89,9 +91,10 @@ def on_create(func: Callable) -> Callable:
 
 def notify(*args, **kw):
     from . import notification
+
     notification.Notification(*args, **kw).show()
 
 
 __version__ = "0.1.0a1"
 __author__ = "ken-morel"
-__all__ = ['Nil', 'on_create']
+__all__ = ["Nil", "on_create", "notify"]

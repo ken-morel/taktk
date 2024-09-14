@@ -43,6 +43,7 @@ class Notification:
         image = None
         if icon is Nil:
             import taktk
+
             if taktk.application is None:
                 return
             image = taktk.application.icon.image
@@ -51,7 +52,9 @@ class Notification:
         if image is not None:
             w, h = image.size
             sc = Notification.IMAGE_WIDTH / w
-            self.icon = ImageTk.PhotoImage(image.resize((int(w * sc), int(h * sc))))
+            self.icon = ImageTk.PhotoImage(
+                image.resize((int(w * sc), int(h * sc)))
+            )
         else:
             try:
                 sc = Notification.IMAGE_WIDTH / icon.width()
@@ -120,7 +123,6 @@ class Notification:
 
     @classmethod
     def add(cls, notification):
-
         marg = Notification.MARGIN
         width = Notification.WIDTH
         notification.root.update_idletasks()
@@ -132,7 +134,10 @@ class Notification:
                 cls._STACK[x].source == notification.source
                 and notification.source is not None
             ):
-                px, py = cls._STACK[x].root.winfo_rootx(), cls._STACK[x].root.winfo_rooty()
+                px, py = (
+                    cls._STACK[x].root.winfo_rootx(),
+                    cls._STACK[x].root.winfo_rooty(),
+                )
                 cls.remove(cls._STACK[x])
                 cls._STACK.insert(x, notification)
                 notification.root.geometry(f"{width}x{height}{px:+}{py:+}")

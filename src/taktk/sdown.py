@@ -1,16 +1,17 @@
-from ttkbootstrap import Frame, Text, Scrollbar
-import tkinter as tk
-from pyoload import annotate
-from .component.builtin import TkComponent
-from .component import _Component
-from typing import Optional, Callable
-from . import dictionary
-from . import resolve, Nil, NilType
-from dataclasses import dataclass, field
-from contextlib import contextmanager
-from .writeable import Expression
 import re
-from dataclasses import field
+import tkinter as tk
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from typing import Any, Callable, Optional
+
+import pygments
+from pyoload import annotate
+from ttkbootstrap import Frame, Scrollbar, Text
+
+from . import Nil, NilType, dictionary, resolve
+from .component import _Component
+from .component.builtin import TkComponent
+from .writeable import Expression
 
 
 class State:
@@ -173,6 +174,15 @@ class Sdown:
             return hash(self.text)
 
     @dataclass
+    @annotate
+    class Code(Tag):
+        text: str
+        syntax: str
+
+        def __hash__(self):
+            return hash(self.text)
+
+    @dataclass
     class Paragraph(Tag):
         children: "list[Tag]" = field(default_factory=list)
 
@@ -325,6 +335,13 @@ class Sdown:
                     else:
                         break
                 tags.append(cls.OList(items=items))
+            elif state[...:].startswith("```"):
+                state += 3
+                syntax = state.next_line().strip()
+                code = state[...:]
+                end = code.find("\n```")
+                state += end + 4
+                tags.append(cls.Code(text=code, syntax=syntax))
             else:
                 paragraph = cls.Paragraph()
 
@@ -409,6 +426,7 @@ class SdownViewer(TkComponent):
     def _create(self, parent, params):
         self.container = Frame(parent)
         self.container.columnconfigure(0, weight=1)
+        self.container.columnconfigure(0, weight=1)
         self.container.rowconfigure(0, weight=1)
         params = {
             **{
@@ -417,7 +435,7 @@ class SdownViewer(TkComponent):
                 if k in self.conf_aliasses and v is not Nil
             }
         }
-        self.widget = Text(self.container, **params, borderwidth=20, relief='sunken')
+        self.widget = Text(self.container, **params)
         if self.attrs.scrollable:
             self.scrollbar = Scrollbar(self.container)
             self.scrollbar.grid(column=1, row=0, sticky="nsew")
@@ -519,6 +537,21 @@ class SdownViewer(TkComponent):
                 self.widget.insert("end", f"\n{pos + 1} ", "olist_puce")
                 insert_inline(items)
 
+        def insert_code(code):
+            from pygments import lexers
+
+            component = LexedCode(
+                self.namespace,
+                self,
+                {},
+                dict(
+                    text=code.text,
+                    lexer=lexers.get_lexer_by_name(code.syntax),
+                ),
+            )
+            component.create(self.widget)
+            self.widget.window_create("end", window=component.container)
+
         for tag in parsed:
             if isinstance(tag, Sdown.Title):
                 self.widget.insert(
@@ -530,6 +563,8 @@ class SdownViewer(TkComponent):
                 insert_ulist(tag)
             elif isinstance(tag, Sdown.OList):
                 insert_olist(tag)
+            elif isinstance(tag, Sdown.Code):
+                insert_code(tag)
             else:
                 raise ValueError(tag)
 
@@ -539,6 +574,108 @@ class SdownViewer(TkComponent):
 
     def create_button(self, text, command):
         from ttkbootstrap import Button
+
         return (self.attrs.button_class or Button)(
             master=self.widget, command=command, text=text
         )
+
+
+class LexedCode(TkComponent):
+    _attr_ignore = ("text", "scrollable", "lexer", "style")
+
+    class Attrs:
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
+        text: str | dictionary.Translation = ""
+        width: int | NilType = Nil
+        height: int | NilType = Nil
+        borderwidth: int | NilType = Nil
+        foreground: str | NilType = Nil
+        background: str | NilType = Nil
+        relief: str | NilType = Nil
+        scrollable: bool = True
+        lexer: Any = Nil
+        style: Any = Nil
+
+    @contextmanager
+    def enabled(self):
+        self.widget["state"] = "normal"
+        yield
+        self.widget["state"] = "disabled"
+
+    def _create(self, parent, params):
+        from pygments import styles
+
+        self.container = Frame(parent)
+        self.container.columnconfigure(0, weight=1)
+        self.container.rowconfigure(0, weight=1)
+        if isinstance(self.attrs.style, dict):
+            self._style = self.attrs.style.copy()
+            if "name" in self.attrs.style:
+                self.style = styles.get_style_by_name(self.attrs.style["name"])
+        else:
+            self._style = self.attrs.style
+            if self.attrs.style is not Nil:
+                self.style = self.attrs.style()
+            else:
+                self.style = next(styles.get_all_styles())
+        if isinstance(self.attrs.lexer, dict):
+            self._lexer = self.attrs.lexer.copy()
+            if "name" in self.attrs.lexer:
+                self.lexer = pygments.lexers.get_lexer_by_name(
+                    self.attrs.lexer["name"]
+                )
+            elif "filename" in self.attrs.lexer:
+                self.lexer = pygments.lexers.get_for_filename(
+                    self.attrs.lexer["filename"]
+                )
+            elif "mimetype" in self.attrs.lexer:
+                self.lexer = pygments.lexers.get_lexer_for_mimetype(
+                    self.attrs.lexer["mimetype"]
+                )
+        else:
+            self._lexer = self.attrs.lexer
+            if self.attrs.lexer is not Nil:
+                self.lexer = self.attrs.lexer()
+            else:
+                self.lexer = next(pygments.lexers.get_all_lexers())
+        self.widget = Text(self.container, **params)
+        if self.attrs.scrollable:
+            self.scrollbar = Scrollbar(self.container)
+            self.scrollbar.grid(column=1, row=0, sticky="nsew")
+            self.scrollbar["command"] = self.widget.yview
+            self.widget["yscrollcommand"] = self.scrollbar.set
+        else:
+            self.scrollbar = None
+        self.widget["state"] = "disabled"
+        self.widget.grid(column=0, row=0, sticky="nsew")
+        self.container.rowconfigure(0, weight=1)
+        self.container.columnconfigure(0, weight=1)
+        self.set_text(resolve(self.attrs.text))
+
+    def set_text(self, text):
+        import pygments
+
+        self._text = text
+        with self.enabled():
+            self.clear()
+            self.insert_tokens(pygments.lex(text, self.attrs.lexer))
+
+    def config_styles(self):
+        for style, (fg, bg) in self.attrs.style._styles.items():
+            self.widget.tag_configure(style, foreground=fg, background=bg)
+
+    @property
+    def text(self):
+        return self._text
+
+    @text.setter
+    def text(self, text):
+        self.set_text(text)
+
+    def insert_tokens(self, tokens):
+        for token, text in tokens:
+            self.widget.insert("end", text, (str(token),))
+
+    def clear(self):
+        self.widget.delete("1.0", "end")
