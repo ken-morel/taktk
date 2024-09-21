@@ -1,17 +1,15 @@
-import yaml
-
 import time
+from threading import Lock, Thread
 
+import yaml
 from PIL import ImageTk
 from pyoload import *
-from threading import Lock
-from threading import Thread
 from ttkbootstrap import *
 from ttkbootstrap.icons import *
 from ttkbootstrap.utility import *
 
-DEFAULT_ICON_WIN32 = "\ue154"
-DEFAULT_ICON = "\u25f0"
+from . import Nil
+from .media import get_image
 
 
 class Notification:
@@ -19,6 +17,7 @@ class Notification:
     _STACK = []
     WIDTH = 350
     IMAGE_WIDTH = 100
+    icon = None
     rearange_lock = Lock()
 
     def __init__(
@@ -28,7 +27,7 @@ class Notification:
         duration=None,
         bootstyle="dark",
         alert=False,
-        icon=None,
+        icon=Nil,
         source=None,
     ):
         self.source = source
@@ -37,11 +36,25 @@ class Notification:
         self.duration = duration
         self.bootstyle = bootstyle
 
-        if isinstance(icon, str):
-            image = Image.open(icon)
+        self.setup_icon(icon)
+        self.titlefont = None
+
+    def setup_icon(self, icon=Nil):
+        image = None
+        if icon is Nil:
+            import taktk
+
+            if taktk.get_app() is None:
+                return
+            image = taktk.get_app().icon.image
+        elif isinstance(icon, str):
+            image = get_image(icon).image
+        if image is not None:
             w, h = image.size
             sc = Notification.IMAGE_WIDTH / w
-            icon = ImageTk.PhotoImage(image.resize((int(w * sc), int(h * sc))))
+            self.icon = ImageTk.PhotoImage(
+                image.resize((int(w * sc), int(h * sc)))
+            )
         else:
             try:
                 sc = Notification.IMAGE_WIDTH / icon.width()
@@ -49,10 +62,9 @@ class Notification:
                     width=int(sc * icon.width()),
                     height=int(sc * icon.height()),
                 )
+                self.icon = icon
             except Exception:
                 pass
-        self.icon = icon
-        self.titlefont = None
 
     def show(self):
         self.root = window = Toplevel(overrideredirect=True, alpha=0.7)
@@ -75,6 +87,7 @@ class Notification:
         ttk.Label(
             root,
             text=self.title,
+            wraplength=scale_size(root, Notification.WIDTH - 100),
             font="{20px arial}",
             bootstyle=f"{self.bootstyle}-inverse",
             anchor=NW,
@@ -83,13 +96,13 @@ class Notification:
         ttk.Label(
             root,
             text=self.message,
-            wraplength=scale_size(root, Notification.WIDTH - 130),
+            wraplength=scale_size(root, Notification.WIDTH - 100),
             bootstyle=f"{self.bootstyle}-inverse",
             anchor=NW,
         ).grid(row=1, column=1, sticky=NSEW, padx=10, pady=(0, 5))
 
         window.bind("<ButtonPress>", self.hide)
-        Notification.add(self)
+        Thread(target=Notification.add, args=(self,)).start()
         window.bell()
 
         if self.duration is not None:
@@ -110,34 +123,41 @@ class Notification:
 
     @classmethod
     def add(cls, notification):
-        for x in range(len(cls._STACK)):
-            if (
-                cls._STACK[x].source == notification.source
-                and notification.source is not None
-            ):
-                cls.remove(cls._STACK[x])
-                cls._STACK.insert(x, notification)
-                return cls.position_widgets()
-
         marg = Notification.MARGIN
         width = Notification.WIDTH
         notification.root.update_idletasks()
 
         height = notification.root.winfo_height()
         screen_height = notification.root.winfo_screenheight()
-
-        while True:
-            taken = 0
-            for notif in Notification._STACK:
-                taken += marg + notif.root.winfo_height()
-
-            if screen_height - (taken + marg) < height:
-                Notification.remove_earliset()
-                continue
-            else:
+        for x in range(len(cls._STACK)):
+            if (
+                cls._STACK[x].source == notification.source
+                and notification.source is not None
+            ):
+                px, py = (
+                    cls._STACK[x].root.winfo_rootx(),
+                    cls._STACK[x].root.winfo_rooty(),
+                )
+                cls.remove(cls._STACK[x])
+                cls._STACK.insert(x, notification)
+                notification.root.geometry(f"{width}x{height}{px:+}{py:+}")
+                cls.position_widgets()
                 break
-        cls._STACK.append(notification)
-        notification.root.geometry(f"{width}x{height}-{marg}-{taken+marg}")
+        else:
+            while True:
+                taken = 0
+                for notif in Notification._STACK:
+                    taken += marg + notif.root.winfo_height()
+
+                if screen_height - (taken + marg) < height:
+                    Notification.remove_earliset()
+                    continue
+                else:
+                    break
+            cls._STACK.append(notification)
+            notification.root.geometry(
+                f"{width}x{height}-{marg}-{taken + marg}"
+            )
 
     @classmethod
     def remove_earliset(cls):
@@ -151,22 +171,23 @@ class Notification:
 
     @classmethod
     def position_widgets(cls):
-        marg = cls.MARGIN
+        with cls.rearange_lock:
+            marg = cls.MARGIN
 
-        for idx, notification in enumerate(cls._STACK):
-            taken = 0
-            height = notification.root.winfo_height()
-            for notif in cls._STACK[:idx]:
-                taken += marg + notif.root.winfo_height()
+            for idx, notification in enumerate(cls._STACK):
+                taken = 0
+                height = notification.root.winfo_height()
+                for notif in cls._STACK[:idx]:
+                    taken += marg + notif.root.winfo_height()
 
-            pos2 = taken + marg
-            swidth = notification.root.winfo_screenheight()
-            while (swidth - notification.root.winfo_y() - height) > pos2:
-                for notif in cls._STACK[idx:]:
-                    notif.root.geometry(
-                        f"-{marg}+{notif.root.winfo_y() + 1}",
-                    )
-                    notif.root.update_idletasks()
-                # time.sleep(0.005)
-            notification.root.geometry(f"-{marg}-{pos2}")
-            notification.root.update_idletasks()
+                pos2 = taken + marg
+                swidth = notification.root.winfo_screenheight()
+                while (swidth - notification.root.winfo_y() - height) > pos2:
+                    for notif in cls._STACK[idx:]:
+                        notif.root.geometry(
+                            f"-{marg}+{notif.root.winfo_y() + 10}",
+                        )
+                        notif.root.update_idletasks()
+                    # time.sleep(0.005)
+                notification.root.geometry(f"-{marg}-{pos2}")
+                notification.root.update_idletasks()

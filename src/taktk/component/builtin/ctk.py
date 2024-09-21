@@ -1,14 +1,17 @@
-from customtkinter import CTkLabel, CTkFrame, CTkButton, CTkEntry
-from . import frame, label, button, entry
+from dataclasses import field
+
+from customtkinter import CTkButton, CTkEntry, CTkFrame, CTkLabel
+
 from ... import Nil
+from . import *
 
 
 class frame(frame):
-    WIDGET = CTkFrame
+    Widget = CTkFrame
 
 
 class label(label):
-    WIDGET = CTkLabel
+    Widget = CTkLabel
 
     class attrs:
         text: str = "fake"
@@ -21,8 +24,22 @@ class label(label):
 
 
 class button(button):
-    WIDGET = CTkButton
+    Widget = CTkButton
 
 
 class entry(entry):
-    WIDGET = CTkEntry
+    class Attrs:
+        weight: dict = field(default_factory=dict)
+        pos: dict = field(default_factory=dict)
+        lay: dict = field(default_factory=dict)
+        bootstyle: str | NilType = Nil
+        text: str = "fake"
+        padx: int | NilType = Nil
+        pady: int | NilType = Nil
+        width: int | NilType = Nil
+        font: str | NilType = Nil
+        textvariable: StringVar | NilType = Nil
+        show: str | NilType = Nil
+        bind: dict = field(default_factory=dict)
+
+    Widget = CTkEntry
