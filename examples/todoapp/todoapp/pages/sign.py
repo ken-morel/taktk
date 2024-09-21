@@ -7,15 +7,15 @@ from ..admin import User
 
 class Signin(Component):
     r"""
-    \frame:form weight:x='0: 1' weight:y='0: 1' padding=50
-        \frame:form pos:grid=0,0 weight:x='0:1'
+    \frame weight:x='0: 1' weight:y='0: 1' padding=50
+        \frame pos:grid=0,0 weight:x='0:1'
             \frame pos:grid=0,0 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
                 \label text=[pages.signin.label.name] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
                 \entry text={{username}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
             \frame pos:grid=0,1 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
                 \label text=[pages.signin.label.password] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
                 \entry show='*' text={{password}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
-        \frame:buttons pos:grid=0,1 pos:sticky='nsew' weight:x='1: 10'
+        \frame pos:grid=0,1 pos:sticky='nsew' weight:x='1: 10'
             \ctk.button command={gt_signup} text=[pages.signin.gt_signup] pos:grid=0,0 pos:sticky='sw'
             \ctk.button command={signin} text=[pages.signin.submit] pos:grid=2,0 pos:sticky='se'
     """

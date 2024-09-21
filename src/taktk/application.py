@@ -16,28 +16,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
 from logging import getLogger
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any
-from typing import Optional
 from types import ModuleType
+from typing import Any, Optional
 
 from pyoload import annotate
 from ttkbootstrap import Window
 
-from . import ON_CREATE_HANDLERS
-from . import application_server
-from . import component
-from . import dictionary
-from . import media
-from . import menu
-from . import page
-from . import store
+from . import (
+    ON_CREATE_HANDLERS,
+    application_server,
+    component,
+    dictionary,
+    media,
+    menu,
+    page,
+    store,
+)
 
-
-store_ = store
 log = getLogger(__name__)
 
 
@@ -50,13 +48,13 @@ class Application:
       fetch dictionaries from
     - **fallback_language**: The fallback language to use in case the locale's
       language could not be found in dictionaries
-    - **params**: `dict[str,]`: Additional params to pass to ttkbootstrap.Window on window
+    - **params**: `dict[str,]`: Additional params to pass to ttkbootstrap
+      Window on window
       creation.
     - **menu**: an optional `taktk.menu.Menu` object to use as toplevel menu
     - **layout**: an instance of `Layout` class you should define yourself
     - **destroy_cache**: Experimental: destroys only the last {x} viewed
       component's widget to reduce chances for app to abruptly resize
-    - **store**: A before initialization: a *sjd*
     """
 
     dictionaries: dictionary.Dictionaries = None
@@ -64,13 +62,13 @@ class Application:
     menu: Optional[menu.Menu]
     layout: Optional[component.Component]
     destroy_cache: int = 5
-    store: Optional[store_.Store] = None
+    _store: Optional[store.Store] = None
     address: Optional[tuple[str, int]]
     icon: Optional[str | media.Image]
     _create_params: tuple[
         Optional[Path | str | dictionary.Dictionaries],
         dict[str, Any],
-        tuple[None, dict] | store_.Store,
+        tuple[None, dict] | store.Store,
         Optional[Path | str | media.Image],
         type(Window),
     ]
@@ -85,7 +83,7 @@ class Application:
         params: dict[str, Any] = {},
         menu: Optional[menu.Menu] = None,
         layout: Optional[component.Component] = None,
-        store: tuple[None, dict] | store_.Store = (None, {}),
+        store: tuple[None, dict] | store.Store = (None, {}),
         address: Optional[tuple[str, int]] = None,
         icon: Optional[str | media.Image] = None,
         media_path: Optional[str | Path] = None,
@@ -163,20 +161,19 @@ class Application:
         (
             dictionaries_path,
             _,
-            store_,
+            _store,
             *__,
         ) = self._create_params
-        if isinstance(store_, store.Store):
-            self.store = store_
+        if isinstance(_store, store.Store):
+            self._store = _store
+        elif isinstance(_store, tuple):
+            _store, default = _store
         else:
-            if isinstance(store_, tuple):
-                store_, default = store_
-            else:
-                default = {}
-            if store_ is None:
+            default = {}
+            if _store is None:
                 self._store_file = NamedTemporaryFile(delete=False)
-                store_ = self._store_file.name
-            self.store = store.Store(store_, default=default)
+                _store = self._store_file.name
+            self._store = store.Store(_store, default=default)
         if dictionaries_path is not None:
             self.dictionaries = dictionary.Dictionaries(dictionaries_path)
             self.set_language()
@@ -213,7 +210,7 @@ class Application:
             self.menu.toplevel(root)
         if self.layout is not None:
             self.layout.render(self.root)
-            self.layout.container.grid(column=0, row=0, sticky='nsew')
+            self.layout.container.grid(column=0, row=0, sticky="nsew")
             return self.layout["outlet"].outlet
         else:
             return root
@@ -294,9 +291,15 @@ class Application:
 
         try:
             urlopen(f"http://localhost:{self.address[1]}/!current").read()
-        except Exception as e:
+        except Exception:
             self.run(url)
             return True
         else:
             urlopen(f"http://localhost:{self.address[1]}/" + url.lstrip("/"))
             return False
+
+    def get_store(self) -> store.Store:
+        """
+        Returns the application store instance.
+        """
+        return self._store

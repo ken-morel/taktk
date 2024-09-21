@@ -17,17 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from importlib import import_module
-from types import ModuleType
 from typing import Optional
 
 from pyoload import *
 from pyoload import annotate
 
-from .. import Nil, resolve
-from ..writeable import Expression, Namespace, Writeable
-from . import parser
+from .. import Nil, resolve, template
+from ..template import Template, evaluate_literal
+from ..writeable import Expression, Namespace
 
 
 class Instruction:
@@ -96,7 +95,7 @@ class Create_Component(Instruction):
         _state |= state
         return cls(name=name, alias=alias, attrs=attrs, parent=parent)
 
-    @annotate
+    # @annotate
     def _eval(self, namespace: Namespace):
         parent = self.parent
         assert (
@@ -112,7 +111,7 @@ class Create_Component(Instruction):
             child._eval(namespace)
         return self.component
 
-    @annotate
+    # @annotate
     def eval(self, namespace: Namespace):
         self.component = get_component(self.name, namespace)(
             parent=None, attrs=self.attrs, namespace=namespace
@@ -125,7 +124,6 @@ class Create_Component(Instruction):
         return self.component
 
 
-@annotate
 class Create_Enum_Component(Instruction):
     """
     create_Component instruction to create a new widget
@@ -153,7 +151,6 @@ class Create_Enum_Component(Instruction):
             parent.children.append(self)
 
     @classmethod
-    @annotate
     def next(cls, _state, parent: "Optional[Instruction]" = None):
         """
         Gets the next Create_Component instruction
@@ -162,7 +159,6 @@ class Create_Enum_Component(Instruction):
         _state |= state
         return cls(name=name, alias=alias, parent=parent)
 
-    @annotate
     def _eval(self, namespace: Namespace):
         from ..writeable import NamespaceWriteable
 
@@ -215,8 +211,6 @@ class Create_If_Component(Instruction):
         return cls(condition=condition, parent=parent)
 
     def _eval(self, namespace: Namespace):
-        from ..writeable import NamespaceWriteable
-
         parent = self.parent
         self.component = IfComponent(
             parent=parent.component,
@@ -278,14 +272,17 @@ def parse_subinstructions(parent, lines, begin, indent, offset):
                     raise ValueError("unknown special tag:", instr)
             else:
                 raise ValueError("unknown tag:", instr)
-        last_ind = ind
     return (line_idx, parent)
 
 
 def execute(text):
     lines = list(filter(lambda l: bool(l.strip()), text.splitlines()))
-    offset = min(len(l) - len(l.lstrip(" ")) for l in lines)
-    lines = [l[offset:] for l in lines]
+    for idx, line in reversed(tuple(enumerate(lines[:]))):
+        if line.endswith("\\") and idx + 1 < len(lines):
+            pre, post = lines[idx : idx + 2]
+            lines[idx : idx + 2] = [pre[:-1] + " " + post.lstrip()]
+    offset = min(len(line) - len(line.lstrip(" ")) for line in lines)
+    lines = [line[offset:] for line in lines]
     line, *lines = lines
     indent = -1
     while not line.startswith("\\"):
@@ -314,26 +311,6 @@ def execute(text):
 
 
 ###############################################################################
-
-
-def get_component(name, namespace=None):
-    from . import builtin
-
-    if name[0].islower():
-        if "." in name:
-            mod_path, name = name.rsplit(".", 1)
-            mod = import_module(__package__ + ".builtin." + mod_path)
-        else:
-            mod = builtin
-        if hasattr(mod, name):
-            _component = getattr(mod, name)
-            return _component
-        else:
-            raise NameError(f"{name} not in module {mod}")
-    elif namespace is not None:
-        return namespace[name]
-    else:
-        raise ValueError(f"component not found {name}")
 
 
 class _Component:
@@ -475,11 +452,11 @@ class _Component:
             if ":" in key:
                 pre, key = key.split(":", 1)
 
-                if not pre in obj or not isinstance(obj[pre], dict):
+                if pre not in obj or not isinstance(obj[pre], dict):
                     obj[pre] = {}
                 set_param(obj[pre], key, value)
             else:
-                obj[key] = parser.evaluate_literal(value, self.namespace)
+                obj[key] = evaluate_literal(value, self.namespace)
 
         attrs = {}
         for key, value in raw_attrs.items():
@@ -533,7 +510,7 @@ class TkComponent(_Component):
         for k, v in params.items():
             try:
                 self.container.configure(k, v)
-            except:
+            except Exception:
                 pass
 
     def update(self):
@@ -558,7 +535,6 @@ class EnumComponent(_Component):
         alias: tuple[str, str],
         parent: "Optional[_Component]" = None,
         instructions: list = [],
-        component_space=None,
     ):
         self.children = []
         self.parent = parent
@@ -566,7 +542,6 @@ class EnumComponent(_Component):
         self.object = object
         self.instructions = instructions  # instructions
         self.alias = alias
-        self.component_space = component_space
         if parent is not None:
             self.parent.children.append(self)
 
@@ -580,7 +555,7 @@ class EnumComponent(_Component):
             namespace[aidx] = idx
             namespace[aval] = val
             for instr in self.instructions:
-                comp = instr._eval(namespace, self.component_space)
+                comp = instr._eval(namespace)
                 comp.create(parent)
                 elt = comp.container
                 self.widgets.append(
@@ -607,14 +582,12 @@ class IfComponent(_Component):
         namespace,
         parent: "Optional[_Component]" = None,
         instructions: list = [],
-        component_space=None,
     ):
         self.children = []
         self.parent = parent
         self.namespace = namespace
         self.condition = condition
         self.instructions = instructions  # instructions
-        self.component_space = component_space
         if parent is not None:
             self.parent.children.append(self)
 
@@ -625,7 +598,7 @@ class IfComponent(_Component):
         self.condition.subscribe(self._update)
         if self.condition.get():
             for instr in self.instructions:
-                comp = instr._eval(self.namespace, self.component_space)
+                comp = instr._eval(self.namespace)
                 comp.create(parent)
                 self.widgets.append(
                     (comp.container, comp.container),
@@ -649,6 +622,7 @@ class Component(_Component):
     _component_: _Component = None
     _instructions_: Instruction = None
     _code_: str = None
+    _template_cache: tuple[Optional[str], Optional[Template]] = (None, None)
 
     def init(self):
         pass
@@ -663,6 +637,16 @@ class Component(_Component):
             except IndexError as e:
                 raise IndexError(item) from e
 
+    def __init_subclass__(cls):
+        cls.get_template()
+
+    @classmethod
+    def get_template(cls):
+        code = cls._code_ or cls.__doc__ or r"\frame"
+        if cls._template_cache[0] != code:
+            cls._template_cache = code, Template.parse(code)
+        return cls._template_cache[1]
+
     @annotate
     def __setitem__(self, item: str, value):
         self.namespace[item] = value
@@ -675,17 +659,14 @@ class Component(_Component):
             if not attr_name.startswith("_"):
                 try:
                     self.namespace[attr_name] = getattr(self, attr_name)
-                except:
+                except AttributeError:
                     pass
         self.init()
-        if not self._component_:
-            self._instructions_ = execute(
-                self._code_ or self.__doc__ or r"\frame"
-            )
-            self._component_ = self._instructions_.eval(self.namespace)
+        self._component_ = self.get_template().eval(self.namespace)
 
     def render(self, master):
         self._component_.create(master)
+        return self.container
 
     def update(self):
         self.namespace._watch_changes_()

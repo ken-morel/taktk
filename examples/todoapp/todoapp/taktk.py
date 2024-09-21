@@ -1,53 +1,33 @@
-import sys
-from pathlib import Path
-from urllib.request import urlopen
+from builtins import _
 
-from taktk.application import Application
-from taktk.component import component
-from taktk.dictionary import Dictionary
-from taktk.media import get_media
-from taktk.menu import Menu
-from taktk.notification import Notification
-from taktk.writeable import Writeable
 import taktk
+import taktk.application
+import taktk.component
+import taktk.dictionary
+import taktk.menu
+import taktk.notification
 
 from . import pages
 from .admin import DIR
-from .admin import Todo
-from .admin import User
 
 recent_files = ["ama.py", "test.py", "ttkbootstrap.py", "label.py"]
 
 
-def opener_file(file):
-    def func():
-        from taktk.notification import Notification
-
-        Notification(
-            "Opener", "file open", bootstyle="info", duration=5000
-        ).show()
-
-    return func
-
-
-class Application(Application):
-    destroy_cache = 5
-
+class Application(taktk.application.Application):
     def __init__(self):
         super().__init__(
-            icon = "@icon",
-            dictionaries = DIR / "dictionaries",
-            media_path = DIR / "media",
-            params = dict(
+            icon="@icon",
+            dictionaries=DIR / "dictionaries",
+            media_path=DIR / "media",
+            params=dict(
                 themename="darkly",
                 minsize=(800, 400),
             ),
-            address = ("", 56789),
-            menu = Menu(
+            address=("", 56789),
+            menu=taktk.make_menu(
                 {
                     "@file": {
                         "@open": lambda: None,
-                        "@recent": {f: opener_file(f) for f in recent_files},
                         "!sep": None,
                         "@/menu.quit": exit,
                     },
@@ -58,21 +38,21 @@ class Application(Application):
                 },
                 translations="menu",
             ),
-            store = (
+            store=(
                 DIR / "store.json",
                 {
                     "language": "english",
                     "theme": "darkly",
                 },
             ),
-            pages = pages,
+            pages=pages,
             layout=Layout(self),
         )
 
     def init(self):
         self.menu["@preferences/@language"] = {
-            l: self.dictionaries.get(l).install
-            for l in self.dictionaries.languages
+            lang: self.dictionaries.get(lang).install
+            for lang in self.dictionaries.languages
         }
         style = self.root.style
         self.menu["@preferences/@theme"] = {
@@ -81,20 +61,20 @@ class Application(Application):
         try:
             self.root.style.theme_use(self.store["theme"])
         except Exception as e:
-            log.error(e)
+            print(e)
         self.menu.update()
         self.set_language(self.store["language"])
-        Dictionary.subscribe(self.update_language)
+        taktk.dictionary.Dictionary.subscribe(self.update_language)
 
     def set_theme(self, theme):
         self.root.style.theme_use(theme)
         self.store["theme"] = theme
-        Notification(
+        taktk.notify(
             "Todos",
             _("preferences.success_modified"),
             bootstyle="info",
             duration=10000,
-        ).show()
+        )
 
     def back(self):
         self.view.back()
@@ -103,7 +83,7 @@ class Application(Application):
         self.view.forward()
 
     def update_language(self):
-        self.store["language"] = Dictionary.dictionary.language
+        self.store["language"] = taktk.Dictionary.dictionary.language
         self.store.save()
         Notification(
             "Todos",

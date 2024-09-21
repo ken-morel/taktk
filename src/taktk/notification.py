@@ -1,6 +1,5 @@
 import time
-from threading import Lock
-from threading import Thread
+from threading import Lock, Thread
 
 import yaml
 from PIL import ImageTk
@@ -18,6 +17,7 @@ class Notification:
     _STACK = []
     WIDTH = 350
     IMAGE_WIDTH = 100
+    icon = None
     rearange_lock = Lock()
 
     def __init__(
@@ -44,9 +44,9 @@ class Notification:
         if icon is Nil:
             import taktk
 
-            if taktk.application is None:
+            if taktk.get_app() is None:
                 return
-            image = taktk.application.icon.image
+            image = taktk.get_app().icon.image
         elif isinstance(icon, str):
             image = get_image(icon).image
         if image is not None:
@@ -155,7 +155,9 @@ class Notification:
                 else:
                     break
             cls._STACK.append(notification)
-            notification.root.geometry(f"{width}x{height}-{marg}-{taken+marg}")
+            notification.root.geometry(
+                f"{width}x{height}-{marg}-{taken + marg}"
+            )
 
     @classmethod
     def remove_earliset(cls):

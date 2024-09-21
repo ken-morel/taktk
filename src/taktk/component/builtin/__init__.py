@@ -1,16 +1,13 @@
-import sys
-from dataclasses import dataclass, field
+from dataclasses import field
 from tkinter import BooleanVar
 from tkinter import Image as TkImage
 from tkinter import StringVar
+from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label
 from typing import Callable, Optional
-
-from pyoload import annotate
-from ttkbootstrap import Button, Checkbutton, Entry, Frame, Label
 
 from ... import Nil, NilType, resolve
 from ...media import Image
-from ...writeable import NamespaceWriteable, Writeable
+from ...writeable import Writeable
 from .. import TkComponent, _Component
 
 
@@ -21,6 +18,7 @@ class frame(TkComponent):
         weight: dict = field(default_factory=dict)
         pos: dict = field(default_factory=dict)
         lay: dict = field(default_factory=dict)
+        bind: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         padding: int | NilType = Nil
         borderwidth: int | NilType = Nil
@@ -36,6 +34,7 @@ class label(TkComponent):
         weight: dict = field(default_factory=dict)
         pos: dict = field(default_factory=dict)
         lay: dict = field(default_factory=dict)
+        bind: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         text: str = "fake"
         foreground: str | NilType = Nil
@@ -55,6 +54,7 @@ class button(TkComponent):
         weight: dict = field(default_factory=dict)
         pos: dict = field(default_factory=dict)
         lay: dict = field(default_factory=dict)
+        bind: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         text: str = "fake"
         command: Callable = lambda: None
@@ -84,6 +84,7 @@ class entry(TkComponent):
         font: str | NilType = Nil
         textvariable: StringVar | NilType = Nil
         show: str | NilType = Nil
+        bind: dict = field(default_factory=dict)
 
     def create(self, parent: "Optional[_Component]" = None):
         _Component.create(self)
@@ -121,6 +122,7 @@ class checkbutton(TkComponent):
         weight: dict = field(default_factory=dict)
         pos: dict = field(default_factory=dict)
         lay: dict = field(default_factory=dict)
+        bind: dict = field(default_factory=dict)
         bootstyle: str | NilType = Nil
         checked: bool = False
         padx: int | NilType = Nil
