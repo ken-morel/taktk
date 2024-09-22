@@ -1,6 +1,5 @@
 import time
-from threading import Lock
-from threading import Thread
+from threading import Lock, Thread
 
 import yaml
 from PIL import ImageTk
@@ -18,6 +17,7 @@ class Notification:
     _STACK = []
     WIDTH = 350
     IMAGE_WIDTH = 100
+    icon = None
     rearange_lock = Lock()
 
     def __init__(
@@ -43,15 +43,18 @@ class Notification:
         image = None
         if icon is Nil:
             import taktk
-            if taktk.application is None:
+
+            if taktk.get_app() is None:
                 return
-            image = taktk.application.icon.image
+            image = taktk.get_app().icon.image
         elif isinstance(icon, str):
             image = get_image(icon).image
         if image is not None:
             w, h = image.size
             sc = Notification.IMAGE_WIDTH / w
-            self.icon = ImageTk.PhotoImage(image.resize((int(w * sc), int(h * sc))))
+            self.icon = ImageTk.PhotoImage(
+                image.resize((int(w * sc), int(h * sc)))
+            )
         else:
             try:
                 sc = Notification.IMAGE_WIDTH / icon.width()
@@ -120,7 +123,6 @@ class Notification:
 
     @classmethod
     def add(cls, notification):
-
         marg = Notification.MARGIN
         width = Notification.WIDTH
         notification.root.update_idletasks()
@@ -132,7 +134,10 @@ class Notification:
                 cls._STACK[x].source == notification.source
                 and notification.source is not None
             ):
-                px, py = cls._STACK[x].root.winfo_rootx(), cls._STACK[x].root.winfo_rooty()
+                px, py = (
+                    cls._STACK[x].root.winfo_rootx(),
+                    cls._STACK[x].root.winfo_rooty(),
+                )
                 cls.remove(cls._STACK[x])
                 cls._STACK.insert(x, notification)
                 notification.root.geometry(f"{width}x{height}{px:+}{py:+}")
@@ -150,7 +155,9 @@ class Notification:
                 else:
                     break
             cls._STACK.append(notification)
-            notification.root.geometry(f"{width}x{height}-{marg}-{taken+marg}")
+            notification.root.geometry(
+                f"{width}x{height}-{marg}-{taken + marg}"
+            )
 
     @classmethod
     def remove_earliset(cls):

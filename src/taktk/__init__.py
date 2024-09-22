@@ -15,15 +15,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
-from typing import Callable
+from typing import Any, Callable, Optional
+
 from pyoload import annotate
+
+_app = None
+
 
 class NilType:
     """
     Simple type to describe inexistence of value, used in components
     some other parts of taktk
     """
+
     _instance = None
 
     def __new__(cls):
@@ -54,7 +58,7 @@ Nil = NilType()
 
 
 @annotate
-def resolve(value: Any, callback: Callable = None) -> Any:
+def resolve(value: Any, callback: Optional[Callable] = None) -> Any:
     """
     basicly resolves from taktk descriptors as Media or Writeable
     to the underlying value. if it is not a media resource or
@@ -82,16 +86,27 @@ def on_create(func: Callable) -> Callable:
     :returns: The passed callable
     """
     ON_CREATE_HANDLERS.add(func)
-    if application is not None:
-        func(application)
+    if _app is not None:
+        func(_app)
     return func
+
+
+def get_app():
+    return _app
 
 
 def notify(*args, **kw):
     from . import notification
+
     notification.Notification(*args, **kw).show()
+
+
+def make_menu(*args, **kw):
+    from . import menu
+
+    return menu.Menu(*args, **kw)
 
 
 __version__ = "0.1.0a1"
 __author__ = "ken-morel"
-__all__ = ['Nil', 'on_create']
+__all__ = ["Nil", "on_create", "notify"]

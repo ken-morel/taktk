@@ -5,15 +5,10 @@ Here simply manages the database
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from uuid import UUID
-from uuid import uuid1
-
-from pyoload import Cast
-from pyoload import Checks
-from pyoload import annotate
+from uuid import UUID, uuid1
 
 import taktk
-from taktk.store import Store
+from pyoload import Cast, annotate
 
 DIR = Path(__file__).parent
 
@@ -169,7 +164,7 @@ class Todo(Model):
 @taktk.on_create
 def init(app):
     global store
-    store = app.store.for_page(
+    store = app.get_store().for_page(
         __name__,
         {
             "users": [],

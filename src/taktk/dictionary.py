@@ -9,15 +9,14 @@ class Dictionary(dict):
     subscribers = set()
     dictionary = None
 
-    def __init__(self, path, language=None):
-        super().__init__()
-        self.path = path
+    def __init__(self, data, language=None):
+        super().__init__(data)
         self.language = language
-        self.load()
 
-    def load(self):
+    @classmethod
+    def from_file(cls, path, language=None):
         with open(self.path) as f:
-            super().update(yaml.safe_load(f.read()))
+            return cls(yaml.safe_load(f.read()), language)
 
     def install(self):
         global dictionary
@@ -63,9 +62,11 @@ class Dictionaries:
         language = language.lower()
         fallback_language = fallback_language.lower()
         if language in self.languages:
-            return Dictionary(self.languages[language], language=language)
+            return Dictionary.from_file(
+                self.languages[language], language=language
+            )
         else:
-            return Dictionary(
+            return Dictionary.from_file(
                 self.languages[fallback_language], language=fallback_language
             )
 
@@ -86,7 +87,7 @@ class Translation(Writeable):
         try:
             return dictionary(self.expr)
         except TypeError:
-            return ':-('
+            return ":-("
 
     def set(self, val) -> None:
         """
@@ -100,5 +101,6 @@ class Translation(Writeable):
 
 class TranslationNotFound(ValueError):
     pass
+
 
 dictionary = None

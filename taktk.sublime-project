@@ -23,13 +23,24 @@
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Anaconda Python Builder",
             "selector": "source.python",
-            "shell_cmd": "\"python\" -u \"$file\"",
+            "shell_cmd": "\"d:\\taktk/Scripts/python.exe\" -u \"$file\"",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Taktk",
-            "cmd": ["py", "-3.12", "$project_path/examples/todoapp/main.py"],
+            "cmd": ["py", "$project_path/examples/todoapp/main.py"],
             "working_dir": "$project_path/examples/locale",
+        },
+        {
+            "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+            "name": "Taktk Docs",
+            "cmd": ["$project_path/docs/make.bat", "html"],
+            "working_dir": "$project_path/docs",
+            "env": {
+              "COLORS": "0",
+              "PYTHON_COLORS": "0",
+              "FORCE_COLORS": "0",
+            }
         },
     ],
     "settings": {
