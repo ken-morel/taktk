@@ -26,7 +26,7 @@ from pyoload import annotate
 
 from .. import Nil, resolve, template
 from ..template import Template, evaluate_literal
-from ..writeable import Expression, Namespace
+from ..writeable import Namespace, Writeable
 
 
 class Instruction:
