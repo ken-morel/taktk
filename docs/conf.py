@@ -64,3 +64,8 @@ html_theme_options = asdict(theme_options)
 # docsearch_app_id = "<DOCSEARCH_APP_ID>"
 # docsearch_api_key = "<DOCSEARCH_SEARCH_API_KEY>"
 # docsearch_index_name = "<DOCSEARCH_INDEX_NAME>"
+
+prolog = """\
+.. role:: python(code)
+  :language: python
+  :class: highlight"""
