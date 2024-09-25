@@ -1,3 +1,5 @@
+"""Base module containing taktk built-in components."""
+
 from dataclasses import field
 from tkinter import BooleanVar
 from tkinter import Image as TkImage
@@ -5,13 +7,11 @@ from tkinter import StringVar
 from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label
 from typing import Callable, Optional
 
-from ... import Nil, NilType, resolve
-from ...media import Image
-from ...writeable import Writeable
-from .. import TkComponent, _Component
+from . import Nil, NilType, resolve
+from . import media, writeable, component
 
 
-class frame(TkComponent):
+class frame(component.TkComponent):
     Widget = Frame
 
     class Attrs:
@@ -27,7 +27,7 @@ class frame(TkComponent):
         height: int | NilType = Nil
 
 
-class label(TkComponent):
+class label(component.TkComponent):
     Widget = Label
 
     class Attrs:
@@ -43,11 +43,11 @@ class label(TkComponent):
         padx: int | NilType = Nil
         pady: int | NilType = Nil
         font: str | NilType = Nil
-        image: Image | TkImage | NilType = Nil
+        image: media.Image | TkImage | NilType = Nil
         compound: str | NilType = Nil
 
 
-class button(TkComponent):
+class button(component.TkComponent):
     Widget = Button
 
     class Attrs:
@@ -62,13 +62,13 @@ class button(TkComponent):
         pady: int | NilType = Nil
         fg: str | NilType = Nil
         bg: str | NilType = Nil
-        image: Image | TkImage | NilType = Nil
+        image: media.Image | TkImage | NilType = Nil
         compound: str | NilType = Nil
         background: str | NilType = Nil
         foreground: str | NilType = Nil
 
 
-class entry(TkComponent):
+class entry(component.TkComponent):
     Widget = Entry
     _attr_ignore = ("text",)
 
@@ -86,8 +86,8 @@ class entry(TkComponent):
         show: str | NilType = Nil
         bind: dict = field(default_factory=dict)
 
-    def create(self, parent: "Optional[_Component]" = None):
-        _Component.create(self)
+    def create(self, parent: "Optional[component.BaseComponent]" = None):
+        component.BaseComponent.create(self)
         parent = parent
         params = {
             **{
@@ -97,7 +97,7 @@ class entry(TkComponent):
             }
         }
         if "textvariable" not in params:
-            if isinstance(self.attrs.text, Writeable):
+            if isinstance(self.attrs.text, writeable.Writeable):
                 self.textvariable = self.attrs.text.stringvar
             else:
                 self.textvariable = StringVar()
@@ -105,7 +105,7 @@ class entry(TkComponent):
             params["textvariable"] = self.textvariable
             self.attrs.textvariable = self.textvariable
         else:
-            self.textvariable = params[textvariable]
+            self.textvariable = params["textvariable"]
         self.container = self.outlet = self.Widget(
             master=parent,
             **params,
@@ -114,7 +114,7 @@ class entry(TkComponent):
         self.make_bindings()
 
 
-class checkbutton(TkComponent):
+class checkbutton(component.TkComponent):
     Widget = Checkbutton
     _attr_ignore = ("checked",)
 
@@ -131,8 +131,8 @@ class checkbutton(TkComponent):
         variable: BooleanVar | NilType = Nil
         _ignore = ("checked",)
 
-    def create(self, parent: "Optional[_Component]" = None):
-        _Component.create(self)
+    def create(self, parent: "Optional[component.BaseComponent]" = None):
+        component.BaseComponent.create(self)
         parent = parent
         params = {
             **{
@@ -142,7 +142,7 @@ class checkbutton(TkComponent):
             }
         }
         if "variable" not in params:
-            if isinstance(self.attrs.checked, Writeable):
+            if isinstance(self.attrs.checked, writeable.Writeable):
                 self.variable = self.attrs.checked.booleanvar
             else:
                 self.variable = BooleanVar(value=self.attrs.checked)
@@ -156,3 +156,51 @@ class checkbutton(TkComponent):
         self.outlet = None
         self.init_geometry()
         self.make_bindings()
+
+
+class sdown:
+    from .sdown import LexedCode as code
+    from .sdown import SdownViewer as view
+
+
+try:
+    from customtkinter import CTkButton, CTkEntry, CTkFrame, CTkLabel
+except ImportError:
+    pass
+else:
+
+    class ctk:
+        class frame(frame):
+            Widget = CTkFrame
+
+        class label(label):
+            Widget = CTkLabel
+
+            class attrs:
+                text: str = "fake"
+                fg_color: str = Nil
+                bg_color: str = Nil
+                text_color: str = Nil
+                padx: int = Nil
+                pady: int = Nil
+                font: str = Nil
+
+        class button(button):
+            Widget = CTkButton
+
+        class entry(entry):
+            class Attrs:
+                weight: dict = field(default_factory=dict)
+                pos: dict = field(default_factory=dict)
+                lay: dict = field(default_factory=dict)
+                bootstyle: str | NilType = Nil
+                text: str = "fake"
+                padx: int | NilType = Nil
+                pady: int | NilType = Nil
+                width: int | NilType = Nil
+                font: str | NilType = Nil
+                textvariable: StringVar | NilType = Nil
+                show: str | NilType = Nil
+                bind: dict = field(default_factory=dict)
+
+            Widget = CTkEntry

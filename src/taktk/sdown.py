@@ -9,9 +9,8 @@ from pyoload import annotate
 from ttkbootstrap import Frame, Scrollbar, Text
 
 from . import Nil, NilType, dictionary, resolve
-from .component import _Component
-from .component.builtin import TkComponent
-from .writeable import Expression
+from . import component
+from . import writeable
 
 
 class State:
@@ -357,7 +356,7 @@ TEXT_SIZE = 10
 
 
 # @annotate
-class SdownViewer(TkComponent):
+class SdownViewer(component.TkComponent):
     _attr_ignore = (
         "text",
         "scrollable",
@@ -413,9 +412,9 @@ class SdownViewer(TkComponent):
         background: str | NilType = Nil
         relief: str | NilType = Nil
         scrollable: bool = True
-        onlink: Expression | Callable = lambda link: None
-        onbutton: Expression | Callable = lambda link: None
-        button_class: Expression | Callable | type(Nil) = Nil
+        onlink: Callable = lambda link: None
+        onbutton: Callable = lambda link: None
+        button_class: Callable | type(Nil) = Nil
 
     @contextmanager
     def enabled(self):
@@ -580,7 +579,7 @@ class SdownViewer(TkComponent):
         )
 
 
-class LexedCode(TkComponent):
+class LexedCode(component.TkComponent):
     _attr_ignore = ("text", "scrollable", "lexer", "style")
 
     class Attrs:

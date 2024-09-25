@@ -2,10 +2,13 @@
 from dataclasses import asdict
 from pathlib import Path
 
+# Register the lexer with Pygments
+from pygments.lexers import get_all_lexers
 from sphinxawesome_theme import LinkIcon, ThemeOptions
 from sphinxawesome_theme.postprocess import Icons
+from taktk.lexer import TaktlLexer
 
-# For the full list of built-in configuration values, see the documentation:
+# Forlthe full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 if __name__ == "__main__":
@@ -65,7 +68,7 @@ html_theme_options = asdict(theme_options)
 # docsearch_api_key = "<DOCSEARCH_SEARCH_API_KEY>"
 # docsearch_index_name = "<DOCSEARCH_INDEX_NAME>"
 
-prolog = """\
+rst_prolog = """\
 .. role:: python(code)
   :language: python
   :class: highlight"""

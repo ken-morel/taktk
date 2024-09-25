@@ -27,8 +27,8 @@ dependencies = [
   "PyYAML",
   "PIllow",
 ]
-description = "Order your tkinter apps"
-keywords = ["customtkinter", "framework", "tkinter"]
+description = "Ordering and facilitating tkinter development. \\^o^/"
+keywords = ["taktk", "taktl", "framework", "tkinter"]
 license = {file="LICENSE"}
 maintainers = [
   {name="ken-morel", email="engonken8@gmail.com"}
@@ -41,7 +41,9 @@ requires-python = ">= 3.10"
 
 [project.optional-dependencies]
 all = [
-  "tksheet"
+  "tksheet",
+  "customtkinter",
+  "tkinter_gl"
 ]
 
 [project.urls]
@@ -50,6 +52,9 @@ Documentation = "https://github.com/ken-morel/taktk/wiki"
 Repository = "https://github.com/ken-morel/taktk.git"
 Issues = "https://github.com/ken-morel/taktk/issues"
 Changelog = "https://github.com/ken-morel/taktk/blob/main/doc/CHANGELOG.rst"
+
+[project.entry-points."pygments.lexers"]
+taktk = "taktk.lexer:TaktlLexer"  # Replace TaktkLexer with your lexer class name
 
 [tool.black]
 line-length = 79

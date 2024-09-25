@@ -131,9 +131,8 @@ Easily create and manage notifications in your application using taktk's built-i
 
 - Customizable notification duration
 - Support for icons
-- Flexible positioning options
 
-Example::
+..
 
     from taktk import notify
 
@@ -141,6 +140,12 @@ Example::
            "A new version of the application is ready to install.",
            duration="5000",
            icon="path/to/update_icon.png")
+
+.. code-block:: taktl
+
+  !enum ama:(d, j)
+  \frame yeah={colorama} padding=34
+    \dkfkl k
 
 Getting Started
 ---------------
@@ -155,4 +160,6 @@ Getting Started
   :caption: Contents:
 
   installation
+  quickstart
+  tutorials/index
   whatsnew

@@ -23,12 +23,11 @@ import os.path
 import string
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 from pyoload import annotate
 
-from .dictionary import Translation
-from .writeable import Namespace, Writeable
+from . import dictionary, writeable, component
 
 
 class TagType(enum.Enum):
@@ -355,15 +354,6 @@ class State:
             return indent, self.parse_next_special()
         else:
             raise ValueError(char)
-        # if len(tree) > 0:
-        #     last = tree[-1][0]
-        #     if last < indent:
-        #         tree[-2].children.append(tree[-1])
-        #         indents.pop()
-        #     elif last >= curr:
-        #         indents.pop()
-        #         while len(indents) > 0 and curr < indents[-1]:
-        #             indents.pop()
 
     def parse_next_tag(self) -> None:
         """Return next tag."""
@@ -422,8 +412,10 @@ class State:
             return root
 
 
-def evaluate_literal(string: str, namespace=None):
-    """Evaluate a litteral from string."""
+def evaluate_literal(
+    string: str, namespace: Optional[writeable.Namespace] = None
+) -> Any:
+    """Evaluate a litteral from string and optional namespace."""
     from .media import get_media
     import tkinter.constants
 
@@ -451,18 +443,19 @@ def evaluate_literal(string: str, namespace=None):
     elif len(string) > 2 and b == "{" and e == "}":
         if namespace is None:
             raise ValueError(
-                "Unallowed Writeable in none namespaced context", string
+                "Unallowed writeable.Writeable in none namespaced context",
+                string,
             )
         code = string[1:-1]
         if len(code) >= 2 and code[0] == "$":
-            return Writeable.from_name(namespace, code[1:])
+            return writeable.Writeable.from_name(namespace, code[1:])
         if len(code) >= 2 and code[0] == "{" and code[-1] == "}":
             code = code[1:-1]
             if "||" in code:
                 get, set_ = code.split("||")
             else:
                 get, set_ = code, ""
-            return Writeable.from_get_set(namespace, get, set_)
+            return writeable.Writeable.from_get_set(namespace, get, set_)
         else:
             return eval(code, {}, namespace)
     elif b in STRING_QUOTES:
@@ -473,7 +466,7 @@ def evaluate_literal(string: str, namespace=None):
     elif string[0] == string[-1] == "/":
         return Path(os.path.expandvars(string[1:-1]))
     elif string[0] == "[" and string[-1] == "]":
-        return Translation(string[1:-1])
+        return dictionary.Translation(string[1:-1])
     elif ":" in string and len(string_set - (DECIMAL | SLICE)) == 0:
         if len(d := (string_set - SLICE)) > 0:
             raise ValueError("wrong slice", string, d)
@@ -524,21 +517,21 @@ class Template:
         type: TagType
         name: str
         args: tuple
-        parent: "Item" = None
+        parent: "Template.Item" = None
         children: list = dataclasses.field(default_factory=list)
 
         def render(self, parent, namespace):
             """Create the component."""
             if self.type == TagType.TAG:
                 alias, attrs = self.args
-                component = get_component(self.name, namespace)(
+                comp = get_component(self.name, namespace)(
                     parent=parent,
                     attrs=attrs,
                     namespace=namespace,
                 )
                 if alias is not None:
-                    namespace[alias] = component
-                return component
+                    namespace[alias] = comp
+                return comp
             else:
                 raise NotImplementedError()
 
@@ -579,7 +572,8 @@ class Template:
         """Load template from taktl source string."""
         return Template(State(string.replace("\\\n", "")).parse())
 
-    def eval(self, _namespace=None):
+    def eval(self, _namespace: Optional[writeable.Namespace] = None):
+        """Evaluate the template in the given namespace."""
         namespace = self.namespace or _namespace
         assert namespace is not None, "No namespace specified!"
 
@@ -595,22 +589,10 @@ class Template:
         return str(self.root)
 
 
-def get_component(name, namespace=None):
-    from taktk.component import builtin
-    from importlib import import_module
+def get_component(
+    name: str, namespace: Optional[writeable.Namespace] = None
+) -> "component.BaseComponent":
+    """Get a component by name from builtins or optional `namespace`."""
+    from . import components
 
-    if name[0].islower():
-        if "." in name:
-            mod_path, name = name.rsplit(".", 1)
-            mod = import_module(builtin.__package__ + "." + mod_path)
-        else:
-            mod = builtin
-        if hasattr(mod, name):
-            _component = getattr(mod, name)
-            return _component
-        else:
-            raise NameError(f"{name} not in module {mod}")
-    elif namespace is not None:
-        return namespace[name]
-    else:
-        raise ValueError(f"component not found {name}")
+    return eval(name, {}, vars(components) | (namespace.vars or {}))
