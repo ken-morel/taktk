@@ -43,6 +43,9 @@ requires-python = ">= 3.10"
 all = [
   "tksheet"
 ]
+ci = [
+  "pytest"
+]
 
 [project.urls]
 Homepage = "https://github.com/ken-morel/taktk.git"
