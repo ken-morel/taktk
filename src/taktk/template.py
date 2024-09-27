@@ -38,12 +38,6 @@ class TagType(enum.Enum):
     META = enum.auto()
 
 
-class ArgType(enum.Enum):
-    INFERRED = enum.auto()
-    RAW = enum.enum()
-    EVALUATED = enum.enum()
-
-
 SPACE = frozenset(" ")
 VARNAME = frozenset(string.ascii_letters + string.digits + "_")
 COMPONENT_NAME = VARNAME | frozenset(".")
@@ -420,10 +414,10 @@ class State:
 
 def evaluate_literal(
     string: str, namespace: Optional[writeable.Namespace] = None
-) -> Any:
+) -> tuple[bool, Any]:
     """Evaluate a litteral from string and optional namespace."""
-    from .media import get_media
-    import tkinter.constants
+    from . import media
+    from . import constants
 
     string_set = set(string)
     if len(string) > 1:
@@ -432,47 +426,55 @@ def evaluate_literal(
         b, e = string, None
     else:
         raise ValueError("empty literal string")
-    if hasattr(tkinter.constants, string):
-        return getattr(tkinter.constants, string)
+    if hasattr(constants, string):
+        return (False, getattr(constants, string))
     elif string == "None":
-        return None
+        return (False, None)
     elif string == "True":
-        return True
+        return (False, True)
     elif string == "False":
-        return False
+        return (False, False)
     elif b == "<" and e == ">":
-        return get_media(string[1:-1])
-    elif len(string_set - INT) == 0 and string.isnumeric():
-        return int(string)
+        return (False, media.get_media(string[1:-1]))
+    elif len(string_set - INT) == 0:
+        return (False, int(string))
     elif len(string_set - DECIMAL) == 0:
         return Decimal(string)
-    elif len(string) > 2 and b == "{" and e == "}":
+    elif b == "{" and e == "}":
         if namespace is None:
             raise ValueError(
                 "Unallowed writeable.Writeable in none namespaced context",
                 string,
             )
         code = string[1:-1]
-        if len(code) >= 2 and code[0] == "$":
-            return writeable.Writeable.from_name(namespace, code[1:])
-        if len(code) >= 2 and code[0] == "{" and code[-1] == "}":
-            code = code[1:-1]
+        return (False, eval(code, {}, namespace))
+    elif b == "$":
+        if len(string) < 2:
+            raise Exception(f"Wrong subscription {string!r}")
+        typ = string[1]
+        if typ == "{":  # Custum writeable
+            code = string[2:-1]
             if "||" in code:
                 get, set_ = code.split("||")
             else:
                 get, set_ = code, ""
-            return writeable.Writeable.from_get_set(namespace, get, set_)
+            return (
+                True,
+                writeable.Writeable.from_get_set(namespace, get, set_),
+            )
+        elif typ == "(":
+            return (True, eval(string[2:1]))
         else:
-            return eval(code, {}, namespace)
+            return (True, writeable.Writeable.from_name(namespace, code[1:]))
     elif b in STRING_QUOTES:
         if e == b:
-            return string[1:-1]
+            return (False, string[1:-1])
         else:
             raise ValueError("Unterminated string:", string)
     elif string[0] == string[-1] == "/":
-        return Path(os.path.expandvars(string[1:-1]))
-    elif string[0] == "[" and string[-1] == "]":
-        return dictionary.Translation(string[1:-1])
+        return (False, Path(os.path.expandvars(string[1:-1])))
+    elif b == "@":
+        return (False, dictionary.Translation(string[1:]))
     elif ":" in string and len(string_set - (DECIMAL | SLICE)) == 0:
         if len(d := (string_set - SLICE)) > 0:
             raise ValueError("wrong slice", string, d)
