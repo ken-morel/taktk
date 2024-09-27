@@ -18,15 +18,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Iterable, Type, Any
 
 from pyoload import annotate
 
 from . import Nil, resolve
 from . import template, writeable
 
+AttrSpec = tuple[str, Type, Optional[Any]]
 
-Attrs = dict[str]
+
+class AttributeManager(writeable.subscriber):
+    attrs: Iterable[AttrSpec]
+
+    def __init__(self, attrs: Iterable[AttrSpec]):
+        self.attrs = attrs
 
 
 class BaseComponent:

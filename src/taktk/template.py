@@ -38,6 +38,12 @@ class TagType(enum.Enum):
     META = enum.auto()
 
 
+class ArgType(enum.Enum):
+    INFERRED = enum.auto()
+    RAW = enum.enum()
+    EVALUATED = enum.enum()
+
+
 SPACE = frozenset(" ")
 VARNAME = frozenset(string.ascii_letters + string.digits + "_")
 COMPONENT_NAME = VARNAME | frozenset(".")
@@ -434,8 +440,8 @@ def evaluate_literal(
         return True
     elif string == "False":
         return False
-    elif ":" in string and string[: string.index(":")].isalpha():
-        return get_media(string)
+    elif b == "<" and e == ">":
+        return get_media(string[1:-1])
     elif len(string_set - INT) == 0 and string.isnumeric():
         return int(string)
     elif len(string_set - DECIMAL) == 0:

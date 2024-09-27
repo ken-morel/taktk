@@ -14,13 +14,12 @@ from functools import cached_property
 from tkinter import IntVar, StringVar
 from typing import Any, Callable, Iterable, Optional
 
-from . import Nil
-
 
 class Subscribeable:
     """Subscribeable value template."""
 
     _subscribers: set
+    _subscribers_objects: "set[Subscriber]"
 
     def __init__(self):
         """Create the subscibeable."""
@@ -39,6 +38,10 @@ class Subscribeable:
         for subscriber in set(self._subscribers):
             subscriber()
 
+    def unsubscribe_all(self):
+        """Unsubscibe all subscribed subscribeables."""
+        for subscriber
+
 
 class Subscriber:
     """Subscriber object methods."""
@@ -52,7 +55,7 @@ class Subscriber:
     def subscribe_to(self, subscribeable: Subscribeable, callback: Callable):
         """Subscribe to the passed `Subscribeable` with callback."""
         self._subscribing.add((subscribeable, callback))
-        subscribeable.subscribe(callback)
+        subscribeable.subscribe(callback, self)
 
     def unsubscribe_from(self, subscribeable: Subscribeable):
         """Unsubscribe all methods from subscribeable."""
