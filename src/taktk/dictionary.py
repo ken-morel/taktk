@@ -1,33 +1,41 @@
 from pathlib import Path
 
 import yaml
-
-from .writeable import Writeable, Subscribeable
+import builtins
+from . import writeable
+from typing import Optional, Callable
 
 
 class Dictionary(dict):
-    subscribeable = Subscribeable()
+    """Creates or loads a dictionary."""
+
+    subscribeable = writeable.Subscribeable()
     dictionary = None
 
-    def __init__(self, data, language=None):
+    def __init__(self, data: dict, language: Optional[str] = None):
+        """Create a menu from dictionary and optional language name."""
         super().__init__(data)
         self.language = language
 
     @classmethod
-    def from_file(cls, path, language=None):
-        with open(self.path) as f:
+    def from_file(
+        cls, path: str, language: Optional[str] = None
+    ) -> "Dictionary":
+        """Create a dictionary from filename and optional language name."""
+        with open(path) as f:
             return cls(yaml.safe_load(f.read()), language)
 
-    def install(self):
+    def install(self, install_builtins: bool = True):
+        """Install dictionary for usage by taktk."""
         global dictionary
         dictionary = self
         Dictionary.dictionary = self
-        import builtins
-
-        builtins._ = self
+        if install_builtins:
+            builtins._ = self
         Dictionary.subscribeable.warn_subscribers()
 
-    def __call__(self, path):
+    def __call__(self, path: str) -> str | dict:
+        """Get a dictionary item specified by path."""
         obj = self
         try:
             for sub in path.split("."):
@@ -37,12 +45,16 @@ class Dictionary(dict):
         return obj
 
     @classmethod
-    def subscribe(cls, obj, method):
+    def subscribe(cls, obj: writeable.Subscriber, method: Callable):
+        """Subscribe the subscriber to dictionary changes."""
         cls.subscribeable.subscribe(obj, method)
 
 
 class Dictionaries:
-    def __init__(self, path="dictionaries"):
+    """Holds a mapping of dictionaries to languages."""
+
+    def __init__(self, path: str = "dictionaries"):
+        """Initialize the dictionaries from dictionaries folder path."""
         self.path = path
         self.languages = (
             {p.stem.lower(): p for p in path.glob("*.yml")}
@@ -67,14 +79,14 @@ class Dictionaries:
             )
 
 
-class Translation(Writeable):
+class Translation(writeable.Writeable):
     def __init__(self, expr: str):
         """
         Creates the listener on the namespace with defined name
         """
         self.expr = expr
         Dictionary.subscribe(self, self.update)
-        Writeable.__init__(self)
+        writeable.Writeable.__init__(self)
 
     def get(self):
         """

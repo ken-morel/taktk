@@ -23,13 +23,13 @@
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Anaconda Python Builder",
             "selector": "source.python",
-            "shell_cmd": "\"/bin/python\" -u \"$file\"",
+            "shell_cmd": "\"/media/ken-morel/data/taktk/bin/python\" -u \"$file\"",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
-            "name": "Taktk",
-            "cmd": ["py", "$project_path/examples/todoapp/main.py"],
-            "working_dir": "$project_path/examples/locale",
+            "name": "Taktk todoapp",
+            "cmd": ["python3", "$project_path/examples/todoapp/main.py"],
+            "working_dir": "$project_path/examples/todoapp",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",

@@ -1,11 +1,10 @@
-import sys
+print("running")
+import todoapp
 
 from todoapp.taktk import Application
 
 entry = "/"
 
-if len(sys.argv) > 1:
-    entry = sys.argv[1]
-
+print("running")
 Application().run(entry)
 # Application().redirect_to_singleton(entry)

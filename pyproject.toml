@@ -26,6 +26,7 @@ dependencies = [
   "comberload",
   "PyYAML",
   "PIllow",
+  "pygments",
 ]
 description = "Ordering and facilitating tkinter development. \\^o^/"
 keywords = ["taktk", "taktl", "framework", "tkinter"]

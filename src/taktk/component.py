@@ -25,20 +25,22 @@ from pyoload import annotate
 from . import Nil, resolve
 from . import template, writeable
 
-AttrSpec = tuple[str, Type, Optional[Any]]
+AttrSpec = dict[str, tuple[Type, Optional[Any]]]
 
 
 class AttributeManager:
     """An object to manage component attributes."""
 
-    _params: tuple[AttrSpec]
+    _params: dict[AttrSpec]
     _subscriber: writeable.Subscriber
     _subscribeable: writeable.Subscribeable
 
     def __init__(self, component: "BaseComponent", kwargs: dict[str, str]):
         """Create the Attibute manager from component and args."""
         self._component = component
-        self._params = tuple(component.get_params())
+        self._params = {}
+        for name, ann, default in component.get_params():
+            self._params[name] = (ann, default)
         self._subscriber = writeable.Subscriber()
         self._subscribeable = writeable.Subscribeable()
         self._subscribe = self._subscribeable.subscribe
@@ -62,33 +64,53 @@ class AttributeManager:
     def _collect_values(self):
         self._values = {}
 
-        def set_param(obj, key, value):
+        def filters(val, get, ann, default):
+            from . import media, writeable
+            from tkinter import Image
+
+            if val is Nil:
+                val = default
+            if ann is writeable.Writeable and isinstance(
+                val, writeable.Writeable
+            ):
+                return val
+            else:
+                if get:
+                    val = val.get()
+                if ann is Image or (
+                    isinstance(ann, type)
+                    and issubclass(ann, Image)
+                    and isinstance(val, media.Image)
+                ):
+                    val = val.get()
+                if isinstance(val, media.Image):
+                    print(val)
+                return val
+
+        def set_param(obj, key, value, annotation, default):
             get, val = value
             if ":" in key:
                 pre, key = key.split(":", 1)
 
                 if pre not in obj or not isinstance(obj[pre], dict):
                     obj[pre] = {}
-                set_param(
-                    obj[pre],
-                    key,
-                    value,
-                )
+                set_param(obj[pre], key, value, annotation, default)
             else:
-                if get:
-                    obj[key] = val.get()
-                else:
-                    obj[key] = val
+                obj[key] = filters(val, get, annotation, default)
 
         for key, value in self._args.items():
-            set_param(self._values, key, value)
+            if key in self._params:
+                ann, val = self._params[key]
+            else:
+                ann = val = None
+            set_param(self._values, key, value, ann, val)
 
     def _get_writeable(self, name):
         val = self._args[name][1]
         if isinstance(val, writeable.Writeable):
             return val
         else:
-            s
+            raise NotImplementedError("Sorry...")
 
     def __getattr__(self, attr: str):
         """Get attribute from values."""
@@ -121,7 +143,7 @@ class BaseComponent(writeable.Subscriber):
         """Get an iterable of tuples (name, annotation, default)."""
         anns = {}
         params = []
-        for name, ann in cls.__annotations__.items():
+        for name, ann in cls.Attrs.__annotations__.items():
             anns[name] = ann
         for name, val in vars(cls.Attrs).items():
             if name in anns:
@@ -440,14 +462,17 @@ class Component(BaseComponent):
                 except AttributeError:
                     pass
         self.init()
+        self.renderred = False
         self._component_ = self.get_template().eval(self.namespace)
 
     def render(self, master):
         self._component_.create(master)
+        self.rederred = True
         return self.container
 
     def update(self):
-        self._component_.update()
+        if self.renderred:
+            self._component_.update()
 
     def expose(self, func):
         self.namespace[func.__name__] = func

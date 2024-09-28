@@ -47,7 +47,7 @@ INT = frozenset(string.digits)
 DECIMAL = frozenset(string.digits + ".")
 SLICE = INT | frozenset(":")
 POINT = DECIMAL | frozenset(",")
-ATTR_NAME = frozenset(":") | VARNAME
+ATTR_NAME = frozenset(":-") | VARNAME
 
 
 class State:
@@ -603,4 +603,7 @@ def get_component(
     """Get a component by name from builtins or optional `namespace`."""
     from . import components
 
-    return eval(name, {}, vars(components) | (namespace.vars or {}))
+    try:
+        return eval(name, {}, vars(components) | (namespace.vars or {}))
+    except NameError as e:
+        raise NameError(f"Component {name!r} does not exist.") from e

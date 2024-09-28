@@ -57,7 +57,7 @@ class PageView:
         self.parent = parent
         self.current_widget = None
         self.app = app
-        self.store = app.store
+        self.store = app.get_store()
         self.destroy_cache = destroy_cache
         self.package = page
         self.current_url = None

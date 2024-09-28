@@ -79,7 +79,7 @@ class Application:
         fallback_language: str = "english",
         params: dict[str, Any] = {},
         menu: Optional[menu.Menu] = None,
-        layout: Optional[component.Component] = None,
+        layout: Optional[type] = None,
         store: tuple[None, dict] | store.Store = (None, {}),
         address: Optional[tuple[str, int]] = None,
         icon: Optional[str | media.Image] = None,
@@ -123,7 +123,8 @@ class Application:
         taktk.application = self
 
         self.menu = menu
-        self.layout = layout
+        self.layout_class = layout
+        self.layout = None
         self.address = address
         self.media_path = media_path
         self.pages = pages
@@ -165,6 +166,10 @@ class Application:
             self._store = _store
         elif isinstance(_store, tuple):
             _store, default = _store
+            if _store is None:
+                self._store_file = NamedTemporaryFile(delete=False)
+                _store = self._store_file.name
+            self._store = store.Store(_store, default=default)
         else:
             default = {}
             if _store is None:
@@ -205,6 +210,8 @@ class Application:
         root.rowconfigure(0, weight=1)
         if self.menu is not None:
             self.menu.toplevel(root)
+
+        self.layout = self.layout_class()
         if self.layout is not None:
             self.layout.render(self.root)
             self.layout.container.grid(column=0, row=0, sticky="nsew")

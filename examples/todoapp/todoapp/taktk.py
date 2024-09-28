@@ -4,8 +4,11 @@ import taktk.component
 import taktk.dictionary
 import taktk.menu
 import taktk.notification
+import taktk.writeable
+
 
 from . import pages
+
 from .admin import DIR
 
 recent_files = ["ama.py", "test.py", "ttkbootstrap.py", "label.py"]
@@ -44,7 +47,7 @@ class Application(taktk.application.Application):
                 },
             ),
             pages=pages,
-            layout=Layout(self),
+            layout=Layout,
         )
 
     def init(self):
@@ -61,8 +64,8 @@ class Application(taktk.application.Application):
         except Exception as e:
             print(e)
         self.menu.update()
-        self.set_language(self.store["language"])
-        taktk.dictionary.Dictionary.subscribe(self.update_language)
+        self.set_language(self.get_store()["language"])
+        taktk.dictionary.Dictionary.subscribe(None, self.update_language)
 
     def set_theme(self, theme):
         from builtins import _
@@ -93,18 +96,28 @@ class Application(taktk.application.Application):
         ).show()
 
 
-@component
+@taktk.component.component
 def Layout(self):
     r"""
-    \frame weight:x='0: 10' weight:y='1: 10, 2: 10'
-        \frame padding=5 weight:y='2:10' weight:x='4:10' pos:grid=0,0 pos:sticky='nsew'
-            \button command={back}    image=img:@backward{width: 20} pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
-            \button command={gt_users}    image=img:@users-between-lines{height: 20} pos:grid=1,0 pos:sticky='w' bootstyle='dark outline'
-            \button command={gt_todos}    image=img:@check-double{height: 20} pos:grid=2,0 pos:sticky='w' bootstyle='dark outline'
-            \label text={f'logged in as: {User.current().name}' if User.current() else "not logged in!"} pos:grid=3,0
-            \button command={forward} image=img:@forward{width: 20}  pos:grid=5,0 pos:sticky='e' bootstyle='dark outline'
-        \frame:outlet pos:grid=0,1
+    \frame
+        \frame padding=5 pos:pack
+            \button command={back}        image=<img:@backward{width: 20}> \
+                pos:grid=0,0 pos:sticky='w' bootstyle='dark outline'
+            \button command={gt_users}\
+                image=<img:@users-between-lines{height: 20}> pos:grid=1,0\
+                pos:sticky='w' bootstyle='dark outline'
+            \button command={gt_todos}\
+                image=<img:@check-double{height: 20}> pos:grid=2,0\
+                pos:sticky='w' bootstyle='dark outline'
+            \label\
+                text={f'logged in as: {User.current().name}' if User.current() else "not logged in!"}\
+                pos:grid=3,0
+            \button command={forward} image=<img:@forward{width: 20}>\
+                pos:grid=5,0 pos:sticky='e' bootstyle='dark outline'
+        \frame:outlet pos:pack
     """
+    from .admin import User
+
     user = None
 
     def back():

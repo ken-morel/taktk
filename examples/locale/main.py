@@ -1,44 +1,50 @@
+"""Very minimal taktk localization example."""
 from tkinter import Tk
 
-from taktk.component import Component
+from taktk.component import component
 from taktk.dictionary import Dictionary
 
-french = Dictionary.from_directory(locale="French")
-english = Dictionary.from_directory(locale="English")
+french = Dictionary.from_file("dictionaries/french.yml", "french")
+english = Dictionary.from_file("dictionaries/english.yml", "english")
 english.install()
 
 
-class Comp(Component):
+@component
+def Comp(self):
+    r"""
+    \frame
+        \frame pos:pack  padding=5
+            \label text=@label.text pos:pack=LEFT
+            \button text=@button.close command={close} pos:pack=RIGHT
+        \frame pos:pack padding=5
+            \label text=$number pos:pack=LEFT
+            \button text=@button.add command={add} pos:pack=RIGHT
+        \button pos:pack command={toggle} text=$btn_text
     """
-    \\frame
-        \\frame pos:grid=0,0  padding=5
-            \\label text=[label.text] pos:grid=0,0
-            \\button text=[button.close] command={close} pos:grid=1,0
-        \\frame pos:grid=0,1  padding=5 relief='sunken'
-            \\label text={{number}} pos:grid=0,0
-            \\ctk.button text=[button.add] command={add} pos:grid=1,0
-        \\button pos:grid=0,2 command={toggle} text={btn_text}
-    """
+    from builtins import _
 
     code = __doc__
 
     number = 0
-    btn_text = _.locale
+    btn_text = _.language
 
-    def close(self):
+    def close():
         root.destroy()
         print("closed")
 
-    def add(self):
+    def add():
         self["number"] += 1
-        self.update()
 
-    def toggle(self):
-        if _ == english:
+    def toggle():
+        from builtins import _  # The object is expected to change
+
+        if _.language == "english":
             french.install()
         else:
             english.install()
-        self["btn_text"] = _.locale
+        self["btn_text"] = _.language
+
+    return locals()
 
 
 root = Tk()

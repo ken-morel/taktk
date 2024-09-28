@@ -1,11 +1,12 @@
 """Contain helper class for menu management."""
 from logging import getLogger
 
-from ttkbootstrap import Menu as ttkMenu
+from tkinter import Menu as tkMenu, Toplevel
 from . import dictionary, writeable
-from typing import Menu
+from typing import Callable, Optional, Any
 
 log = getLogger(__name__)
+MenuStructure = dict[str, Callable | str | dict]
 
 
 class Menu(writeable.Subscriber):
@@ -16,23 +17,33 @@ class Menu(writeable.Subscriber):
 
     def __init__(
         self,
-        structure: dict[str, Callable | str | dict],
+        structure: MenuStructure,
         translations: str = "menu",
     ):
+        """
+        Create the menu from structure using translation heading.
+
+        :param structure: A dictionary containing menu structure, view docs.
+        :param translations: The translation heading to load translations from.
+        """
         writeable.Subscriber.__init__(self)
         self.subscribe_to(dictionary.Dictionary.subscribeable, self.update)
         self.structure = structure
         self.translations = translations
+        self.created = False
 
-    def create(self):
-        menubar = ttkMenu()
-        Menu.build_submenus(menubar, self.eval_structure())
+    def create(self) -> tkMenu:
+        """Create the tkinter.Menu instance."""
+        menubar = tkMenu()
+        Menu.build_submenus(menubar, self._eval_structure())
         self.menu = menubar
-        self.menu_structure = self.eval_structure()
+        self.menu_structure = self._eval_structure()
+        self.created = True
         return menubar
 
     @classmethod
-    def build_submenus(cls, menu, structure):
+    def build_submenus(cls, menu: tkMenu, structure: MenuStructure):
+        """Recursively build the corresponding structure into the menu."""
         from .dictionary import Translation
         from .writeable import Writeable
 
@@ -46,7 +57,7 @@ class Menu(writeable.Subscriber):
             if callable(contents):  # it is a command
                 menu.add_command(label=name, command=contents, underline=idx)
             elif isinstance(contents, dict):  # a submenu
-                submenu = ttkMenu(menu)
+                submenu = tkMenu(menu)
                 menu.add_cascade(menu=submenu, label=name, underline=idx)
                 cls.build_submenus(submenu, contents)
             elif isinstance(contents, Writeable):
@@ -62,26 +73,56 @@ class Menu(writeable.Subscriber):
                     f"wrong menu dict field: {label!r}:{contents!r}",
                 )
 
-    def post(self, xpos, ypos):
-        if self.menu_structure != self.eval_structure():
+    def post(self, xpos: int | tuple[int], ypos: Optional[int] = None):
+        """
+        Popup the menu at specified location.
+
+        either:
+        - my_menu.post((x, y))
+        - my_menu.post(x, y)
+        """
+        if isinstance(xpos, tuple):
+            xpos, ypos = xpos
+        if self.menu_structure != self._eval_structure():
             self.create()
         self.menu.post(xpos, ypos)
 
-    def toplevel(self, root):
-        if self.menu_structure != self.eval_structure():
+    def toplevel(self, root: Toplevel) -> Toplevel:
+        """Set the menu as the toplevel's menu."""
+        if self.menu_structure != self._eval_structure():
             self.create()
         root["menu"] = self.menu
         return root
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str | tuple[str]):
+        """
+        Get a menu sub item.
+
+        The item may be a tuple of menu labels or the path to menu label
+        separated by slashes.
+        """
+        if isinstance(item, str):
+            parts = item.split("/")
+        else:
+            parts = tuple(item)
         obj = self.structure
-        for x in item.split("/"):
+        for x in parts:
             obj = obj[x]
         return obj
 
-    def __setitem__(self, item, val):
+    def __setitem__(self, item: str | tuple[str], val: Any):
+        """
+        Set a menu sub item.
+
+        The item may be a tuple of menu labels or the path to menu label
+        separated by slashes.
+        """
+        if isinstance(item, str):
+            parts = item.split("/")
+        else:
+            parts = tuple(item)
         obj = self.structure
-        *path, item = item.split("/")
+        *path, item = parts
         for x in path:
             if x in obj:
                 obj = obj[x]
@@ -94,11 +135,15 @@ class Menu(writeable.Subscriber):
         return val
 
     def update(self):
-        self.menu.delete(0, "end")
-        self.build_submenus(self.menu, self.eval_structure())
+        """Update the menu object."""
+        if self.created:
+            self.menu.delete(0, "end")
+            self.build_submenus(self.menu, self._eval_structure())
 
-    def eval_structure(self):
+    def _eval_structure(self):
         def build_sub(alias, structure):
+            from builtins import _
+
             ret = {}
             for child_name, child_contents in structure.items():
                 menu_trans = child_name
@@ -115,9 +160,9 @@ class Menu(writeable.Subscriber):
                             name = _(f"{basename}.__label__")
                         except NameError:
                             name = "Not Found"
-                        except:
+                        except Exception:
                             name = _(basename)
-                    except:
+                    except Exception:
                         name = "Not found"
                 else:
                     name = child_name

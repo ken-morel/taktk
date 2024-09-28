@@ -5,25 +5,26 @@ from taktk.component import Component
 from taktk.menu import Menu
 from taktk.notification import Notification
 from taktk.page import Redirect
-from taktk.writeable import NamespaceWriteable
+from taktk.writeable import Subscriber
 
 from ..admin import Todo as Todo
 from ..admin import User
 
 store = STORE = None
+subscriber = Subscriber()
 
 
 class TodoPage(Component):
     r"""
     \frame padding=20
-        \frame pos:grid=0,0 pos:sticky='nsew'
-            \entry width=80 pos:grid=0,0 text={{entry}} pos:sticky='nsw' bind:Key-Return={add_todo}
-            \button text='+' command={add_todo} pos:grid=1,0 pos:sticky='nse'
-        \frame pos:grid=0,1 pos:sticky='nsew'
-            !enum todos:(idx, todo)
-                \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(todo.uuid)} bind:3={popup_menu(todo.uuid)}
-                \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(todo.uuid)} pos:grid={(1, idx)} pos:sticky='nse'
-                \button text=[pages.todos.remove] command={popper(todo.uuid)} pos:grid={(2, idx)} pos:sticky='nse'
+        \frame pos:pack
+            \entry width=80 pos:grid=0,0 text=$entry pos:pack bind:Key-Return={add_todo}
+            \button text='+' command={add_todo} pos:pack
+        \frame pos:pack
+            # !enum todos:(idx, todo)
+                # \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(todo.uuid)} bind:3={popup_menu(todo.uuid)}
+                # \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(todo.uuid)} pos:grid={(1, idx)} pos:sticky='nse'
+                # \button text=[pages.todos.remove] command={popper(todo.uuid)} pos:grid={(2, idx)} pos:sticky='nse'
     """
 
     def __init__(self, user, entry):
@@ -33,12 +34,9 @@ class TodoPage(Component):
 
     def init(self):
         self["todos"] = Todo.for_user(self.user)
-        NamespaceWriteable(self.namespace, "entry").subscribe(
-            self.update_entry
-        )
 
     def update_entry(self):
-        store['entry'] = self["entry"]
+        store["entry"] = self["entry"]
 
     def close(self):
         root.destroy()
@@ -112,9 +110,12 @@ def default(_store, /):
     STORE = _store
     if User.is_login():
         user = User.current()
-        store = STORE.for_page(__name__).partition(user.name, {
-            "entry": _("pages.todos.placeholder"),
-        })
-        return TodoPage(user=user, entry=store['entry'])
+        store = STORE.for_page(__name__).partition(
+            user.name,
+            {
+                "entry": _("pages.todos.placeholder"),
+            },
+        )
+        return TodoPage(user=user, entry=store["entry"])
     else:
         raise Redirect("sign@signin")

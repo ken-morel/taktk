@@ -3,7 +3,7 @@
 from dataclasses import field
 from tkinter import BooleanVar
 from tkinter import Image as TkImage
-from tkinter import StringVar
+from tkinter import StringVar, PhotoImage
 from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label
 from typing import Callable, Optional
 
@@ -43,7 +43,7 @@ class label(component.TkComponent):
         padx: int | NilType = Nil
         pady: int | NilType = Nil
         font: str | NilType = Nil
-        image: media.Image | TkImage | NilType = Nil
+        image: PhotoImage = Nil
         compound: str | NilType = Nil
 
 
@@ -62,7 +62,7 @@ class button(component.TkComponent):
         pady: int | NilType = Nil
         fg: str | NilType = Nil
         bg: str | NilType = Nil
-        image: media.Image | TkImage | NilType = Nil
+        image: PhotoImage = Nil
         compound: str | NilType = Nil
         background: str | NilType = Nil
         foreground: str | NilType = Nil

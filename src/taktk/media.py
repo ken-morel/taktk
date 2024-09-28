@@ -18,11 +18,11 @@ def parse_media_spec(spec):
 
 
 def parse_media_spec_props(props):
-    from .component.parser import evaluate_literal
+    from .template import evaluate_literal
 
     props = props.split(";")
     return {
-        x.split(":")[0]: evaluate_literal(x.split(":")[1].strip(), None)
+        x.split(":")[0]: evaluate_literal(x.split(":")[1].strip(), None)[1]
         for x in props
         if x.strip()
     }
@@ -42,10 +42,12 @@ def get_media(spec):
         case wrong:
             raise ValueError(f"Unrecognised media {spec!r}")
 
+
 def get_image(spec):
-    if not spec.startswith('img:'):
-        spec = 'img:' + spec
+    if not spec.startswith("img:"):
+        spec = "img:" + spec
     return get_media(spec)
+
 
 class Resource:
     pass
