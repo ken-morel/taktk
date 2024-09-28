@@ -125,9 +125,4 @@ def update():
     Signin().render(root).grid(column=0, row=0, sticky="nsew")
 
 
-root = Window()
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
-menu.toplevel(root)
-Signin().render(root).grid(column=0, row=0, sticky="nsew")
-root.mainloop()
+menu.toplevel(Signin().create_tk(root := Window())).mainloop()  # hack!

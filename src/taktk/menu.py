@@ -1,16 +1,24 @@
+"""Contain helper class for menu management."""
 from logging import getLogger
 
 from ttkbootstrap import Menu as ttkMenu
 from . import dictionary, writeable
+from typing import Menu
 
 log = getLogger(__name__)
 
 
 class Menu(writeable.Subscriber):
+    """Create a menu structure to be shown as popup or binded to a toplevel."""
+
     menu = None
     menu_structure = None
 
-    def __init__(self, structure, translations="menu"):
+    def __init__(
+        self,
+        structure: dict[str, Callable | str | dict],
+        translations: str = "menu",
+    ):
         writeable.Subscriber.__init__(self)
         self.subscribe_to(dictionary.Dictionary.subscribeable, self.update)
         self.structure = structure
@@ -63,6 +71,7 @@ class Menu(writeable.Subscriber):
         if self.menu_structure != self.eval_structure():
             self.create()
         root["menu"] = self.menu
+        return root
 
     def __getitem__(self, item):
         obj = self.structure

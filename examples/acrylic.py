@@ -2,8 +2,6 @@ from contextlib import contextmanager
 from tkinter import *
 from tkinter.ttk import *
 
-import win32con
-import win32gui
 from PIL import Image, ImageFilter, ImageGrab, ImageTk
 from ttkbootstrap import Window
 
@@ -36,7 +34,7 @@ def transparent(win, alpha=0.3):
 
 
 root = Window(themename="superhero")
-root.attributes("-transparentcolor", "#555")
+# root.attributes("-type", "#555")
 root.geometry("500x300")
 
 root.style.configure(

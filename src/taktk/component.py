@@ -467,6 +467,25 @@ class Component(BaseComponent):
         except NameError:
             return None
 
+    def create_tk(self, root=None):
+        """Create the component in a full Tk window."""
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+
+        self.render(root).grid(column=0, row=0, sticky="nsew")
+        return root
+
+    def popup(self, **params):
+        """Create the component in a full Tk window."""
+        from tkinter import Toplevel
+
+        root = Toplevel()
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+
+        self.render(root).grid(column=0, row=0, sticky="nsew")
+        return root
+
 
 def component(func):
     def component_init(self):
