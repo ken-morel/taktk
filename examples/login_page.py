@@ -12,18 +12,18 @@ def Signin(self):
     \frame padding=100
         \frame pos:pack pos:fill=BOTH
             \frame pos:pack pos:fill=BOTH padding=20
-                \label text=[label.name] pos:pack=LEFT\
+                \label text=@label.name pos:pack=LEFT\
                     font='"Nova Square" 15'
-                \entry text={{username||username = value}}\
+                \entry text=${username||username = value}\
                     pos:pack=RIGHT width=30 font='"Nova Square" 18'
             \frame pos:pack pos:fill=BOTH padding=20
-                \label text=[label.password] pos:pack=LEFT\
+                \label text=@label.password pos:pack=LEFT\
                     font='"Nova Square" 15'
-                \entry show='*' text={$password}\
+                \entry show='*' text=$password\
                     pos:pack=RIGHT width=30 font='"Nova Square" 18'
         \frame pos:pack pos:fill=BOTH
-            \button command={lambda: None} text=[gt_signup] pos:pack=LEFT
-            \button command={signin} text=[submit] pos:pack=RIGHT
+            \button command={lambda: None} text=@gt_signup pos:pack=LEFT
+            \button command={signin} text=@submit pos:pack=RIGHT
     """
     username = ""
     password = ""

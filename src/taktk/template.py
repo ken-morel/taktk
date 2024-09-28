@@ -452,7 +452,7 @@ def evaluate_literal(
         if len(string) < 2:
             raise Exception(f"Wrong subscription {string!r}")
         typ = string[1]
-        if typ == "{":  # Custum writeable
+        if typ == "{":  # Custom writeable
             code = string[2:-1]
             if "||" in code:
                 get, set_ = code.split("||")
@@ -465,7 +465,7 @@ def evaluate_literal(
         elif typ == "(":
             return (True, eval(string[2:1]))
         else:
-            return (True, writeable.Writeable.from_name(namespace, code[1:]))
+            return (True, writeable.Writeable.from_name(namespace, string[1:]))
     elif b in STRING_QUOTES:
         if e == b:
             return (False, string[1:-1])
@@ -474,7 +474,7 @@ def evaluate_literal(
     elif string[0] == string[-1] == "/":
         return (False, Path(os.path.expandvars(string[1:-1])))
     elif b == "@":
-        return (False, dictionary.Translation(string[1:]))
+        return (True, dictionary.Translation(string[1:]))
     elif ":" in string and len(string_set - (DECIMAL | SLICE)) == 0:
         if len(d := (string_set - SLICE)) > 0:
             raise ValueError("wrong slice", string, d)
@@ -505,7 +505,7 @@ def evaluate_literal(
                 values.append(dec)
             finally:
                 pos = end + 1
-        return tuple(values)
+        return (False, tuple(values))
     else:
         raise ValueError("Unrecognsed literal:", repr(string))
 

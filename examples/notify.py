@@ -8,9 +8,9 @@ from taktk.notification import Notification
 class Notifica(Component):
     r"""
     \frame
-        \button image=!{julia_image} text='julia' command={notif_julia} pos:grid=0,0
-        \button image=!{git_image} text='git' command={notif_git} pos:grid=0,1
-        \button image=!{powershell_image} text='powershell' command={notif_powershell} pos:grid=0,2
+        \button image={julia_image} text='julia' command={notif_julia} pos:grid=0,0
+        \button image={git_image} text='git' command={notif_git} pos:grid=0,1
+        \button image={powershell_image} text='powershell' command={notif_powershell} pos:grid=0,2
     """
 
     code = __doc__

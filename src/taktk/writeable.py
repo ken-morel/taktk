@@ -18,52 +18,58 @@ from typing import Any, Callable, Iterable, Optional
 class Subscribeable:
     """Subscribeable value template."""
 
-    _subscribers: set
-    _subscribers_objects: "set[Subscriber]"
+    _subscribers: "list[tuple[Subscriber, Callable]]"
 
     def __init__(self):
         """Create the subscibeable."""
-        self._subscribers = set()
+        self._subscribers = list()
 
-    def subscribe(self, subscriber: Callable):
+    def subscribe(self, subscriber: "Subscriber", callback: Callable):
         """Subscribe to the subscibeable."""
-        self._subscribers.add(subscriber)
+        self._subscribers.append((subscriber, callback))
 
-    def unsubscribe(self, subscriber: Callable):
+    def unsubscribe(
+        self,
+        subscriber: "Optional[Subscriber]" = None,
+        callback: Optional[Callable] = None,
+    ):
         """Unsunscribe from the namespace."""
-        self._subscribers.remove(subscriber)
+        for tup in self._subscribers[:]:
+            if tup[0] is subscriber or tup[1] is callback:
+                self._subscribers.remove(tup)
 
     def warn_subscribers(self):
         """Call all subscribed handlers."""
-        for subscriber in set(self._subscribers):
-            subscriber()
+        for _, callback in self._subscribers[:]:
+            callback()
 
     def unsubscribe_all(self):
         """Unsubscibe all subscribed subscribeables."""
-        for subscriber
+        for subscriber, callback in self._subscribers[:]:
+            subscriber.unsubscribe(self)
 
 
 class Subscriber:
     """Subscriber object methods."""
 
-    _subscribing: set[tuple[Subscribeable, Callable]]
+    _subscribing: list[tuple[Subscribeable, Callable]]
 
     def __init__(self):
         """Initialize the subscriber."""
-        self._subscribing = set()
+        self._subscribing = list()
 
     def subscribe_to(self, subscribeable: Subscribeable, callback: Callable):
         """Subscribe to the passed `Subscribeable` with callback."""
-        self._subscribing.add((subscribeable, callback))
-        subscribeable.subscribe(callback, self)
+        self._subscribing.append((subscribeable, callback))
+        subscribeable.subscribe(self, callback)
 
     def unsubscribe_from(self, subscribeable: Subscribeable):
         """Unsubscribe all methods from subscribeable."""
-        for subscribing in set(self._subscribing):
+        for subscribing in self._subscribing[:]:
             subable, call = subscribing
             if subable is subscribeable:
                 try:
-                    subable.unsubscribe(call)
+                    subable.unsubscribe(self, call)
                 except Exception:
                     pass
                 finally:
@@ -71,7 +77,7 @@ class Subscriber:
 
     def unsubscribe_from_all(self):
         """Unsubscribe all methods from all subscribed subscribeable."""
-        for subscribing in set(self._subscribing):
+        for subscribing in self._subscribing[:]:
             subable, call = subscribing
             try:
                 subable.unsubscribe(call)
@@ -83,7 +89,6 @@ class Subscriber:
     def __del__(self):
         """Delete properly the object."""
         self.unsubscribe_from_all()
-        super().__del__()
 
 
 class Namespace(Subscribeable):
@@ -102,7 +107,6 @@ class Namespace(Subscribeable):
 
     def __getitem__(self, item: str) -> Any:
         """Get namespace variable from self or parents."""
-        self.watch_changes()
         if item in self.vars:
             return self.vars[item]
         else:
@@ -152,7 +156,7 @@ class Namespace(Subscribeable):
         self.vars(var)
 
 
-class Writeable(Subscribeable):
+class Writeable(Subscribeable, Subscriber):
     """Create a Writeable with subscribers and methods."""
 
     @classmethod
@@ -185,13 +189,15 @@ class Writeable(Subscribeable):
                 namespace[set_name] = val
                 exec(setter, {}, namespace)
 
-        return cls(
+        obj = cls(
             value,
             call_gets
             if (len(getter) > 0 and getter[-1] == ";")
             else eval_gets,
             call_sets,
         )
+        obj.subscribe_to(namespace, obj.warn_subscribers)
+        return obj
 
     @classmethod
     def from_name(cls, namespace: Namespace, name: str, value: Any = None):
@@ -203,7 +209,9 @@ class Writeable(Subscribeable):
         def setter(val):
             namespace[name] = val
 
-        return cls(value, getter, setter)
+        obj = cls(value, getter, setter)
+        obj.subscribe_to(namespace, obj.warn_subscribers)
+        return obj
 
     def __init__(
         self,
@@ -214,10 +222,10 @@ class Writeable(Subscribeable):
         """Create the object with the specified default value."""
         self._value = val
         self.last = val
-        self.subscribers = set()
         self.getter = getter
         self.setter = setter
         Subscribeable.__init__(self)
+        Subscriber.__init__(self)
 
     def set(self, value: Any):
         """Set the value of the Writeable, and watches changes."""

@@ -1,18 +1,18 @@
 from logging import getLogger
 
 from ttkbootstrap import Menu as ttkMenu
+from . import dictionary, writeable
 
 log = getLogger(__name__)
 
 
-class Menu:
+class Menu(writeable.Subscriber):
     menu = None
     menu_structure = None
 
     def __init__(self, structure, translations="menu"):
-        from .dictionary import Dictionary
-
-        Dictionary.subscribe(self.update)
+        writeable.Subscriber.__init__(self)
+        self.subscribe_to(dictionary.Dictionary.subscribeable, self.update)
         self.structure = structure
         self.translations = translations
 
@@ -85,7 +85,7 @@ class Menu:
         return val
 
     def update(self):
-        self.menu.delete(0, 'end')
+        self.menu.delete(0, "end")
         self.build_submenus(self.menu, self.eval_structure())
 
     def eval_structure(self):

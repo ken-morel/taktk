@@ -1,8 +1,7 @@
 """
-The main components tool
+The main components tool.
 
 Copyright (C) 2024  ken-morel
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +17,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Iterable, Type, Any
+from typing import Optional, Type, Any
+from inspect import _empty
 
 from pyoload import annotate
 
@@ -28,17 +28,81 @@ from . import template, writeable
 AttrSpec = tuple[str, Type, Optional[Any]]
 
 
-class AttributeManager(writeable.subscriber):
-    attrs: Iterable[AttrSpec]
+class AttributeManager:
+    """An object to manage component attributes."""
 
-    def __init__(self, attrs: Iterable[AttrSpec]):
-        self.attrs = attrs
+    _params: tuple[AttrSpec]
+    _subscriber: writeable.Subscriber
+    _subscribeable: writeable.Subscribeable
+
+    def __init__(self, component: "BaseComponent", kwargs: dict[str, str]):
+        """Create the Attibute manager from component and args."""
+        self._component = component
+        self._params = tuple(component.get_params())
+        self._subscriber = writeable.Subscriber()
+        self._subscribeable = writeable.Subscribeable()
+        self._subscribe = self._subscribeable.subscribe
+        self._args = {}
+        self._last = None
+        for key, value in kwargs.items():
+            sub, val = template.evaluate_literal(
+                value, self._component.namespace
+            )
+            self._args[key] = (sub, val)
+            if sub:
+                self._subscriber.subscribe_to(val, self._update)
+        self._collect_values()
+
+    def _update(self):
+        vals = self._values.copy()
+        self._collect_values()
+        if self._values != vals:
+            self._subscribeable.warn_subscribers()
+
+    def _collect_values(self):
+        self._values = {}
+
+        def set_param(obj, key, value):
+            get, val = value
+            if ":" in key:
+                pre, key = key.split(":", 1)
+
+                if pre not in obj or not isinstance(obj[pre], dict):
+                    obj[pre] = {}
+                set_param(
+                    obj[pre],
+                    key,
+                    value,
+                )
+            else:
+                if get:
+                    obj[key] = val.get()
+                else:
+                    obj[key] = val
+
+        for key, value in self._args.items():
+            set_param(self._values, key, value)
+
+    def _get_writeable(self, name):
+        val = self._args[name][1]
+        if isinstance(val, writeable.Writeable):
+            return val
+        else:
+            s
+
+    def __getattr__(self, attr: str):
+        """Get attribute from values."""
+        if attr[0] == "_":
+            return super().__getattr__(attr)
+        else:
+            try:
+                return self._values[attr]
+            except KeyError as e:
+                raise AttributeError() from e
 
 
-class BaseComponent:
-    """
-    The base component class.
-    """
+class BaseComponent(writeable.Subscriber):
+    """The base component class."""
 
     parent = None
     children: list
@@ -52,6 +116,20 @@ class BaseComponent:
             cls.Attrs = type(cls.__name__ + ".Attrs", (), {})
         cls.Attrs = dataclass(cls.Attrs)
 
+    @classmethod
+    def get_params(cls) -> tuple[tuple[str, type, Any]]:
+        """Get an iterable of tuples (name, annotation, default)."""
+        anns = {}
+        params = []
+        for name, ann in cls.__annotations__.items():
+            anns[name] = ann
+        for name, val in vars(cls.Attrs).items():
+            if name in anns:
+                params.append((name, anns[name], val))
+            else:
+                params.append((name, _empty, val))
+        return tuple(params)
+
     __init_subclass__ = _init_subclass
 
     def __init__(
@@ -61,15 +139,19 @@ class BaseComponent:
         attrs: dict[str] = {},
         params: dict[str] = {},
     ):
+        """Initialize Base Component."""
+        writeable.Subscriber.__init__(self)
         self.children = []
         self.parent = parent
         self.namespace = namespace
         if parent is not None:
             self.parent.children.append(self)
         self.raw_attrs = attrs
-        self.bind_attrs(self.collect_params(attrs) | params)
+        self.attrs = AttributeManager(self, attrs)
+        self.attrs._subscribe(self, self._update)
 
     def bind_attrs(self, attrs: dict[str]):
+        """Bind the specified attributes to the component."""
         try:
             self.attrs = self.__class__.Attrs(**attrs)
         except TypeError as e:
@@ -89,8 +171,10 @@ class BaseComponent:
         self._align_offset += 1
 
     def update(self):
+        self.attrs._collect_values()
         for child in self.children:
             child.update()
+        self._update()
 
     def _update(self):
         pass
@@ -114,7 +198,7 @@ class BaseComponent:
             "ipady",
             "pady",
         )
-        if hasattr(self.attrs, "lay"):
+        if hasattr(self.attrs, "lay") and self.attrs.lay:
             lay = self.attrs.lay
             if "w" in lay:
                 if "x" in lay["w"]:
@@ -169,22 +253,6 @@ class BaseComponent:
                         raise ValueError("wrong grid tuple", coord)
                 self.container.grid(**grid)
 
-    def collect_params(self, raw_attrs: dict[str]):
-        def set_param(obj, key, value):
-            if ":" in key:
-                pre, key = key.split(":", 1)
-
-                if pre not in obj or not isinstance(obj[pre], dict):
-                    obj[pre] = {}
-                set_param(obj[pre], key, value)
-            else:
-                obj[key] = template.evaluate_literal(value, self.namespace)
-
-        attrs = {}
-        for key, value in raw_attrs.items():
-            set_param(attrs, key, value)
-        return attrs
-
 
 class TkComponent(BaseComponent):
     Widget = None
@@ -207,8 +275,8 @@ class TkComponent(BaseComponent):
         super().create()
         self._params = params = {
             **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
+                self.conf_aliasses[k]: v
+                for k, v in self.attrs._values.items()
                 if k in self.conf_aliasses and v is not Nil
             }
         }
@@ -222,31 +290,17 @@ class TkComponent(BaseComponent):
         self.outlet = self.container = self.Widget(parent, **params)
 
     def _update(self):
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v, self.update)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        for k, v in params.items():
+        for k, v in {
+            self.conf_aliasses[k]: v
+            for k, v in self.attrs._values.items()
+            if k in self.conf_aliasses and v is not Nil
+        }.items():
+            if k == "text":
+                self.container["text"] = v
             try:
-                self.container.configure(k, v)
+                self.container.configure(**{k: v})
             except Exception:
-                pass
-
-    def update(self):
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v, self.update)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        if params != self._params:
-            self._update()
-            self._params = params
-        super().update()
+                raise
 
 
 class EnumComponent(BaseComponent):
@@ -370,14 +424,15 @@ class Component(BaseComponent):
             cls._template_cache = code, template.Template.parse(code)
         return cls._template_cache[1]
 
-    @annotate
     def __setitem__(self, item: str, value):
         self.namespace[item] = value
 
     def __init__(self, store=None, **params):
+        writeable.Subscriber.__init__(self)
         self.namespace = writeable.Namespace()
         self.namespace.vars.update(params)
         self.namespace.vars["store"] = store
+        self.subscribe_to(self.namespace, self.update)
         for attr_name in dir(self):
             if not attr_name.startswith("_"):
                 try:
@@ -392,7 +447,6 @@ class Component(BaseComponent):
         return self.container
 
     def update(self):
-        self.namespace._watch_changes_()
         self._component_.update()
 
     def expose(self, func):

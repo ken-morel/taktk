@@ -2,11 +2,11 @@ from pathlib import Path
 
 import yaml
 
-from .writeable import Writeable
+from .writeable import Writeable, Subscribeable
 
 
 class Dictionary(dict):
-    subscribers = set()
+    subscribeable = Subscribeable()
     dictionary = None
 
     def __init__(self, data, language=None):
@@ -25,11 +25,7 @@ class Dictionary(dict):
         import builtins
 
         builtins._ = self
-        for subscriber in tuple(Dictionary.subscribers):
-            try:
-                subscriber()
-            except:
-                pass
+        Dictionary.subscribeable.warn_subscribers()
 
     def __call__(self, path):
         obj = self
@@ -41,8 +37,8 @@ class Dictionary(dict):
         return obj
 
     @classmethod
-    def subscribe(cls, method):
-        cls.subscribers.add(method)
+    def subscribe(cls, obj, method):
+        cls.subscribeable.subscribe(obj, method)
 
 
 class Dictionaries:
@@ -77,8 +73,8 @@ class Translation(Writeable):
         Creates the listener on the namespace with defined name
         """
         self.expr = expr
-        self.subscribers = set()
-        Dictionary.subscribe(self.update)
+        Dictionary.subscribe(self, self.update)
+        Writeable.__init__(self)
 
     def get(self):
         """

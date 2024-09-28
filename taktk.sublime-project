@@ -4,7 +4,7 @@
             "path": ".",
         },
         {
-			"path": "C:\\Program Files\\Python313\\Lib",
+			"path": "./Lib",
 		},
     ],
     "build_systems": [
@@ -23,7 +23,7 @@
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
             "name": "Anaconda Python Builder",
             "selector": "source.python",
-            "shell_cmd": "\"d:\\taktk/Scripts/python.exe\" -u \"$file\"",
+            "shell_cmd": "\"/media/ken-morel/data/taktk/bin/python\" -u \"$file\"",
         },
         {
             "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
@@ -44,8 +44,6 @@
         },
     ],
     "settings": {
-        "python_interpreter": "$VIRTUAL_ENV/Scripts/python.exe",
-        "anaconda_linter_phantoms": true,
-        "validate_imports": true,
+        "python_interpreter": "$VIRTUAL_ENV/bin/python",
     },
 }

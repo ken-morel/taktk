@@ -15,16 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
 from logging import getLogger
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from types import ModuleType
 from typing import Any, Optional
-
 from pyoload import annotate
 from ttkbootstrap import Window
-
 from . import (
     ON_CREATE_HANDLERS,
     application_server,

@@ -82,36 +82,14 @@ class entry(component.TkComponent):
         pady: int | NilType = Nil
         width: int | NilType = Nil
         font: str | NilType = Nil
-        textvariable: StringVar | NilType = Nil
         show: str | NilType = Nil
         bind: dict = field(default_factory=dict)
 
     def create(self, parent: "Optional[component.BaseComponent]" = None):
-        component.BaseComponent.create(self)
-        parent = parent
-        params = {
-            **{
-                self.conf_aliasses[k]: resolve(v)
-                for k, v in vars(self.attrs).items()
-                if k in self.conf_aliasses and v is not Nil
-            }
-        }
-        if "textvariable" not in params:
-            if isinstance(self.attrs.text, writeable.Writeable):
-                self.textvariable = self.attrs.text.stringvar
-            else:
-                self.textvariable = StringVar()
-                self.textvariable.set(self.attrs.text)
-            params["textvariable"] = self.textvariable
-            self.attrs.textvariable = self.textvariable
-        else:
-            self.textvariable = params["textvariable"]
-        self.container = self.outlet = self.Widget(
-            master=parent,
-            **params,
-        )
-        self.init_geometry()
-        self.make_bindings()
+        super().create(parent)
+        self.container["textvariable"] = self.attrs._get_writeable(
+            "text"
+        ).stringvar
 
 
 class checkbutton(component.TkComponent):
