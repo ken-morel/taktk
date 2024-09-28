@@ -10,18 +10,18 @@ from ttkbootstrap import Window
 def Signin(self):
     r"""
     \frame padding=100
-        \frame pos:pack
-            \frame pos:pack pos:fill=X padding=20
+        \frame pos:pack pos:fill=BOTH
+            \frame pos:pack pos:fill=BOTH padding=20
                 \label text=[label.name] pos:pack=LEFT\
                     font='"Nova Square" 15'
-                \entry text={{username}}\
+                \entry text={{username||username = value}}\
                     pos:pack=RIGHT width=30 font='"Nova Square" 18'
-            \frame pos:pack pos:fill=X padding=20
+            \frame pos:pack pos:fill=BOTH padding=20
                 \label text=[label.password] pos:pack=LEFT\
                     font='"Nova Square" 15'
-                \entry show='*' text={{password}}\
+                \entry show='*' text={$password}\
                     pos:pack=RIGHT width=30 font='"Nova Square" 18'
-        \frame pos:pack pos:fill=X
+        \frame pos:pack pos:fill=BOTH
             \button command={lambda: None} text=[gt_signup] pos:pack=LEFT
             \button command={signin} text=[submit] pos:pack=RIGHT
     """
@@ -121,10 +121,13 @@ menu = Menu(
 
 
 def update():
-    Signin().render(root).grid(column=0, row=0)
+    """Update the component."""
+    Signin().render(root).grid(column=0, row=0, sticky="nsew")
 
 
 root = Window()
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
 menu.toplevel(root)
-Signin().render(root).grid(column=0, row=0)
+Signin().render(root).grid(column=0, row=0, sticky="nsew")
 root.mainloop()

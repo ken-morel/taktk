@@ -18,304 +18,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass
-from importlib import import_module
-from typing import Optional
+from typing import Optional, Iterable, Type, Any
 
-from pyoload import *
 from pyoload import annotate
 
-from .. import Nil, resolve, template
-from ..template import Template, evaluate_literal
-from ..writeable import Expression, Namespace
+from . import Nil, resolve
+from . import template, writeable
+
+AttrSpec = tuple[str, Type, Optional[Any]]
 
 
-class Instruction:
-    def __str__(self):
-        if len(self.children) == 0:
-            return f"<{self.__class__.__name__}:{self._str_header()}>"
-        else:
-            text = f"<{self.__class__.__name__}:{self._str_header()}["
-            for child in self.children:
-                for line in str(child).splitlines():
-                    text += "\n  " + line
-            return text + "\n]"
+class AttributeManager(writeable.subscriber):
+    attrs: Iterable[AttrSpec]
 
-    def _str_header(self):
-        return "{}"
-
-
-Attrs = dict[str]
-
-
-# @annotate
-class Create_Component(Instruction):
-    """
-    create_Component instruction to create a new widget
-    :param name: The widget name
-    :param params: The widget parameters
-    """
-
-    name: str
-    attrs: Attrs
-    alias: Optional[str]
-    parent: "Optional[_Component]"
-    children: list[Instruction]
-    computed: bool = False
-
-    def __init__(
-        self,
-        name: str,
-        attrs: Attrs = {},
-        alias: Optional[str] = None,
-        parent: "Optional[_Component]" = None,
-    ):
-        self.name = name
+    def __init__(self, attrs: Iterable[AttrSpec]):
         self.attrs = attrs
-        self.alias = alias
-        self.parent = parent
-        if parent:
-            self.parent.children.append(self)
-        self.children = []
-
-    def _str_header(self):
-        return f"{self.name}, {repr(self.attrs)[:10]}...; &{self.alias}"
-
-    @classmethod
-    def next(cls, _state, parent: "Optional[_Component]" = None):
-        """
-        Gets the next Create_Component instruction
-        """
-        state, name, alias = parser.tag_name(_state)
-        attrs = {}
-        while len(state[state:]) > 0:
-            nstate, key, val = parser.next_attr_value(state)
-            state |= nstate
-            attrs[key] = val
-
-        _state |= state
-        return cls(name=name, alias=alias, attrs=attrs, parent=parent)
-
-    # @annotate
-    def _eval(self, namespace: Namespace):
-        parent = self.parent
-        assert (
-            parent.computed
-        ), "cannot compute children instructions before parent"
-        self.component = get_component(self.name, namespace)(
-            parent=parent.component, attrs=self.attrs, namespace=namespace
-        )
-        if self.alias is not None:
-            namespace[self.alias] = self.component
-        self.computed = True
-        for child in self.children:
-            child._eval(namespace)
-        return self.component
-
-    # @annotate
-    def eval(self, namespace: Namespace):
-        self.component = get_component(self.name, namespace)(
-            parent=None, attrs=self.attrs, namespace=namespace
-        )
-        if self.alias is not None:
-            namespace[self.alias] = self.component
-        self.computed = True
-        for child in self.children:
-            child._eval(namespace)
-        return self.component
 
 
-class Create_Enum_Component(Instruction):
+class BaseComponent:
     """
-    create_Component instruction to create a new widget
-    :param name: The widget name
-    :param params: The widget parameters
-    """
-
-    object_name: str
-    alias: tuple[str, str]
-    parent: "Optional[Instruction]"
-    children: list[Instruction]
-    computed: bool = False
-
-    def __init__(
-        self,
-        name: str,
-        alias: tuple[str, str] = None,
-        parent: "Optional[Instruction]" = None,
-    ):
-        self.object_name = name
-        self.alias = alias
-        self.parent = parent
-        self.children = []
-        if parent:
-            parent.children.append(self)
-
-    @classmethod
-    def next(cls, _state, parent: "Optional[Instruction]" = None):
-        """
-        Gets the next Create_Component instruction
-        """
-        state, name, alias = parser.next_enum(_state)
-        _state |= state
-        return cls(name=name, alias=alias, parent=parent)
-
-    def _eval(self, namespace: Namespace):
-        from ..writeable import NamespaceWriteable
-
-        parent = self.parent
-        self.component = EnumComponent(
-            parent=parent.component,
-            namespace=namespace,
-            object=NamespaceWriteable(namespace, self.object_name),
-            instructions=self.children,
-            alias=self.alias,
-        )
-        self.computed = True
-        return self.component
-
-    def eval(*__, **_):
-        raise NotImplementedError()
-
-
-class Create_If_Component(Instruction):
-    """
-    create_Component instruction to create a new widget
-    :param name: The widget name
-    :param params: The widget parameters
-    """
-
-    condition: str
-    alias: tuple[str, str]
-    parent: "Optional[Instruction]"
-    children: list[Instruction]
-    computed: bool = False
-
-    def __init__(
-        self,
-        condition: str,
-        parent: "Optional[Instruction]" = None,
-    ):
-        self.condition = condition
-        self.parent = parent
-        self.children = []
-        if parent:
-            parent.children.append(self)
-
-    @classmethod
-    def next(cls, _state, parent: "Optional[Instruction]" = None):
-        """
-        Gets the next Create_If_Component instruction
-        """
-        state, condition = parser.next_if(_state)
-        _state |= state
-        return cls(condition=condition, parent=parent)
-
-    def _eval(self, namespace: Namespace):
-        parent = self.parent
-        self.component = IfComponent(
-            parent=parent.component,
-            namespace=namespace,
-            condition=Expression(namespace, self.condition),
-            instructions=self.children,
-        )
-        self.computed = True
-        return self.component
-
-    def eval(*__, **_):
-        raise NotImplementedError()
-
-
-def parse_subinstructions(parent, lines, begin, indent, offset):
-    base_ind = -1
-    last_component = None
-    target_idx = 0
-    line_idx = 0
-    for line_idx, line in enumerate(lines):
-        if line_idx < max(target_idx, begin):
-            continue
-        if not line.strip():
-            continue
-        if indent == -1:
-            indent = len(line) - len(line.lstrip())
-        if base_ind == -1:
-            base_ind = (len(line) - len(line.lstrip())) // indent
-        if line.strip().startswith("#"):
-            continue
-        ind = len(line) - len(line.lstrip())
-        if ind % indent != 0:
-            raise ValueError("Unexpected indent", line)
-        ind = ind // indent
-        if ind < base_ind:
-            return (line_idx - 1, parent)
-        elif ind > base_ind:
-            target_idx, _w = parse_subinstructions(
-                last_component, lines, line_idx, indent, offset
-            )
-            target_idx += 1
-            continue
-        else:
-            instr = line.strip()
-            if instr[0] == "\\":
-                last_component = Create_Component.next(
-                    parser.State(line, ind * 2), parent=parent
-                )
-            elif instr[0] == "!":
-                if instr.startswith("!enum"):
-                    last_component = Create_Enum_Component.next(
-                        parser.State(line, ind * 2), parent=parent
-                    )
-                elif instr.startswith("!if"):
-                    last_component = Create_If_Component.next(
-                        parser.State(line, ind * 2), parent=parent
-                    )
-                else:
-                    raise ValueError("unknown special tag:", instr)
-            else:
-                raise ValueError("unknown tag:", instr)
-    return (line_idx, parent)
-
-
-def execute(text):
-    lines = list(filter(lambda l: bool(l.strip()), text.splitlines()))
-    for idx, line in reversed(tuple(enumerate(lines[:]))):
-        if line.endswith("\\") and idx + 1 < len(lines):
-            pre, post = lines[idx : idx + 2]
-            lines[idx : idx + 2] = [pre[:-1] + " " + post.lstrip()]
-    offset = min(len(line) - len(line.lstrip(" ")) for line in lines)
-    lines = [line[offset:] for line in lines]
-    line, *lines = lines
-    indent = -1
-    while not line.startswith("\\"):
-        if not line.strip() or line[0] == "#":
-            line, *lines = lines
-            continue
-        elif line[0].isspace():
-            raise ValueError("Unallowed space in line:", line)
-        elif c == "@":
-            if line.startswith("@indent"):
-                indent = int(line.split(" ")[1])
-                line, lines = lines
-            else:
-                raise ValueError("Unrecognised meta parameter:", line)
-        else:
-            raise ValueError("Error parsing line", line)
-    master = Create_Component.next(parser.State(line, 0))
-    _, instr = parse_subinstructions(
-        master,
-        lines,
-        0,
-        indent=indent,
-        offset=offset,
-    )
-    return instr
-
-
-###############################################################################
-
-
-class _Component:
-    """
-    The base component class
+    The base component class.
     """
 
     parent = None
@@ -334,7 +56,7 @@ class _Component:
 
     def __init__(
         self,
-        namespace: "Namespace" = {},
+        namespace: "writeable.Namespace" = {},
         parent=None,
         attrs: dict[str] = {},
         params: dict[str] = {},
@@ -456,7 +178,7 @@ class _Component:
                     obj[pre] = {}
                 set_param(obj[pre], key, value)
             else:
-                obj[key] = evaluate_literal(value, self.namespace)
+                obj[key] = template.evaluate_literal(value, self.namespace)
 
         attrs = {}
         for key, value in raw_attrs.items():
@@ -464,7 +186,7 @@ class _Component:
         return attrs
 
 
-class TkComponent(_Component):
+class TkComponent(BaseComponent):
     Widget = None
     _attr_ignore = ()
     _params = None
@@ -527,13 +249,13 @@ class TkComponent(_Component):
         super().update()
 
 
-class EnumComponent(_Component):
+class EnumComponent(BaseComponent):
     def __init__(
         self,
         object,
         namespace,
         alias: tuple[str, str],
-        parent: "Optional[_Component]" = None,
+        parent: "Optional[BaseComponent]" = None,
         instructions: list = [],
     ):
         self.children = []
@@ -551,7 +273,7 @@ class EnumComponent(_Component):
         self.widgets = []
         for idx, val in enumerate(self.object.get()):
             aidx, aval = self.alias
-            namespace = Namespace(parents=[self.parent_namespace])
+            namespace = writeable.Namespace(parents=[self.parent_namespace])
             namespace[aidx] = idx
             namespace[aval] = val
             for instr in self.instructions:
@@ -575,12 +297,12 @@ class EnumComponent(_Component):
             del widget
 
 
-class IfComponent(_Component):
+class IfComponent(BaseComponent):
     def __init__(
         self,
         condition,
         namespace,
-        parent: "Optional[_Component]" = None,
+        parent: "Optional[BaseComponent]" = None,
         instructions: list = [],
     ):
         self.children = []
@@ -618,11 +340,12 @@ class IfComponent(_Component):
             del widget
 
 
-class Component(_Component):
-    _component_: _Component = None
-    _instructions_: Instruction = None
-    _code_: str = None
-    _template_cache: tuple[Optional[str], Optional[Template]] = (None, None)
+class Component(BaseComponent):
+    code: Optional[str] = None
+    _template_cache: tuple[Optional[str], Optional[template.Template]] = (
+        None,
+        None,
+    )
 
     def init(self):
         pass
@@ -642,9 +365,9 @@ class Component(_Component):
 
     @classmethod
     def get_template(cls):
-        code = cls._code_ or cls.__doc__ or r"\frame"
+        code = cls.code or cls.__doc__
         if cls._template_cache[0] != code:
-            cls._template_cache = code, Template.parse(code)
+            cls._template_cache = code, template.Template.parse(code)
         return cls._template_cache[1]
 
     @annotate
@@ -652,7 +375,7 @@ class Component(_Component):
         self.namespace[item] = value
 
     def __init__(self, store=None, **params):
-        self.namespace = Namespace()
+        self.namespace = writeable.Namespace()
         self.namespace.vars.update(params)
         self.namespace.vars["store"] = store
         for attr_name in dir(self):

@@ -31,6 +31,17 @@
             "cmd": ["py", "$project_path/examples/todoapp/main.py"],
             "working_dir": "$project_path/examples/locale",
         },
+        {
+            "file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+            "name": "Taktk Docs",
+            "cmd": ["$project_path/docs/make.bat", "html"],
+            "working_dir": "$project_path/docs",
+            "env": {
+              "COLORS": "0",
+              "PYTHON_COLORS": "0",
+              "FORCE_COLORS": "0",
+            },
+        },
     ],
     "settings": {
         "python_interpreter": "$VIRTUAL_ENV/Scripts/python.exe",

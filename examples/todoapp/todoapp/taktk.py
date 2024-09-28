@@ -1,5 +1,3 @@
-from builtins import _
-
 import taktk
 import taktk.application
 import taktk.component
@@ -67,6 +65,8 @@ class Application(taktk.application.Application):
         taktk.dictionary.Dictionary.subscribe(self.update_language)
 
     def set_theme(self, theme):
+        from builtins import _
+
         self.root.style.theme_use(theme)
         self.store["theme"] = theme
         taktk.notify(
