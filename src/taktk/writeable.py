@@ -48,6 +48,10 @@ class Subscribeable:
         for subscriber, callback in self._subscribers[:]:
             subscriber.unsubscribe(self)
 
+    def __delete__(self):
+        self.unsubscribe_all()
+        super().__delete__()
+
 
 class Subscriber:
     """Subscriber object methods."""
@@ -86,9 +90,10 @@ class Subscriber:
             finally:
                 self._subscribing.remove(subscribing)
 
-    def __del__(self):
+    def __delete__(self):
         """Delete properly the object."""
         self.unsubscribe_from_all()
+        super().__delete__()
 
 
 class Namespace(Subscribeable):

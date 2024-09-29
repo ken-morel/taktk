@@ -1,85 +1,78 @@
-from dataclasses import dataclass
-from functools import cache
+import functools
 
-from taktk.component import Component
-from taktk.menu import Menu
-from taktk.notification import Notification
-from taktk.page import Redirect
-from taktk.writeable import Subscriber
+import taktk.component
+import taktk.menu
+import taktk.page
+import taktk.store
 
 from ..admin import Todo as Todo
 from ..admin import User
 
-store = STORE = None
-subscriber = Subscriber()
 
-
-class TodoPage(Component):
+@taktk.component.component
+def TodoPage(self):
     r"""
     \frame padding=20
         \frame pos:pack
-            \entry width=80 pos:grid=0,0 text=$entry pos:pack bind:Key-Return={add_todo}
+            \entry width=80 pos:grid=0,0 text=$entry pos:pack\
+                bind:Key-Return={add_todo}
             \button text='+' command={add_todo} pos:pack
         \frame pos:pack
-            # !enum todos:(idx, todo)
-                # \label bootstyle={'info' if todo.done else 'danger'} text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)} pos:xweight=10 pos:sticky='nswe' bind:1={toggler(todo.uuid)} bind:3={popup_menu(todo.uuid)}
-                # \button text={_('pages.todos.mark-done') if not todo.done else _('pages.todos.mark-undone')} command={toggler(todo.uuid)} pos:grid={(1, idx)} pos:sticky='nse'
-                # \button text=[pages.todos.remove] command={popper(todo.uuid)} pos:grid={(2, idx)} pos:sticky='nse'
+            !enum todos:(idx, todo)
+                \label bootstyle={'info' if todo.done else 'danger'}\
+                    text={str(idx + 1) + ') ' + todo.desc} pos:grid={(0, idx)}\
+                    pos:xweight=10 pos:sticky='nswe'\
+                    bind:1={toggler(todo.uuid)} bind:3={popup_menu(todo.uuid)}
+                \button\
+                    text={_(f"pages.todos.mark-{'un' if todo.done else ''}done")}\
+                    command={toggler(todo.uuid)} pos:grid={(1, idx)}\
+                    pos:sticky='nse'
+                \button text=@pages.todos.remove command={popper(todo.uuid)}\
+                    pos:grid={(2, idx)} pos:sticky='nse'
     """
 
-    def __init__(self, user, entry):
-        self.user = user
-        self.entry = entry
-        super().__init__()
+    class Attrs:
+        user: User
+        store: taktk.store.Store
 
-    def init(self):
-        self["todos"] = Todo.for_user(self.user)
-
-    def update_entry(self):
-        store["entry"] = self["entry"]
-
-    def close(self):
+    def close():
         root.destroy()
 
-    def add_todo(self, *_):
+    def add_todo(*_):
         if not self["entry"].strip():
-            return Notification(
+            return taktk.notify(
                 "Empty field",
                 "Please, enter an item",
                 duration=1000,
                 bootstyle="warning",
                 source="todo-empty-notification",
             ).show()
-        self["user"].create_todo(self["entry"]).save()
+        self.attrs.user.create_todo(self["entry"]).save()
         self["entry"] = ""
-        self.update()
+        self["todos"] = Todo.for_user(self.attrs.user)
 
-    def popper(self, uuid):
+    def popper(uuid):
         def func(*_):
             Todo.from_uuid(uuid).delete()
-            self.update()
+            self["todos"] = Todo.for_user(self.attrs.user)
 
         return func
 
-    def toggler(self, uuid):
+    def toggler(uuid):
         def func(*_):
             obj = Todo.from_uuid(uuid)
             obj.done = not obj.done
             obj.save()
-            self.update()
+            self["todos"] = Todo.for_user(self.attrs.user)
 
         return func
 
-    def update(self):
-        self["todos"] = Todo.for_user(self.user)
-        super().update()
-
-    def popup_menu(self, uuid):
-        menu = Menu(
+    def popup_menu(uuid):
+        menu = taktk.menu.Menu(
             {
-                "@toggle": self.toggler(uuid),
-                "@remove": self.popper(uuid),
-                "@edit": self.editer(uuid),
+                "@toggle": toggler(uuid),
+                "@remove": popper(uuid),
+                "@edit": editer(uuid),
             },
             translations="pages.todos.menu",
         )
@@ -89,7 +82,7 @@ class TodoPage(Component):
 
         return func
 
-    def editer(self, uuid):
+    def editer(uuid):
         def edit(*_):
             from customtkinter import CTkInputDialog
 
@@ -99,23 +92,32 @@ class TodoPage(Component):
             todo = Todo.from_uuid(uuid)
             todo.desc = value
             todo.save()
-            self.update()
+            self["todos"] = Todo.for_user(self.attrs.user)
 
         return edit
 
+    def update_entry():
+        self.attrs.store["entry"] = self["entry"]
 
-@cache
-def default(_store, /):
-    global store, STORE, user
-    STORE = _store
+    todos = Todo.for_user(self.attrs.user)
+    entry = self.attrs.store["entry"]
+
+    self.subscribe_to(self.namespace, update_entry)
+    return locals()
+
+
+@functools.cache
+def default(store, /):
     if User.is_login():
         user = User.current()
-        store = STORE.for_page(__name__).partition(
-            user.name,
-            {
-                "entry": _("pages.todos.placeholder"),
-            },
+        return TodoPage(
+            user=user,
+            store=store.for_page(__name__).partition(
+                user.name,
+                {
+                    "entry": _("pages.todos.placeholder"),
+                },
+            ),
         )
-        return TodoPage(user=user, entry=store["entry"])
     else:
-        raise Redirect("sign@signin")
+        raise taktk.page.Redirect("sign@signin")

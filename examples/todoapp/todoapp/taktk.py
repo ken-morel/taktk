@@ -59,10 +59,7 @@ class Application(taktk.application.Application):
         self.menu["@preferences/@theme"] = {
             t: lambda s=self.set_theme, t=t: s(t) for t in style.theme_names()
         }
-        try:
-            self.root.style.theme_use(self.store["theme"])
-        except Exception as e:
-            print(e)
+        self.root.style.theme_use(self.get_store()["theme"])
         self.menu.update()
         self.set_language(self.get_store()["language"])
         taktk.dictionary.Dictionary.subscribe(None, self.update_language)
@@ -71,7 +68,7 @@ class Application(taktk.application.Application):
         from builtins import _
 
         self.root.style.theme_use(theme)
-        self.store["theme"] = theme
+        self.get_store()["theme"] = theme
         taktk.notify(
             "Todos",
             _("preferences.success_modified"),
@@ -86,9 +83,10 @@ class Application(taktk.application.Application):
         self.view.forward()
 
     def update_language(self):
-        self.store["language"] = taktk.Dictionary.dictionary.language
-        self.store.save()
-        Notification(
+        store = self.get_store()
+        store["language"] = _.language
+        store.save()
+        taktk.notification.Notification(
             "Todos",
             _("preferences.success_modified"),
             bootstyle="info",

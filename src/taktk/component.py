@@ -2,18 +2,17 @@
 The main components tool.
 
 Copyright (C) 2024  ken-morel
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass
@@ -35,7 +34,12 @@ class AttributeManager:
     _subscriber: writeable.Subscriber
     _subscribeable: writeable.Subscribeable
 
-    def __init__(self, component: "BaseComponent", kwargs: dict[str, str]):
+    def __init__(
+        self,
+        component: "BaseComponent",
+        raw_kwargs: dict[str, str] = {},
+        kwargs: dict[str, Any] = {},
+    ):
         """Create the Attibute manager from component and args."""
         self._component = component
         self._params = {}
@@ -46,13 +50,14 @@ class AttributeManager:
         self._subscribe = self._subscribeable.subscribe
         self._args = {}
         self._last = None
-        for key, value in kwargs.items():
+        for key, value in raw_kwargs.items():
             sub, val = template.evaluate_literal(
                 value, self._component.namespace
             )
             self._args[key] = (sub, val)
             if sub:
                 self._subscriber.subscribe_to(val, self._update)
+        self._args.update(kwargs)
         self._collect_values()
 
     def _update(self):
@@ -137,6 +142,10 @@ class BaseComponent(writeable.Subscriber):
         if not hasattr(cls, "Attrs"):
             cls.Attrs = type(cls.__name__ + ".Attrs", (), {})
         cls.Attrs = dataclass(cls.Attrs)
+
+    def __delete__(self):
+        self.destroy()
+        super().__delete__()
 
     @classmethod
     def get_params(cls) -> tuple[tuple[str, type, Any]]:
@@ -324,53 +333,55 @@ class TkComponent(BaseComponent):
             except Exception:
                 raise
 
+    def destroy(self):
+        for child in self.children[:]:
+            child.destroy()
+        self.container.destroy()
+
 
 class EnumComponent(BaseComponent):
     def __init__(
         self,
-        object,
-        namespace,
-        alias: tuple[str, str],
+        iterable_expr: str,
+        aliases: tuple[str, str],
+        namespace: writeable.Namespace,
         parent: "Optional[BaseComponent]" = None,
-        instructions: list = [],
+        templates: list[template.Template.Item] = [],
     ):
-        self.children = []
+        writeable.Subscriber.__init__(self)
+        self.subscribe_to(namespace, self.update)
         self.parent = parent
-        self.parent_namespace = namespace
-        self.object = object
-        self.instructions = instructions  # instructions
-        self.alias = alias
+        self.namespace = namespace
+        self.iterable_expr = iterable_expr
+        self.aliases = aliases
+        self.templates = templates  # template
         if parent is not None:
             self.parent.children.append(self)
+        self.contents = []
+        self._last = None
 
     def create(self, parent=None):
         parent = parent or self.parent.outlet
         self.render_parent = parent
-        self.widgets = []
-        for idx, val in enumerate(self.object.get()):
-            aidx, aval = self.alias
-            namespace = writeable.Namespace(parents=[self.parent_namespace])
+        self.contents = []
+        iterable = eval(self.iterable_expr, {}, self.namespace)
+        self._last = iterable
+        for idx, val in enumerate(iterable):
+            aidx, aval = self.aliases
+            namespace = writeable.Namespace(parents=[self.namespace])
             namespace[aidx] = idx
             namespace[aval] = val
-            for instr in self.instructions:
-                comp = instr._eval(namespace)
+            for template_item in self.templates:
+                comp = template_item.render(self.parent, namespace)
                 comp.create(parent)
-                elt = comp.container
-                self.widgets.append(
-                    (comp, elt),
-                )
+                self.contents.append((namespace, comp))
 
-    def update(self):
-        widgets = self.widgets.copy()
-        self.create(self.render_parent)
-        try:
-            self.render_parent.update()  # for smoother renderring
-        except Exception:
-            pass
-        for component, widget in widgets:
-            component.container = component.outlet = None
-            widget.destroy()
-            del widget
+    def update(self, force: bool = False):
+        value = eval(self.iterable_expr, {}, self.namespace)
+        if value != self._last or force:
+            for _, comp in self.contents:
+                comp.destroy()
+            self.create(self.render_parent)
 
 
 class IfComponent(BaseComponent):
@@ -379,41 +390,34 @@ class IfComponent(BaseComponent):
         condition,
         namespace,
         parent: "Optional[BaseComponent]" = None,
-        instructions: list = [],
+        template: list = [],
     ):
+        writeable.Subscriber.__init__(self)
+        self.subscribe_to(namespace, self.update)
         self.children = []
         self.parent = parent
         self.namespace = namespace
         self.condition = condition
-        self.instructions = instructions  # instructions
+        self.template = template  # template
         if parent is not None:
             self.parent.children.append(self)
+        self.content = None
+        self._last = None
 
     def create(self, parent=None):
         parent = parent or self.parent.outlet
         self.render_parent = parent
-        self.widgets = []
-        self.condition.subscribe(self._update)
-        if self.condition.get():
-            for instr in self.instructions:
-                comp = instr._eval(self.namespace)
-                comp.create(parent)
-                self.widgets.append(
-                    (comp.container, comp.container),
-                )
+        self._last = eval(self.condition, {}, self.namespace)
+        if self._last:
+            for template in self.template:
+                template.render(self, self.namespace).create(parent)
 
     def update(self):
-        super().update()
-        widgets = self.widgets.copy()
-        self.create(self.render_parent)
-        try:
-            self.render_parent.update()  # for smoother renderring
-        except Exception:
-            pass
-        for component, widget in widgets:
-            component.widget = None
-            widget.destroy()
-            del widget
+        cond = eval(self.condition, {}, self.namespace)
+        if cond != self._last:
+            for content in self.content:
+                content.destroy()
+            self.create(self.render_parent)
 
 
 class Component(BaseComponent):
@@ -449,11 +453,14 @@ class Component(BaseComponent):
     def __setitem__(self, item: str, value):
         self.namespace[item] = value
 
-    def __init__(self, store=None, **params):
+    def __init__(self, **params):
         writeable.Subscriber.__init__(self)
+        self.attrs = AttributeManager(
+            self, {}, {k: (False, v) for k, v in params.items()}
+        )
+        self.attrs._subscribe(self, self._update)
+
         self.namespace = writeable.Namespace()
-        self.namespace.vars.update(params)
-        self.namespace.vars["store"] = store
         self.subscribe_to(self.namespace, self.update)
         for attr_name in dir(self):
             if not attr_name.startswith("_"):
@@ -461,8 +468,8 @@ class Component(BaseComponent):
                     self.namespace[attr_name] = getattr(self, attr_name)
                 except AttributeError:
                     pass
-        self.init()
         self.renderred = False
+        self.init()
         self._component_ = self.get_template().eval(self.namespace)
 
     def render(self, master):

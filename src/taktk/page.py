@@ -6,7 +6,7 @@ from importlib import import_module
 from logging import getLogger
 from tkinter import Tk, Widget
 from types import ModuleType
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from urllib.parse import parse_qsl, urlparse
 from uuid import UUID
 
@@ -26,14 +26,12 @@ DEFAULT_HANDLER = "default"
 class PageView:
     """
     Applictaions page view, performs page routing, caching and history for a
-    taktk application.
+    taktk page View.
     """
 
     history: list
     current_page: Any
-    app: "application.Application"
-    store: store_.Store
-    destroy_cache: int
+    store: store_.Store | Callable
     package: ModuleType
     current_url: Optional[str]
 
@@ -41,8 +39,7 @@ class PageView:
         self,
         parent: Tk | Widget,
         page: ModuleType,
-        app: "application.Application",
-        destroy_cache: int = 5,
+        store: "store_.Store | Callable",
     ):
         """\
         :param parent: the parent widget to view the pages in, usually the
@@ -50,17 +47,16 @@ class PageView:
 
         :param page: The module the app will fetch pages from.
 
-        :param destroy_cache: Experimental destroy cache
         """
         self.history = []
         self.current_page = None
         self.parent = parent
         self.current_widget = None
-        self.app = app
-        self.store = app.get_store()
-        self.destroy_cache = destroy_cache
+        self.store = store
         self.package = page
         self.current_url = None
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(0, weight=1)
 
     def geometry(self):
         """\
@@ -88,13 +84,16 @@ class PageView:
             else:
                 return result
 
-    def view_component(self, components: "tuple", *, _cache={}):
-        if self.current_page is None:
-            self.current_page = 0
-        else:
-            self.current_page += 1
+    def view_component(
+        self, components: "tuple", add_history: bool = True, *, _cache={}
+    ):
+        if add_history:
+            if self.current_page is None:
+                self.current_page = 0
+            else:
+                self.current_page += 1
+            self.history.insert(self.current_page, components)
         current = self.current_widget
-        self.history.insert(self.current_page, components)
         parent = self.parent
         master = None
         for component in components:
@@ -113,35 +112,26 @@ class PageView:
             parent = component.outlet
         self.current_widget = master
         if current is not None:
-            self.destroy_later(master)
+            current.destroy()
 
-    def destroy_later(self, widget, cache=[]):
-        cache.append(widget)
-        if len(cache) > self.destroy_cache:
-            cache.pop(0).destroy()
-
-    def back(self):
+    def back(self) -> bool:
         if self.current_page > 0:
             self.focus_page(self.current_page - 1)
             return True
         else:
             return False
 
-    def forward(self):
+    def forward(self) -> bool:
         if self.current_page < len(self.history) - 1:
             self.focus_page(self.current_page + 1)
             return True
         else:
             return False
 
-    def focus_page(self, idx):
+    def focus_page(self, idx: int):
         page = self.history[idx]
         if self.current_widget is not None:
-            self.current_widget.destroy()
-        self.history[idx].render(self.parent)
-        self.current_widget = self.history[idx].container
-        self.current_widget.grid(column=0, row=0, sticky="nsew")
-        self.current_page = idx
+            self.view_component(self.history[idx], add_history=False)
 
     def exec_url(self, cmd):
         if cmd.strip("/") == "!current":
@@ -194,7 +184,7 @@ class PageView:
             raise Error404(e)
         http = comp = None
         page = function(
-            self.store,
+            self.store() if callable(self.store) else self.store,
             *urlparams,
             **kwparams,
         )

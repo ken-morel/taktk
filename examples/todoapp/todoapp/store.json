@@ -1,6 +1,6 @@
 {
   "language": "english",
-  "theme": "cosmo",
+  "theme": "darkly",
   "~~[$__pageStore__('todoapp.admin')]~~": {
     "users": [
       {
@@ -45,22 +45,28 @@
         "uuid": "f7316748-68cd-11ef-9684-28d244ed9304"
       },
       {
-        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
-        "desc": "No I do not!",
-        "done": false,
-        "uuid": "db7e079b-68ce-11ef-b30d-28d244ed9304"
-      },
-      {
-        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
-        "desc": "Or do I@ msjdjd",
-        "done": false,
-        "uuid": "e13a94dd-68ce-11ef-b4f3-28d244ed9304"
-      },
-      {
         "author_id": "a7be354b-6919-11ef-9755-28d244ed9304",
         "desc": "df",
         "done": true,
         "uuid": "ade6b013-6919-11ef-b74c-28d244ed9304"
+      },
+      {
+        "author_id": "a7be354b-6919-11ef-9755-28d244ed9304",
+        "desc": "colorama",
+        "done": false,
+        "uuid": "153a307e-7e3e-11ef-b897-28d244ed9304"
+      },
+      {
+        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
+        "desc": "I love this",
+        "done": true,
+        "uuid": "56f0e182-7e8e-11ef-a7ee-28d244ed9304"
+      },
+      {
+        "author_id": "75cbf1d5-68cb-11ef-81b3-28d244ed9304",
+        "desc": "Youpi",
+        "done": true,
+        "uuid": "5d3af42a-7e8e-11ef-b624-28d244ed9304"
       }
     ]
   },
@@ -69,7 +75,7 @@
       "entry": "kklklkdffge"
     },
     "~~[$__partition__('ama')]~~": {
-      "entry": "nope!"
+      "entry": ""
     },
     "~~[$__partition__('')]~~": {
       "entry": ""

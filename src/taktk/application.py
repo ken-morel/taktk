@@ -50,15 +50,12 @@ class Application:
       creation.
     - **menu**: an optional `taktk.menu.Menu` object to use as toplevel menu
     - **layout**: an instance of `Layout` class you should define yourself
-    - **destroy_cache**: Experimental: destroys only the last {x} viewed
-      component's widget to reduce chances for app to abruptly resize
     """
 
     dictionaries: dictionary.Dictionaries = None
     fallback_language: str
     menu: Optional[menu.Menu]
     layout: Optional[component.Component]
-    destroy_cache: int = 5
     _store: Optional[store.Store] = None
     address: Optional[tuple[str, int]]
     icon: Optional[str | media.Image]
@@ -231,7 +228,7 @@ class Application:
             handler(self)
         if self.address is not None:
             self.listen_at(self.address)
-        self.view = page.PageView(root, self.pages, self, self.destroy_cache)
+        self.view = page.PageView(root, self.pages, self.get_store)
         self.view.geometry()
         self.view.url(entry)
         self.root.mainloop()

@@ -255,58 +255,68 @@ class State:
             self += 1
         return self[begin:...]
 
-    def next_enum(self) -> "tuple[str, tuple[str, str]]":
+    def parse_next_enum(self) -> "tuple[str, tuple[str, str]]":
         """Next enumerator."""
-        begin = self.copy()
-        begin |= begin.skip_spaces()
-        state = begin.copy()
-        state += len("!enum ")
-        state |= state.skip_spaces()
-        b = state.copy()
-        while state:
-            if state[...][0] not in VARNAME:
-                if state[...][0] != ":":
+        self.skip_spaces()
+        self += len("!enum ")
+        self.skip_spaces()
+        b = self.copy()
+        while self:
+            if self[...] not in VARNAME:
+                if self[...] != ":":
                     raise Exception(
                         "unrecognised symbol in after enum object name",
-                        state.text,
+                        self,
                     )
                 break
-            state += 1
+            self += 1
         else:
-            raise Exception("unterminated enum first field", state.text)
-        obj = state.text[b:state]
-        state += 1
-        b = state.copy()
+            raise Exception("unterminated enum first field\n" + repr(self))
+        obj = self.text[b:self]
+        self += 1
+        b = self.copy()
         b += 1
         nc = 0
-        while state:
-            if state[...][0] == ")":
+        while self:
+            if self[...] == ")":
                 break
-            elif state[...][0] == ",":
+            elif self[...] == ",":
                 nc += 1
                 if nc > 1:
                     raise Exception(
-                        "too many fields after enum object", state.text
+                        "too many fields after enum object\n" + repr(self)
                     )
-            state += 1
+            self += 1
         else:
-            raise Exception("Unterminated enum second field", state.text)
-        alias = tuple(map(str.strip, state[b:state].split(",")))
-        return state, obj, alias
+            raise Exception("Unterminated enum second field\n" + repr(self))
+        alias = tuple(map(str.strip, self[b:...].split(",")))
+        self += 1  # skip ending bracket
+        return Template.Item(
+            type=TagType.SPECIAL, name="enum", args=(obj, alias)
+        )
 
-    def next_if(self) -> "tuple[str, tuple[str, str]]":
+    def parse_next_special(self):
+        if self[...:].startswith("!if"):
+            return self.parse_next_if()
+        elif self[...:].startswith("!enum"):
+            return self.parse_next_enum()
+        else:
+            raise ValueError(
+                "unexpected special tag", self[self.idx : self.idx + 5] + "..."
+            )
+
+    def parse_next_if(self) -> "tuple[str, tuple[str, str]]":
         """Return next if statements parts."""
-        begin = self.copy()
-        begin |= begin.skip_spaces()
-        state = begin.copy()
-        state += len("!if ")
-        state |= state.skip_spaces()
-        b = state.copy()
+        self += len("!if")
+        self.skip_spaces()
+        b = self.copy()
 
-        while state and state[...][0] != "\n":
-            state += 1
+        while self and self[...] != "\n":
+            self += 1
 
-        return state, state.text[b:state]
+        return Template.Item(
+            type=TagType.SPECIAL, name="if", args=(self[b:...],)
+        )
 
     @property
     def row(self) -> int:
@@ -419,6 +429,9 @@ def evaluate_literal(
     from . import media
     from . import constants
 
+    def calls():
+        return eval(string[2:-2], {}, namespace)
+
     string_set = set(string)
     if len(string) > 1:
         b, *_, e = string
@@ -447,7 +460,10 @@ def evaluate_literal(
                 string,
             )
         code = string[1:-1]
-        return (False, eval(code, {}, namespace))
+        if len(code) >= 2 and code[0] == "{" and code[-1] == "}":
+            return (False, calls)
+        else:
+            return (False, eval(code, {}, namespace))
     elif b == "$":
         if len(string) < 2:
             raise Exception(f"Wrong subscription {string!r}")
@@ -530,7 +546,8 @@ class Template:
 
         def render(self, parent, namespace):
             """Create the component."""
-            if self.type == TagType.TAG:
+
+            if self.type is TagType.TAG:
                 alias, attrs = self.args
                 comp = get_component(self.name, namespace)(
                     parent=parent,
@@ -539,9 +556,26 @@ class Template:
                 )
                 if alias is not None:
                     namespace[alias] = comp
+                for child in self.children:
+                    child.render(comp, namespace)
                 return comp
+            elif self.type is TagType.SPECIAL:
+                if self.name == "if":
+                    return component.IfComponent(
+                        self.args[0], namespace, parent, self.children.copy()
+                    )
+                elif self.name == "enum":
+                    return component.EnumComponent(
+                        self.args[0],
+                        self.args[1],
+                        namespace,
+                        parent,
+                        self.children.copy(),
+                    )
+                else:
+                    raise ValueError(f"Unknown special {self.name}")
             else:
-                raise NotImplementedError()
+                raise NotImplementedError(f"Unimplemented tagtype {self.type}")
 
         def __repr__(self) -> str:
             """Reproduce the object as string"""
@@ -585,13 +619,7 @@ class Template:
         namespace = self.namespace or _namespace
         assert namespace is not None, "No namespace specified!"
 
-        def sub_render(parent, item):
-            comp = item.render(parent, namespace)
-            for child in item.children:
-                sub_render(comp, child)
-            return comp
-
-        return sub_render(None, self.root)
+        return self.root.render(None, namespace)
 
     def __repr__(self) -> str:
         return str(self.root)
@@ -604,6 +632,6 @@ def get_component(
     from . import components
 
     try:
-        return eval(name, {}, vars(components) | (namespace.vars or {}))
+        return eval(name, {}, (namespace.vars or {}) | vars(components))
     except NameError as e:
         raise NameError(f"Component {name!r} does not exist.") from e

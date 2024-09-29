@@ -1,5 +1,5 @@
 import taktk
-from taktk.component import Component
+from taktk.component import component, Component
 from taktk.notification import Notification
 
 from ..admin import User
@@ -7,22 +7,25 @@ from ..admin import User
 
 class Signin(Component):
     r"""
-    \frame weight:x='0: 1' weight:y='0: 1' padding=50
-        \frame pos:grid=0,0 weight:x='0:1'
-            \frame pos:grid=0,0 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
-                \label text=[pages.signin.label.name] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
-                \entry text={{username}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
-            \frame pos:grid=0,1 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
-                \label text=[pages.signin.label.password] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
-                \entry show='*' text={{password}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
-        \frame pos:grid=0,1 pos:sticky='nsew' weight:x='1: 10'
-            \ctk.button command={gt_signup} text=[pages.signin.gt_signup] pos:grid=0,0 pos:sticky='sw'
-            \ctk.button command={signin} text=[pages.signin.submit] pos:grid=2,0 pos:sticky='se'
+    \frame padding=100
+        \frame pos:pack pos:fill=BOTH
+            \frame pos:pack pos:fill=BOTH padding=20
+                \label text=@pages.signin.label.name pos:pack=LEFT\
+                    font='"Nova Square" 15'
+                \entry text=$username\
+                    pos:pack=RIGHT width=30 font='"Nova Square" 18'
+            \frame pos:pack pos:fill=BOTH padding=20
+                \label text=@pages.signin.label.password pos:pack=LEFT\
+                    font='"Nova Square" 15'
+                \entry show='*' text=$password\
+                    pos:pack=RIGHT width=30 font='"Nova Square" 18'
+        \frame pos:pack pos:fill=BOTH
+            \button command={gt_signup} text=@pages.signin.gt_signup pos:pack=LEFT
+            \button command={signin} text=@pages.signin.submit pos:pack=RIGHT
     """
 
-    def __init__(self, redirect):
-        self.redirect = redirect
-        super().__init__()
+    class Attrs:
+        redirect: str = "/todos"
 
     username = ""
     password = ""
@@ -48,7 +51,7 @@ class Signin(Component):
                 source="signin-page",
                 duration=5000,
             ).show()
-            taktk.application.view.url(self.redirect)
+            taktk.application.view.url(self.attrs.redirect)
 
     def gt_signup(self):
         taktk.application.view.url("sign#signup")
@@ -60,27 +63,30 @@ def signin(store, /, redirect="todos"):
 
 class Signup(Component):
     r"""
-    \frame:form weight:x='0: 1' weight:y='0: 1' padding=20
-        \frame:form pos:grid=0,0 weight:x='0:1'
-            \frame pos:grid=0,0 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
-                \label text=[pages.signin.label.name] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
-                \entry text={{username}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
-            \frame pos:grid=0,1 padding=20 weight:x='0:1' weight:y='0:1' pos:sticky='nswe'
-                \label text=[pages.signin.label.password] pos:grid=0,0 pos:sticky='w' font='"Nova Square" 15'
-                \entry show='*' text={{password}} font='"Nova Square" 18' pos:grid=1,0 width=30 pos:sticky='e'
-                \entry show='*' text={{password2}} font='"Nova Square" 18' pos:grid=1,1 width=30 pos:sticky='e'
-        \frame:buttons pos:grid=0,1 pos:sticky='nsew' weight:x='1: 10'
-            \ctk.button command={gt_signin} text=[pages.signin.gt_signin] pos:grid=0,0 pos:sticky='sw'
-            \ctk.button command={signup} text=[pages.signin.submit] pos:grid=2,0 pos:sticky='se'
+    \frame padding=100
+        \frame pos:pack pos:fill=BOTH
+            \frame pos:pack pos:fill=BOTH padding=20
+                \label text=@pages.signin.label.name pos:pack=LEFT\
+                    font='"Nova Square" 15'
+                \entry text=$username\
+                    pos:pack=RIGHT width=30 font='"Nova Square" 18'
+            \frame pos:pack pos:fill=BOTH padding=20
+                \label text=@pages.signin.label.password pos:pack=LEFT\
+                    font='"Nova Square" 15'
+                \entry show='*' text=$password2\
+                    pos:pack=BOTTOM width=30 font='"Nova Square" 18'
+                \entry show='*' text=$password\
+                    pos:pack=RIGHT width=30 font='"Nova Square" 18'
+        \frame pos:pack pos:fill=BOTH
+            \button command={gt_signin} text=@pages.signin.gt_signin pos:pack=LEFT
+            \button command={signup} text=@pages.signin.submit pos:pack=RIGHT
     """
-
-    def __init__(self, redirect):
-        self.redirect = redirect
-        super().__init__()
-
     username = ""
     password = ""
     password2 = ""
+
+    class Attrs:
+        redirect: str = "/todos"
 
     def signup(self):
         name = self["username"]
@@ -111,7 +117,7 @@ class Signup(Component):
                 source="signin-page",
                 duration=5000,
             ).show()
-            taktk.application.view.url(self.redirect)
+            taktk.application.view.url(self.attrs.redirect)
 
     def gt_signin(self):
         taktk.application.view.url("sign#signin")

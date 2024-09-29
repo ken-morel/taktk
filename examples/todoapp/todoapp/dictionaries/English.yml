@@ -1,15 +1,20 @@
 pages:
   index:
     welcome: |
-      Good day!, welcome to this test page. This program is just to demonstrate
-      most of the features offered by taktk.
+      # Todoapp
+
+      Good day!, welcome to this _test application_. This is just to demonstrate
+      **most** of the features offered by `taktk`.
       taktk, from from the work 'tak', meaning to order, and tk for tkinter
       for that it does, serves you in writting more organized, simple and
-      readable code using sort of markup.
+      readable code using sort `taktl`.
       The component language though it's appearance actually interpretes to
       python instructions telling taktk how to build the component.
       It is still in development, and I will be happy to hear of you issues
-      at https://github.com/ken-morel/taktk/issues
+      at
+      [https://github.com/ken-morel/taktk/issues](https://github.com/ken-morel/taktk/issues)
+
+      Oh and you are free to login
     next: Go to dashboard >
     login: Login >
   todos:

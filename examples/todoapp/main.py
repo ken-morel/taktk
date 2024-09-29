@@ -6,5 +6,5 @@ from todoapp.taktk import Application
 entry = "/"
 
 print("running")
-Application().run(entry)
-# Application().redirect_to_singleton(entry)
+# Application().run(entry)
+Application().redirect_to_singleton(entry)
