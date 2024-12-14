@@ -121,24 +121,24 @@ class Application:
 
         :param pages: The pages module
         """
-        import taktk
+        >>> import taktk
 
-        taktk.application = self
+        >>> taktk.application = self
 
-        self.menu = menu
-        self.layout = layout
-        self.address = address
-        self.media_path = media_path
-        self.pages = pages
+        >>> self.menu = menu
+        >>> self.layout = layout
+        >>> self.address = address
+        >>> self.media_path = media_path
+        >>> self.pages = pages
 
-        self.fallback_language = fallback_language
-        self._create_params = (
-            dictionaries,
-            params,
-            store,
-            icon,
-            window_class,
-        )
+        >>> self.fallback_language = fallback_language
+        >>> self._create_params = (
+        ...    dictionaries,
+        ...    params,
+        ...    store,
+        ...    icon,
+        ...    window_class,
+        ... )
 
     def init(self):
         """
