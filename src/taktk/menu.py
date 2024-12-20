@@ -1,30 +1,40 @@
-from logging import getLogger
+"""Class to manage tk menu."""
+from .component import TkComponent
 
+from efus.subscribe import Subscriber
+from pyoload import annotate
 from ttkbootstrap import Menu as ttkMenu
+from typing import Any
+from typing import Optional
 
-log = getLogger(__name__)
 
-
+@annotate
 class Menu:
-    menu = None
-    menu_structure = None
+    """Taktk tk menu interface class."""
 
-    def __init__(self, structure, translations="menu"):
+    menu: Optional[ttkMenu] = None
+    menu_structure: Optional[dict] = None
+    subscriber: Subscriber
+
+    def __init__(self, structure: dict, translations: Optional[str] = None):
+        """Create a taltl tk menu."""
         from .dictionary import Dictionary
 
-        Dictionary.subscribe(self.update)
+        self.subscriber = Subscriber()
+        self.subscribe.subscribe_to(Dictionary)
         self.structure = structure
         self.translations = translations
 
-    def create(self):
+    def render(self):
+        """Render the menu to tk menu."""
         menubar = ttkMenu()
-        Menu.build_submenus(menubar, self.eval_structure())
+        Menu._build_submenus(menubar, self._eval_structure())
         self.menu = menubar
-        self.menu_structure = self.eval_structure()
+        self.menu_structure = self._eval_structure()
         return menubar
 
     @classmethod
-    def build_submenus(cls, menu, structure):
+    def _build_submenus(cls, menu, structure):
         from .dictionary import Translation
         from .writeable import Writeable
 
@@ -40,7 +50,7 @@ class Menu:
             elif isinstance(contents, dict):  # a submenu
                 submenu = ttkMenu(menu)
                 menu.add_cascade(menu=submenu, label=name, underline=idx)
-                cls.build_submenus(submenu, contents)
+                cls._build_submenus(submenu, contents)
             elif isinstance(contents, Writeable):
                 val = contents.get()
                 if isinstance(val, bool):
@@ -54,17 +64,20 @@ class Menu:
                     f"wrong menu dict field: {label!r}:{contents!r}",
                 )
 
-    def post(self, xpos, ypos):
-        if self.menu_structure != self.eval_structure():
+    @annotate
+    def post(self, xpos: int, ypos: int):
+        """Post the menu at xpos and ypos."""
+        if self.menu_structure != self._eval_structure():
             self.create()
         self.menu.post(xpos, ypos)
 
-    def toplevel(self, root):
-        if self.menu_structure != self.eval_structure():
+    def toplevel(self, root: Any):
+        """Attach the menu to the specified toplevel."""
+        if self.menu_structure != self._eval_structure():
             self.create()
         root["menu"] = self.menu
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str):
         obj = self.structure
         for x in item.split("/"):
             obj = obj[x]
@@ -85,10 +98,11 @@ class Menu:
         return val
 
     def update(self):
-        self.menu.delete(0, 'end')
-        self.build_submenus(self.menu, self.eval_structure())
+        """Update the tkinter menu."""
+        self.menu.delete(0, "end")
+        self._build_submenus(self.menu, self._eval_structure())
 
-    def eval_structure(self):
+    def _eval_structure(self):
         def build_sub(alias, structure):
             ret = {}
             for child_name, child_contents in structure.items():
