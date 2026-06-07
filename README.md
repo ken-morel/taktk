@@ -109,3 +109,11 @@ if __name__ == "__main__":
 ## 📄 License
 This project is licensed under the GPLv3.0 License.
 
+
+
+---
+
+## Side note
+
+This was a project from 2024 when I was still from lower-sixth. The syntax of efus, including it's capabilitues improves a lot as I learned about existinf frameworks like svelte/reacr latter on see https://github.com/ken-morel/Efus.jl . Julia I considered more suited since it is dynamic and can generate Julia code from efus at macro expansion. But before this I even had to implement efus parser and interpreter in zig. Some times I get asked why I prefer sveltekit, and in fact it feels more natural and just feels right to do it that way.
+
